@@ -1,0 +1,20 @@
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Test Server.exe
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Test Server.pdb
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\newGame.dll
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO Development Server.exe
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO GameLibrary.dll
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\newGame.pdb
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO GameLibrary.xml
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\obj\Debug\ResolveAssemblyReference.cache
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\obj\Debug\Test Server.exe
+C:\deluxe\PRANKS\server\Serverside Code\Player.IO Test Server Project\obj\Debug\Test Server.pdb
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\obj\Debug\Test Server.exe
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\obj\Debug\Test Server.pdb
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Test Server.exe
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Test Server.pdb
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO Development Server.exe
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO GameLibrary.dll
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO GameLibrary.xml
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\obj\Debug\ResolveAssemblyReference.cache
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\pranksServer.dll
+C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\pranksServer.pdb

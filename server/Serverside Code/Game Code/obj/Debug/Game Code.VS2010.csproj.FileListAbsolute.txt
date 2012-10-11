@@ -1,0 +1,7 @@
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\bin\Debug\pranksServer.dll
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\bin\Debug\pranksServer.pdb
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\bin\Debug\Player.IO GameLibrary.dll
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\bin\Debug\Player.IO GameLibrary.xml
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\obj\Debug\ResolveAssemblyReference.cache
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\obj\Debug\pranksServer.dll
+C:\deluxe\pranks_git\server\Serverside Code\Game Code\obj\Debug\pranksServer.pdb

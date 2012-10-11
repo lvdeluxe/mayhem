@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+	<title>OfficeMayhem</title>
+	<style type="text/css">
+		html, body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		#game {
+			/* see http://flassari.is/2012/02/external-interface-error-object-expected*/
+			visibility: visible !important;
+			position: absolute;
+		}
+
+	</style>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script type="text/javascript" src="//connect.facebook.net/en_US/all.js#xfbml=1"></script>
+	<script type="text/javascript" src="{% url 'js/facebookBridge.js' %}"></script>
+
+	<script type="text/javascript">
+	/*
+		$(function () {
+			if(swfobject.hasFlashPlayerVersion('11.4.0')) {
+				swfobject.embedSWF('pranks.swf', 'game', '100%', '768', '11.4.0', 'playerProductInstall.swf', {}, { wmode:'direct', bgcolor:'#ffffff', menu:"false", scale:"noScale", allowFullscreen:"true", allowScriptAccess:"always"}, {name:'game', id:'game'})
+			}
+			else {
+				$('#game').html('<p style="position:relative;">You need at least <a href="http://www.adobe.com/go/getflashplayer">Flash Player 11.2.0</a> to play this game.</p>');
+			}
+		});
+*/
+	</script>
+
+</head>
+<body>
+<div id="allContent" style="position:relative; margin-top: 7px;">
+	<div id="fb-root"></div>
+	<div class="center-wrapper">
+		<div id="game">
+			{% swf src='pranks.swf' width=1024 height=768 version='11.4.0' wmode='direct' allowScriptAccess='always' id='game' name='game' otherParam %}
+		</div>
+	</div>
+</div>
+<div class="center-wrapper">
+	<div id="imageContent" style="position:absolute; top: -10000px;">
+		<img id="screenshotObject"
+			 style="margin: 0 auto; display:block;"/>
+	</div>
+</div>
+</body>
+</html>
