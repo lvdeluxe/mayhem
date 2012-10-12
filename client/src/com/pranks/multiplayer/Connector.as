@@ -23,6 +23,9 @@ package com.pranks.multiplayer
 		private var _socialUser:SocialUser;
 		private var _mainConnection:Connection;
 		
+		//url for live deployment
+		//https://office-mayhem-g9omnsmpskqoxaolbzotca.fb.playerio.com/fb/omfb/
+		
 		public function Connector(pStage:Stage, user:SocialUser) 
 		{
 			_allUsers = new Dictionary();
@@ -42,7 +45,7 @@ package com.pranks.multiplayer
 			trace("Sucessfully connected to player.io");
 			_client = client;
 			//Set developmentsever (Comment out to connect to your server online)
-			//_client.multiplayer.developmentServer = "localhost:8184";
+			_client.multiplayer.developmentServer = "localhost:8184";
 			
 			//Create pr join the room test
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);		

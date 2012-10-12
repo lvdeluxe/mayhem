@@ -18,3 +18,13 @@ C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\De
 C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\obj\Debug\ResolveAssemblyReference.cache
 C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\pranksServer.dll
 C:\deluxe\pranks_git\server\Serverside Code\Player.IO Test Server Project\bin\Debug\pranksServer.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\obj\Debug\Test Server.exe
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\obj\Debug\Test Server.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Test Server.exe
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Test Server.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\OfficeMayhemServer.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO Development Server.exe
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO GameLibrary.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\OfficeMayhemServer.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Debug\Player.IO GameLibrary.xml
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\obj\Debug\ResolveAssemblyReference.cache

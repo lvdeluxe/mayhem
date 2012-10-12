@@ -4,7 +4,7 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\pranks.swf" />
+    <movie path="bin\offmayhem.swf" />
     <movie fps="60" />
     <movie width="1024" />
     <movie height="768" />
@@ -52,6 +52,7 @@
   <!-- SWC Libraries -->
   <libraryPaths>
     <element path="lib\Flare3D_Commercial_2048c.swc" />
+    <element path="lib\AwayPhysics.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>
@@ -84,8 +85,7 @@
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
-    <option testMovie="OpenDocument" />
-    <option testMovieCommand="http://apps.facebook.com/officemayhem/" />
+    <option testMovie="ExternalPlayer" />
   </options>
   <!-- Plugin storage -->
   <storage />
