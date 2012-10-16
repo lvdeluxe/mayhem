@@ -4,10 +4,10 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\offmayhem.swf" />
-    <movie fps="60" />
-    <movie width="1024" />
-    <movie height="768" />
+    <movie path="cubicmayhem" />
+    <movie fps="30" />
+    <movie width="800" />
+    <movie height="600" />
     <movie version="11" />
     <movie minorVersion="3" />
     <movie platform="Flash Player" />
@@ -41,7 +41,7 @@
     <option linkReport="" />
     <option loadExterns="" />
     <option staticLinkRSL="True" />
-    <option additional="-swf-version=13" />
+    <option additional="" />
     <option compilerConstants="" />
     <option minorVersion="" />
   </build>
@@ -51,8 +51,8 @@
   </includeLibraries>
   <!-- SWC Libraries -->
   <libraryPaths>
-    <element path="lib\Flare3D_Commercial_2048c.swc" />
     <element path="lib\AwayPhysics.swc" />
+    <element path="lib\Flare3D_Commercial_2048c.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

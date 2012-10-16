@@ -96,9 +96,11 @@ namespace MyGame {
                     }
                     player.Send(msg);
                     break;
+                case "PlayerStoppedMoving":
+                    Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0));
+                    break;
                 case "PlayerIsMoving":
-                    player.Coords = new Point((int)message.GetFloat(0), (int)message.GetFloat(1));
-                    Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetFloat(0), message.GetFloat(1));
+                    Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetUInt(0));
                     break;
 			}
 		}

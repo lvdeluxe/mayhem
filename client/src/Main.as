@@ -1,4 +1,4 @@
-package 
+package
 {
 	import away3d.core.managers.Stage3DManager;
 	import away3d.core.managers.Stage3DProxy;

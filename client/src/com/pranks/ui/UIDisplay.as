@@ -12,9 +12,9 @@ package com.pranks.ui
 		
 		public function UIDisplay() 
 		{
-			createUI();
-			var textField:TextField = new TextField(400, 300, "Welcome to Starling!");
-			addChild(textField);
+			//createUI();
+			//var textField:TextField = new TextField(400, 300, "Welcome to Starling!");
+			//addChild(textField);
 		}
 		
 		private function createUI():void {

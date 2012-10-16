@@ -51,14 +51,23 @@ package com.pranks.multiplayer
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);		
 			
 			UserInputSignals.USER_IS_MOVING.add(onPlayerMoving);
+			UserInputSignals.USER_STOPPED_MOVING.add(onPlayerStopMoving);
 			
 		}
 		
-		private function onPlayerMoving(position:Vector3D):void {
+		private function onPlayerStopMoving(keyCode:uint):void {
+			var mess:Message = _mainConnection.createMessage("PlayerStoppedMoving");
+			//mess.add("PlayerIsMoving");
+			mess.add(keyCode);
+			//mess.add(position.z);
+			_mainConnection.sendMessage(mess);			
+		}
+		
+		private function onPlayerMoving(keyCode:uint):void {
 			var mess:Message = _mainConnection.createMessage("PlayerIsMoving");
 			//mess.add("PlayerIsMoving");
-			mess.add(position.x);
-			mess.add(position.z);
+			mess.add(keyCode);
+			//mess.add(position.z);
 			_mainConnection.sendMessage(mess);
 		}
 		
@@ -117,10 +126,15 @@ package com.pranks.multiplayer
 					connection.send("GetRoomUsers");
 			});
 			
-			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, coordsX:int, coordsZ:int):void {
-				if (userid != "user_" + _socialUser.social_id) {
-					UserInputSignals.USER_HAS_MOVED.dispatch(userid, new Point(coordsX, coordsZ));
-				}
+			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint):void {
+				//if (userid != "user_" + _socialUser.social_id) {
+					UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode);
+				//}
+			});
+			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint):void {
+				//if (userid != "user_" + _socialUser.social_id) {
+					UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode);
+				//}
 			});
 			
 			
