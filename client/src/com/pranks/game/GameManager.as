@@ -30,6 +30,7 @@ package com.pranks.game
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.text.TextField;
+	import flash.text.TextFormat;
 	import flash.utils.Dictionary;
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
@@ -83,9 +84,6 @@ package com.pranks.game
 			
 			_currentElapsed = getTimer();
 			
-			_gameTimer = new Timer(20);
-			_gameTimer.addEventListener(TimerEvent.TIMER, moveObjects);
-			_gameTimer.start();
 			
 			_tf = new TextField();;
 			_tf.width = 300;
@@ -135,36 +133,44 @@ package com.pranks.game
 			var groundRigidbody : AWPRigidBody = new AWPRigidBody(groundShape, mesh, 0);
 			_physicsWorld.addRigidBody(groundRigidbody);
 			_view3D.scene.addChild(mesh);
+			
 		}
 		
-		private function moveObjects(event:TimerEvent):void {
-			var totalInterval: int = ( getTimer( ) - _currentElapsed ) ;
-			var moveX:int;
-			var moveZ:int;
-			
+		private function moveObjects():void {
+			var t:int = getTimer();
+			var dt:Number = (t - _currentElapsed);
+			_currentElapsed = t;
+			//trace(dt)
+			//apply 500 force per second.
+			var val:Number = (dt * 500) / 1000
+			trace(val)
+			var moveX:Number = 0;
+			var moveZ:Number = 0;
+				
 			for each(var cube:MovingCube in _allPlayers) {
 				moveX = 0;
 				moveZ = 0;
 				
 				if (cube.userInputs[MOVE_LEFT_KEY])
-					moveX = -1;
+					moveX = -val;
 				else if (cube.userInputs[MOVE_RIGHT_KEY])
-					moveX = 1;
+					moveX = val;
 				if (cube.userInputs[MOVE_UP_KEY])
-					moveZ = 1;
+					moveZ = val;
 				else if (cube.userInputs[MOVE_DOWN_KEY])
-					moveZ = -1;
+					moveZ = -val;
 					
 				if (moveX != 0 || moveZ != 0) {
-					cube.body.applyCentralForce(new Vector3D(moveX * ( totalInterval), 0, moveZ * ( totalInterval)));
+					//hasMoved = true;
+					cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
 				}
 				
 			}
-			_currentElapsed = getTimer( );
-		}
+		}		
 		
 		public function renderPhysics():void {
 			_physicsWorld.step(_timeStep, 1, _timeStep);
+			moveObjects();
 		}
 		
 		private function onKeyUp(event:KeyboardEvent):void {
@@ -209,8 +215,9 @@ package com.pranks.game
 					break;
 			}
 			if (_sendMoveMessage) {
+				//_incFrame = 0;
 				trace("sendingMessage")
-				UserInputSignals.USER_IS_MOVING.dispatch(event.keyCode);
+				UserInputSignals.USER_IS_MOVING.dispatch(event.keyCode,new Date().getTime());
 			}
 		}
 		
@@ -219,7 +226,9 @@ package com.pranks.game
 			cube.removeUserInput(keyCode);
 		}
 		
-		private function onUserMoved(userId:String, keyCode:uint):void {
+		private function onUserMoved(userId:String, keyCode:uint, timestamp:Number):void {
+			_tf.text = (new Date().getTime() - timestamp).toString();
+			_incFrame = 0;
 			var cube:MovingCube = _allPlayers[userId];
 			trace('input received')
 			cube.addUserInput(keyCode);

@@ -63,10 +63,11 @@ package com.pranks.multiplayer
 			_mainConnection.sendMessage(mess);			
 		}
 		
-		private function onPlayerMoving(keyCode:uint):void {
+		private function onPlayerMoving(keyCode:uint, timestamp:Number):void {
 			var mess:Message = _mainConnection.createMessage("PlayerIsMoving");
 			//mess.add("PlayerIsMoving");
 			mess.add(keyCode);
+			mess.add(timestamp);
 			//mess.add(position.z);
 			_mainConnection.sendMessage(mess);
 		}
@@ -126,9 +127,9 @@ package com.pranks.multiplayer
 					connection.send("GetRoomUsers");
 			});
 			
-			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint):void {
+			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
 				//if (userid != "user_" + _socialUser.social_id) {
-					UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode);
+					UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);
 				//}
 			});
 			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint):void {

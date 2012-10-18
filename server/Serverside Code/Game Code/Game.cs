@@ -100,7 +100,7 @@ namespace MyGame {
                     Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0));
                     break;
                 case "PlayerIsMoving":
-                    Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetUInt(0));
+                    Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
                     break;
 			}
 		}
