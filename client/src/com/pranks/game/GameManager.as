@@ -71,6 +71,8 @@ package com.pranks.game
 		
 		private var _sendMoveMessage:Boolean = true;
 		
+		private var _updateTimer:Timer;
+		
 		private var _incFrame:uint = 0;
 		
 		private var _tf:TextField;
@@ -78,12 +80,16 @@ package com.pranks.game
 		private var _gameTimer:Timer;
 		private var _currentElapsed:Number;
 		
+		
 		public function GameManager(stage:Stage, proxy:Stage3DProxy) 
 		{
 			_allPlayers = new Dictionary();
 			
 			_currentElapsed = getTimer();
 			
+			
+			_updateTimer = new Timer(500);
+			_updateTimer.addEventListener(TimerEvent.TIMER, updatePosition);
 			
 			_tf = new TextField();;
 			_tf.width = 300;
@@ -123,6 +129,7 @@ package com.pranks.game
 			MultiplayerSignals.USER_REMOVED.add(onUserRemoved);
 			UserInputSignals.USER_HAS_MOVED.add(onUserMoved);
 			UserInputSignals.USER_HAS_STOPPED_MOVING.add(onUserStoppedMoving);
+			UserInputSignals.USER_HAS_UPDATE_STATE.add(onUserUpdateState);
 			
 			var material : ColorMaterial = new ColorMaterial(0x252525);
 			material.lightPicker = _lightPicker;
@@ -136,6 +143,22 @@ package com.pranks.game
 			
 		}
 		
+		private function onUserUpdateState(uid:String, rotation:Vector3D, position:Vector3D):void {
+			var cube:MovingCube = _allPlayers[uid]
+			if (cube != _ownerCube) {
+				trace(rotation)
+				cube.body.rotation = rotation;
+				cube.body.position = position;
+			}
+		}
+		
+		private function updatePosition(event:TimerEvent):void {
+			if (_ownerCube.body.linearVelocity.equals(new Vector3D(0, 0, 0)))
+				_updateTimer.stop();
+			trace(_ownerCube.body.linearVelocity)
+			UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.rotation, _ownerCube.body.position);
+		}
+		
 		private function moveObjects():void {
 			var t:int = getTimer();
 			var dt:Number = (t - _currentElapsed);
@@ -143,29 +166,34 @@ package com.pranks.game
 			//trace(dt)
 			//apply 500 force per second.
 			var val:Number = (dt * 500) / 1000
-			trace(val)
+			//trace(val)
 			var moveX:Number = 0;
 			var moveZ:Number = 0;
 				
 			for each(var cube:MovingCube in _allPlayers) {
 				moveX = 0;
 				moveZ = 0;
-				
+				var  prev:Vector3D = cube.body.position
+				//trace(prev)
 				if (cube.userInputs[MOVE_LEFT_KEY])
-					moveX = -val;
+					moveX = -10//val;
 				else if (cube.userInputs[MOVE_RIGHT_KEY])
-					moveX = val;
+					moveX = 10//val;
 				if (cube.userInputs[MOVE_UP_KEY])
-					moveZ = val;
+					moveZ = 10//val;
 				else if (cube.userInputs[MOVE_DOWN_KEY])
-					moveZ = -val;
+					moveZ = -10//val;
 					
 				if (moveX != 0 || moveZ != 0) {
 					//hasMoved = true;
 					cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
+					
+					//cube.body.linearVelocity = new Vector3D(moveX, 0, moveZ);
+					//cube.body.position = new Vector3D(prev.x + moveX, 0, prev.z + moveZ);
 				}
 				
 			}
+			
 		}		
 		
 		public function renderPhysics():void {
@@ -188,6 +216,7 @@ package com.pranks.game
 					downPressed = false;
 					break;
 			}
+			
 			UserInputSignals.USER_STOPPED_MOVING.dispatch(event.keyCode);
 		}
 		private function onKeyDown(event:KeyboardEvent):void {
@@ -217,6 +246,7 @@ package com.pranks.game
 			if (_sendMoveMessage) {
 				//_incFrame = 0;
 				trace("sendingMessage")
+				//_updateTimer.start();
 				UserInputSignals.USER_IS_MOVING.dispatch(event.keyCode,new Date().getTime());
 			}
 		}
@@ -224,14 +254,36 @@ package com.pranks.game
 		private function onUserStoppedMoving(userId:String, keyCode:uint):void {
 			var cube:MovingCube = _allPlayers[userId];
 			cube.removeUserInput(keyCode);
+			//if (_ownerCube.userInputs[MOVE_LEFT_KEY] == false && _ownerCube.userInputs[MOVE_RIGHT_KEY] == false && _ownerCube.userInputs[MOVE_UP_KEY] == false && _ownerCube.userInputs[MOVE_DOWN_KEY] == false ) {
+				//_updateTimer.stop();
+				//_updateTimer.reset();
+			//}
 		}
 		
 		private function onUserMoved(userId:String, keyCode:uint, timestamp:Number):void {
-			_tf.text = (new Date().getTime() - timestamp).toString();
+			//_tf.text = (new Date().getTime() - timestamp).toString();
+			var elapsed:Number = new Date().getTime() - timestamp
 			_incFrame = 0;
 			var cube:MovingCube = _allPlayers[userId];
+			var val:Number = (elapsed * 500) / 1000
+			
+			var moveX:Number = 0;
+			var moveZ:Number = 0;
+			
+			if (keyCode == Keyboard.LEFT)
+				moveX = -val;
+			else if (keyCode == Keyboard.RIGHT)
+				moveX = val;
+			if (keyCode == Keyboard.UP)
+				moveZ = val;
+			else if (keyCode == Keyboard.DOWN)
+				moveZ = -val;
+				
+			cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
+			//_tf.text = elapsed.toString() + " / " + moveX.toString() + " / " + moveZ.toString();
 			trace('input received')
 			cube.addUserInput(keyCode);
+			
 		}
 		
 		private function onUserRemoved(userId:String):void {
@@ -246,6 +298,12 @@ package com.pranks.game
 			_physicsWorld.addRigidBody(movingCube.body);
 			if (dataObject.isMainUser)
 				_ownerCube = movingCube;
+				_ownerCube.mesh.addEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
+		}
+		
+		private function onCubeChanged(event:Object3DEvent):void {
+			if (!_updateTimer.running)
+				_updateTimer.start();
 		}
 	
 		

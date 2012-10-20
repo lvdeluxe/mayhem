@@ -1,6 +1,7 @@
 package com.pranks.game 
 {
 	import away3d.entities.Mesh;
+	import away3d.events.Object3DEvent;
 	import away3d.materials.ColorMaterial;
 	import away3d.materials.MaterialBase;
 	import away3d.primitives.CubeGeometry;
@@ -51,7 +52,8 @@ package com.pranks.game
 			body.friction = .9;
 			body.ccdSweptSphereRadius = 0.5;
 			body.ccdMotionThreshold = 1;
-			body.position = new Vector3D(coords.x, 50,coords.y);
+			body.position = new Vector3D(coords.x, 50, coords.y);
+			
 		}
 		
 		public function addUserInput(keyCode:uint):void {

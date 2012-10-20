@@ -10,8 +10,11 @@ package com.pranks.signals
 		
 		public static var USER_IS_MOVING:Signal = new Signal();
 		public static var USER_STOPPED_MOVING:Signal = new Signal();
+		public static var USER_UPDATE_STATE:Signal = new Signal();
 		public static var USER_HAS_MOVED:Signal = new Signal();
 		public static var USER_HAS_STOPPED_MOVING:Signal = new Signal();
+		public static var USER_HAS_UPDATE_STATE:Signal = new Signal();
+		
 		
 		
 		public function UserInputSignals() 

@@ -52,7 +52,19 @@ package com.pranks.multiplayer
 			
 			UserInputSignals.USER_IS_MOVING.add(onPlayerMoving);
 			UserInputSignals.USER_STOPPED_MOVING.add(onPlayerStopMoving);
+			UserInputSignals.USER_UPDATE_STATE.add(onPlayerUpdateState);
 			
+		}
+		
+		private function onPlayerUpdateState(rotation:Vector3D, position:Vector3D):void {
+			var mess:Message = _mainConnection.createMessage("PlayerUpdateState");
+			mess.add(rotation.x);
+			mess.add(rotation.y);
+			mess.add(rotation.z);
+			mess.add(position.x);
+			mess.add(position.y);
+			mess.add(position.z);
+			_mainConnection.sendMessage(mess);	
 		}
 		
 		private function onPlayerStopMoving(keyCode:uint):void {
@@ -126,7 +138,12 @@ package com.pranks.multiplayer
 				if (isMain)
 					connection.send("GetRoomUsers");
 			});
-			
+
+			connection.addMessageHandler("PlayerHasStateUpdate", function(m:Message, userid:String, rotX:Number, rotY:Number, rotZ:Number, posX:Number, posY:Number, posZ:Number):void {
+				var rotation:Vector3D = new Vector3D(rotX, rotY, rotZ);
+				var position:Vector3D = new Vector3D(posX, posY, posZ);
+				UserInputSignals.USER_HAS_UPDATE_STATE.dispatch(userid, rotation,position);
+			});
 			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
 				//if (userid != "user_" + _socialUser.social_id) {
 					UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);

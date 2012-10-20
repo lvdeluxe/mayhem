@@ -99,6 +99,9 @@ namespace MyGame {
                 case "PlayerStoppedMoving":
                     Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0));
                     break;
+                case "PlayerUpdateState":
+                    Broadcast("PlayerHasStateUpdate", player.ConnectUserId, message.GetDouble(0), message.GetDouble(1), message.GetDouble(2), message.GetDouble(3), message.GetDouble(4), message.GetDouble(5));
+                    break;
                 case "PlayerIsMoving":
                     Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
                     break;
