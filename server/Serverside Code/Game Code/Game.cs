@@ -1,12 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using PlayerIO.GameLibrary;
 using System.Drawing;
+using PlayerIO.GameLibrary;
 
 namespace MyGame {
 	public class Player : BasePlayer {
 		public string Name;
-        public Point Coords;
+        public double positionX;
+        public double positionY;
+        public double positionZ;
+        public double rotationX;
+        public double rotationY;
+        public double rotationZ;
+        public double velocityX;
+        public double velocityY;
+        public double velocityZ;
 	}
 
 	[RoomType("OfficeMayhem")]
@@ -67,13 +75,17 @@ namespace MyGame {
 
             allUsers.Add(player.ConnectUserId, player);
 
-            Point spawnPoint = new Point();
             Random rand = new Random();
-            spawnPoint.X = rand.Next(-1250, 1250);
-            spawnPoint.Y = rand.Next(-1250, 1250);
-            player.Coords = spawnPoint;
-
-            Broadcast("UserJoined", player.ConnectUserId, spawnPoint.X, spawnPoint.Y);
+            player.positionX = 1250 - (rand.NextDouble() * 2500);
+            player.positionY = 50.0f;
+            player.positionZ = 1250 - (rand.NextDouble() * 2500);
+            player.rotationX = 0.0f;
+            player.rotationY = 0.0f;
+            player.rotationZ = 0.0f;
+            player.velocityX = 0.0f;
+            player.velocityY = 0.0f;
+            player.velocityZ = 0.0f;
+            Broadcast("UserJoined", player.ConnectUserId, player.positionX, player.positionY, player.positionZ, player.rotationX, player.rotationY, player.rotationZ, player.velocityX, player.velocityY, player.velocityZ);
 		}
 
 		// This method is called when a player leaves the game
@@ -90,9 +102,19 @@ namespace MyGame {
                     Message msg = Message.Create("SetRoomUsers");
                     foreach (KeyValuePair<string, Player> plyr in allUsers)
                     {
-                        msg.Add(plyr.Value.ConnectUserId);
-                        msg.Add(plyr.Value.Coords.X);
-                        msg.Add(plyr.Value.Coords.Y);
+                        if (plyr.Value.ConnectUserId != player.ConnectUserId)
+                        {
+                            msg.Add(plyr.Value.ConnectUserId);
+                            msg.Add(plyr.Value.positionX);
+                            msg.Add(plyr.Value.positionY);
+                            msg.Add(plyr.Value.positionZ);
+                            msg.Add(plyr.Value.rotationX);
+                            msg.Add(plyr.Value.rotationY);
+                            msg.Add(plyr.Value.rotationZ);
+                            msg.Add(plyr.Value.velocityX);
+                            msg.Add(plyr.Value.velocityY);
+                            msg.Add(plyr.Value.velocityZ); 
+                        }
                     }
                     player.Send(msg);
                     break;
@@ -100,7 +122,16 @@ namespace MyGame {
                     Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0));
                     break;
                 case "PlayerUpdateState":
-                    Broadcast("PlayerHasStateUpdate", player.ConnectUserId, message.GetDouble(0), message.GetDouble(1), message.GetDouble(2), message.GetDouble(3), message.GetDouble(4), message.GetDouble(5));
+                    player.positionX = message.GetDouble(0);
+                    player.positionY = message.GetDouble(1);
+                    player.positionZ = message.GetDouble(2);
+                    player.rotationX = message.GetDouble(3);
+                    player.rotationY = message.GetDouble(4);
+                    player.rotationZ = message.GetDouble(5);
+                    player.velocityX = message.GetDouble(6);
+                    player.velocityY = message.GetDouble(7);
+                    player.velocityZ = message.GetDouble(8);
+                    Broadcast("PlayerHasStateUpdate", player.ConnectUserId, player.positionX, player.positionY, player.positionZ, player.rotationX, player.rotationY, player.rotationZ, player.velocityX, player.velocityY, player.velocityZ);
                     break;
                 case "PlayerIsMoving":
                     Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
@@ -108,7 +139,7 @@ namespace MyGame {
 			}
 		}
 
-		Point debugPoint;
+        System.Drawing.Point debugPoint;
 
 		// This method get's called whenever you trigger it by calling the RefreshDebugView() method.
 		public override System.Drawing.Image GenerateDebugImage() {
@@ -143,7 +174,7 @@ namespace MyGame {
 		// debug view when you click the debug view on a running game.
 		[DebugAction("Set Debug Point", DebugAction.Icon.Green)]
 		public void SetDebugPoint(int x, int y) {
-			debugPoint = new Point(x,y);
+            debugPoint = new System.Drawing.Point(x, y);
 		}
 	}
 }

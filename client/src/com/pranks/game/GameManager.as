@@ -143,30 +143,29 @@ package com.pranks.game
 			
 		}
 		
-		private function onUserUpdateState(uid:String, rotation:Vector3D, position:Vector3D):void {
+		private function onUserUpdateState(uid:String, position:Vector3D, rotation:Vector3D, velocity:Vector3D):void {
 			var cube:MovingCube = _allPlayers[uid]
 			if (cube != _ownerCube) {
-				trace(rotation)
 				cube.body.rotation = rotation;
 				cube.body.position = position;
+				cube.body.linearVelocity = velocity;
 			}
 		}
 		
 		private function updatePosition(event:TimerEvent):void {
-			if (_ownerCube.body.linearVelocity.equals(new Vector3D(0, 0, 0)))
+			if (_ownerCube.body.linearVelocity.equals(new Vector3D(0, 0, 0))) {
 				_updateTimer.stop();
-			trace(_ownerCube.body.linearVelocity)
-			UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.rotation, _ownerCube.body.position);
+				return;
+			}
+			UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.position,_ownerCube.body.rotation,_ownerCube.body.linearVelocity);
 		}
 		
 		private function moveObjects():void {
 			var t:int = getTimer();
 			var dt:Number = (t - _currentElapsed);
 			_currentElapsed = t;
-			//trace(dt)
 			//apply 500 force per second.
 			var val:Number = (dt * 500) / 1000
-			//trace(val)
 			var moveX:Number = 0;
 			var moveZ:Number = 0;
 				
@@ -174,31 +173,24 @@ package com.pranks.game
 				moveX = 0;
 				moveZ = 0;
 				var  prev:Vector3D = cube.body.position
-				//trace(prev)
 				if (cube.userInputs[MOVE_LEFT_KEY])
-					moveX = -10//val;
+					moveX = -val;
 				else if (cube.userInputs[MOVE_RIGHT_KEY])
-					moveX = 10//val;
+					moveX = val;
 				if (cube.userInputs[MOVE_UP_KEY])
-					moveZ = 10//val;
+					moveZ = val;
 				else if (cube.userInputs[MOVE_DOWN_KEY])
-					moveZ = -10//val;
+					moveZ = -val;
 					
 				if (moveX != 0 || moveZ != 0) {
-					//hasMoved = true;
 					cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
-					
-					//cube.body.linearVelocity = new Vector3D(moveX, 0, moveZ);
-					//cube.body.position = new Vector3D(prev.x + moveX, 0, prev.z + moveZ);
-				}
-				
-			}
-			
+				}				
+			}			
 		}		
 		
 		public function renderPhysics():void {
-			_physicsWorld.step(_timeStep, 1, _timeStep);
 			moveObjects();
+			_physicsWorld.step(_timeStep, 1, _timeStep);
 		}
 		
 		private function onKeyUp(event:KeyboardEvent):void {
@@ -244,9 +236,7 @@ package com.pranks.game
 					break;
 			}
 			if (_sendMoveMessage) {
-				//_incFrame = 0;
 				trace("sendingMessage")
-				//_updateTimer.start();
 				UserInputSignals.USER_IS_MOVING.dispatch(event.keyCode,new Date().getTime());
 			}
 		}
@@ -254,14 +244,9 @@ package com.pranks.game
 		private function onUserStoppedMoving(userId:String, keyCode:uint):void {
 			var cube:MovingCube = _allPlayers[userId];
 			cube.removeUserInput(keyCode);
-			//if (_ownerCube.userInputs[MOVE_LEFT_KEY] == false && _ownerCube.userInputs[MOVE_RIGHT_KEY] == false && _ownerCube.userInputs[MOVE_UP_KEY] == false && _ownerCube.userInputs[MOVE_DOWN_KEY] == false ) {
-				//_updateTimer.stop();
-				//_updateTimer.reset();
-			//}
 		}
 		
 		private function onUserMoved(userId:String, keyCode:uint, timestamp:Number):void {
-			//_tf.text = (new Date().getTime() - timestamp).toString();
 			var elapsed:Number = new Date().getTime() - timestamp
 			_incFrame = 0;
 			var cube:MovingCube = _allPlayers[userId];
@@ -280,10 +265,7 @@ package com.pranks.game
 				moveZ = -val;
 				
 			cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
-			//_tf.text = elapsed.toString() + " / " + moveX.toString() + " / " + moveZ.toString();
-			trace('input received')
-			cube.addUserInput(keyCode);
-			
+			cube.addUserInput(keyCode);			
 		}
 		
 		private function onUserRemoved(userId:String):void {
@@ -291,7 +273,7 @@ package com.pranks.game
 			delete _allPlayers[userId];
 		}
 		private function onUserCreated(dataObject:Object):void {
-			var movingCube:MovingCube = new MovingCube(dataObject.uid,dataObject.coords, dataObject.isMainUser);
+			var movingCube:MovingCube = new MovingCube(dataObject.uid,dataObject.coords, dataObject.rotation,dataObject.velocity,dataObject.isMainUser);
 			_allPlayers[dataObject.uid] = movingCube;			
 			_view3D.scene.addChild(movingCube.mesh);
 			movingCube.material.lightPicker = _lightPicker;

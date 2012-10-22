@@ -56,14 +56,17 @@ package com.pranks.multiplayer
 			
 		}
 		
-		private function onPlayerUpdateState(rotation:Vector3D, position:Vector3D):void {
+		private function onPlayerUpdateState(position:Vector3D,rotation:Vector3D, velocity:Vector3D):void {
 			var mess:Message = _mainConnection.createMessage("PlayerUpdateState");
-			mess.add(rotation.x);
-			mess.add(rotation.y);
-			mess.add(rotation.z);
 			mess.add(position.x);
 			mess.add(position.y);
 			mess.add(position.z);
+			mess.add(rotation.x);
+			mess.add(rotation.y);
+			mess.add(rotation.z);
+			mess.add(velocity.x);
+			mess.add(velocity.y);
+			mess.add(velocity.z);
 			_mainConnection.sendMessage(mess);	
 		}
 		
@@ -112,19 +115,15 @@ package com.pranks.multiplayer
 			connection.addDisconnectHandler(handleDisconnect);
 			//Add message listener for users joining the room
 			connection.addMessageHandler("SetRoomUsers", function(m:Message):void {
-				var arr_args:Array = []
-				for (var i:uint = 0; i < m.length ; i++ ) {
-					arr_args.push( m.getString(i))
-					if (i % 3 == 2) {
-						var isMain:Boolean = arr_args[0] == "user_" + _socialUser.social_id;
-						if(!isMain)MultiplayerSignals.USER_CREATED.dispatch( { uid:arr_args[0], isMainUser:isMain, coords:new Point(arr_args[1], arr_args[2]) } );
-						arr_args = [];
+				for (var i:uint = 0; i < m.length; i++ ) {
+					if (i % 10 == 9) {
+						MultiplayerSignals.USER_CREATED.dispatch( { uid:m.getString( i - 9), isMainUser:false, coords:new Vector3D(m.getNumber( i - 8), m.getNumber( i - 7), m.getNumber( i - 6)), rotation:new Vector3D(m.getNumber( i - 5), m.getNumber( i - 4), m.getNumber( i - 3 )), velocity:new Vector3D(m.getNumber( i - 2), m.getNumber( i - 1), m.getNumber( i )) } );
 					}
 				}
 			});
 			
 			//Add message listener for users joining the room
-			connection.addMessageHandler("UserJoined", function(m:Message, userid:String, coordsX:int, coordsY:int):void {
+			connection.addMessageHandler("UserJoined", function(m:Message, userid:String, coordsX:Number, coordsY:Number, coordsZ:Number, rotatX:Number, rotatY:Number, rotatZ:Number, velX:Number, velY:Number, velZ:Number):void {
 				_allUsers[userid] = new GameUserVO(userid);
 				var isMain:Boolean;
 				if (userid == "user_"+_socialUser.social_id){
@@ -134,25 +133,23 @@ package com.pranks.multiplayer
 					trace("Player with the userid", userid, "just joined the room");
 					isMain = false;
 				}
-				MultiplayerSignals.USER_CREATED.dispatch( { uid:userid, isMainUser:isMain, coords:new Point(coordsX, coordsY) } );
+				MultiplayerSignals.USER_CREATED.dispatch( { uid:userid, isMainUser:isMain, coords:new Vector3D(coordsX, coordsY,coordsZ), rotation:new Vector3D(rotatX, rotatY,rotatY), velocity:new Vector3D(velX, velY,velY) } );
 				if (isMain)
 					connection.send("GetRoomUsers");
 			});
 
-			connection.addMessageHandler("PlayerHasStateUpdate", function(m:Message, userid:String, rotX:Number, rotY:Number, rotZ:Number, posX:Number, posY:Number, posZ:Number):void {
+			connection.addMessageHandler("PlayerHasStateUpdate", function(m:Message, userid:String, posX:Number, posY:Number, posZ:Number,rotX:Number, rotY:Number, rotZ:Number,velX:Number, velY:Number, velZ:Number):void {
 				var rotation:Vector3D = new Vector3D(rotX, rotY, rotZ);
 				var position:Vector3D = new Vector3D(posX, posY, posZ);
-				UserInputSignals.USER_HAS_UPDATE_STATE.dispatch(userid, rotation,position);
+				var velocity:Vector3D = new Vector3D(velX, velY, velZ);
+				trace(velocity)
+				UserInputSignals.USER_HAS_UPDATE_STATE.dispatch(userid, position, rotation,velocity);
 			});
 			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
-				//if (userid != "user_" + _socialUser.social_id) {
-					UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);
-				//}
+				UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);
 			});
 			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint):void {
-				//if (userid != "user_" + _socialUser.social_id) {
-					UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode);
-				//}
+				UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode);
 			});
 			
 			

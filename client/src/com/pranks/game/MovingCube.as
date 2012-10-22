@@ -25,7 +25,7 @@ package com.pranks.game
 		public var material:MaterialBase;
 		public var name:String;
 		
-		public function MovingCube(id:String, coords: Point, isMainUser:Boolean) 
+		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
 		{
 			name = id;
 			userInputs = new Dictionary();
@@ -43,8 +43,11 @@ package com.pranks.game
 			var cG:CubeGeometry = new CubeGeometry(100, 100, 100);
 			mesh = new Mesh(cG, material);
 			mesh.x = coords.x;
-			mesh.z = coords.y;
-			mesh.y = 500;			
+			mesh.y = coords.y;
+			mesh.z = coords.z;	
+			
+			trace('coords=',coords)
+			trace('rotate=',rotation)
 
 			var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
 			body = new AWPRigidBody(boxShape, mesh, 1);
@@ -52,7 +55,9 @@ package com.pranks.game
 			body.friction = .9;
 			body.ccdSweptSphereRadius = 0.5;
 			body.ccdMotionThreshold = 1;
-			body.position = new Vector3D(coords.x, 50, coords.y);
+			body.position = coords;
+			body.rotation = rotation;
+			body.linearVelocity = velocity;
 			
 		}
 		
