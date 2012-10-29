@@ -1,25 +1,33 @@
 package com.pranks.game 
 {
 	import away3d.containers.View3D;
+	import away3d.controllers.FollowController;
 	import away3d.controllers.HoverController;
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.debug.AwayStats
 	import away3d.entities.Mesh;
 	import away3d.events.Object3DEvent;
 	import away3d.lights.DirectionalLight;
+	import away3d.lights.LightBase;
 	import away3d.lights.PointLight;
 	import away3d.materials.ColorMaterial;
 	import away3d.materials.lightpickers.StaticLightPicker;
+	import away3d.materials.methods.FilteredShadowMapMethod;
 	import away3d.materials.methods.HardShadowMapMethod;
 	import away3d.materials.methods.SoftShadowMapMethod;
+	import away3d.materials.methods.TripleFilteredShadowMapMethod;
 	import away3d.primitives.CubeGeometry;
 	import away3d.primitives.PlaneGeometry;
 	import away3d.primitives.WireframePlane;
 	import away3d.textures.BitmapTexture;
+	import awayphysics.collision.dispatch.AWPGhostObject;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.collision.shapes.AWPStaticPlaneShape;
 	import awayphysics.dynamics.AWPDynamicsWorld;
 	import awayphysics.dynamics.AWPRigidBody;
+	import awayphysics.dynamics.character.AWPKinematicCharacterController;
+	import caurina.transitions.Equations;
+	import caurina.transitions.Tweener;
 	import flare.primitives.Cube;
 	import flash.display.Stage;
 	import flash.display.BitmapData
@@ -52,7 +60,7 @@ package com.pranks.game
 		
 		private var _ownerCube:MovingCube;	
 		
-		private var _light:PointLight;
+		private var _light:LightBase;
 		private var _lightPicker:StaticLightPicker;
 		private var _physicsWorld:AWPDynamicsWorld;
 		private var _timeStep : Number = 1.0 / 60;
@@ -75,44 +83,38 @@ package com.pranks.game
 		
 		private var _incFrame:uint = 0;
 		
-		private var _tf:TextField;
-		
 		private var _gameTimer:Timer;
 		private var _currentElapsed:Number;
 		
+		private var _camController:FollowController;
+		
+		private var deccelY:Number = 0;
+		
+		private var _direction:Vector3D = new Vector3D();
 		
 		public function GameManager(stage:Stage, proxy:Stage3DProxy) 
 		{
 			_allPlayers = new Dictionary();
 			
-			_currentElapsed = getTimer();
-			
+			_currentElapsed = getTimer();			
 			
 			_updateTimer = new Timer(500);
 			_updateTimer.addEventListener(TimerEvent.TIMER, updatePosition);
-			
-			_tf = new TextField();;
-			_tf.width = 300;
-			_tf.height = 150;
-			_tf.border = true;
-			_tf.textColor = 0xcc0000;
-			_tf.multiline = true;			
 						
 			_view3D = new View3D();
 			stage.addChild(_view3D);
-			stage.addChild(_tf)
 			_view3D.stage3DProxy = proxy;
 			_view3D.shareContext = true;
+
 			_view3D.camera.y = 1200
 			_view3D.camera.z = -1750;
 			_view3D.camera.rotationX = 45;
 			_view3D.camera.lens.far = 10000;
 			
-			
-			_light = new PointLight();
-			_light.color = 0x2ef5c6;
-			_light.y = 5000;
-			_light.z = 0;
+			_light = new DirectionalLight(-1, -1, 1);
+			_light.color = 0xffffff;
+			_light.y = 100;
+			_light.z = 5000;
 			_view3D.scene.addChild(_light);
 			
 			_lightPicker = new StaticLightPicker([_light]);
@@ -123,7 +125,7 @@ package com.pranks.game
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
  
-			//stage.addChild(new AwayStats(_view3D));
+			stage.addChild(new AwayStats(_view3D));
 			
 			MultiplayerSignals.USER_CREATED.add(onUserCreated);
 			MultiplayerSignals.USER_REMOVED.add(onUserRemoved);
@@ -131,22 +133,67 @@ package com.pranks.game
 			UserInputSignals.USER_HAS_STOPPED_MOVING.add(onUserStoppedMoving);
 			UserInputSignals.USER_HAS_UPDATE_STATE.add(onUserUpdateState);
 			
-			var material : ColorMaterial = new ColorMaterial(0x252525);
+			createArena();			
+		}
+		
+		private function createArena():void {
+			
+			var material : ColorMaterial = new ColorMaterial(0x00cc00);
 			material.lightPicker = _lightPicker;
-			material.ambientColor = 0x0000cc;
-			var mesh:Mesh = new Mesh(new PlaneGeometry(2500, 2500), material);
+			//material.shadowMethod = new TripleFilteredShadowMapMethod(DirectionalLight(_light));
 			
-			var groundShape : AWPStaticPlaneShape = new AWPStaticPlaneShape(new Vector3D(0, 1, 0));
-			var groundRigidbody : AWPRigidBody = new AWPRigidBody(groundShape, mesh, 0);
+			var groundMesh:Mesh = new Mesh(new CubeGeometry(2500, 50, 2500), material);			
+			var groundShape : AWPBoxShape = new AWPBoxShape(2500, 50, 2500);
+			var groundRigidbody : AWPRigidBody = new AWPRigidBody(groundShape,groundMesh, 0);
+			groundRigidbody.y = -25;
 			_physicsWorld.addRigidBody(groundRigidbody);
-			_view3D.scene.addChild(mesh);
+			_view3D.scene.addChild(groundMesh);
 			
+			//var leftMesh:Mesh = new Mesh(new CubeGeometry(50, 200, 2500), material);			
+			//var leftShape : AWPBoxShape = new AWPBoxShape(50, 200, 2500);
+			//var leftRigidbody : AWPRigidBody = new AWPRigidBody(leftShape,leftMesh, 0);
+			//leftRigidbody.x = -1275;
+			//leftRigidbody.y = -25;
+			//_physicsWorld.addRigidBody(leftRigidbody);
+			//_view3D.scene.addChild(leftMesh);
+			//
+			//var rightMesh:Mesh = new Mesh(new CubeGeometry(50, 200, 2500), material);			
+			//var rightShape : AWPBoxShape = new AWPBoxShape(50, 200, 2500);
+			//var rightRigidbody : AWPRigidBody = new AWPRigidBody(rightShape,rightMesh, 0);
+			//rightRigidbody.x = 1275;
+			//rightRigidbody.y = -25;
+			//_physicsWorld.addRigidBody(rightRigidbody);
+			//_view3D.scene.addChild(rightMesh);
+			//
+			//
+			//var upMesh:Mesh = new Mesh(new CubeGeometry(2500, 200, 50), material);			
+			//var upShape : AWPBoxShape = new AWPBoxShape(2500, 200, 50);
+			//var upRigidbody : AWPRigidBody = new AWPRigidBody(upShape,upMesh, 0);
+			//upRigidbody.z = 1275;
+			//rightRigidbody.y = -25;
+			//_physicsWorld.addRigidBody(upRigidbody);
+			//_view3D.scene.addChild(upMesh);
 		}
 		
 		private function onUserUpdateState(uid:String, position:Vector3D, rotation:Vector3D, velocity:Vector3D):void {
-			var cube:MovingCube = _allPlayers[uid]
+			var cube:MovingCube = _allPlayers[uid]			
 			if (cube != _ownerCube) {
+				//cube.interpolateRotationTo = rotation;
+				//var substractRotation:Vector3D = rotation.subtract(cube.body.rotation)
+				//trace("substractRotation",substractRotation)
+				//if (substractRotation.y > 5 || substractRotation.y < -5)
+					//cube.doInterpolateRotation = true;
+				//else
+				//cube.interpolateRotationTo = rotation;
 				cube.body.rotation = rotation;
+				//var substractPosition:Vector3D = position.subtract(cube.body.position)
+				//trace("substractPosition",substractPosition)
+				//if (substractPosition.x > 5 || substractPosition.z > 5 || substractPosition.x < -5 || substractPosition.z < -5){
+					//cube.interpolatePositionTo = position;
+					//cube.doInterpolatePosition = true;
+					//
+				//}else
+				//cube.doInterpolatePosition = true;
 				cube.body.position = position;
 				cube.body.linearVelocity = velocity;
 			}
@@ -157,8 +204,11 @@ package com.pranks.game
 				_updateTimer.stop();
 				return;
 			}
+			trace("send",_ownerCube.name, _ownerCube.body.linearVelocity)
+			//if(!_ownerCube.deccelerateRotation && !_ownerCube.deccelerateVelocity)
 			UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.position,_ownerCube.body.rotation,_ownerCube.body.linearVelocity);
 		}
+		
 		
 		private function moveObjects():void {
 			var t:int = getTimer();
@@ -167,26 +217,35 @@ package com.pranks.game
 			//apply 500 force per second.
 			var val:Number = (dt * 500) / 1000
 			var moveX:Number = 0;
-			var moveZ:Number = 0;
+			var moveZ:Number = 0;			
 				
 			for each(var cube:MovingCube in _allPlayers) {
 				moveX = 0;
 				moveZ = 0;
+				cube.checkDeccelerate();
+				cube.checkInterpolate();
 				var  prev:Vector3D = cube.body.position
 				if (cube.userInputs[MOVE_LEFT_KEY])
-					moveX = -val;
+					moveX = -cube.rotationSpeed;
 				else if (cube.userInputs[MOVE_RIGHT_KEY])
-					moveX = val;
+					moveX = cube.rotationSpeed;
 				if (cube.userInputs[MOVE_UP_KEY])
 					moveZ = val;
 				else if (cube.userInputs[MOVE_DOWN_KEY])
-					moveZ = -val;
-					
-				if (moveX != 0 || moveZ != 0) {
-					cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
+					moveZ = -val;				
+				
+				if (moveX != 0) {
+					cube.body.angularVelocity = new Vector3D(0, moveX, 0);					
+				}
+				
+				if (moveZ != 0) {
+					var f:Vector3D = cube.body.front;
+					f.scaleBy(moveZ);
+					cube.body.applyCentralForce(f);
 				}				
-			}			
+			}				
 		}		
+		
 		
 		public function renderPhysics():void {
 			moveObjects();
@@ -243,6 +302,18 @@ package com.pranks.game
 		
 		private function onUserStoppedMoving(userId:String, keyCode:uint):void {
 			var cube:MovingCube = _allPlayers[userId];
+			trace(keyCode)
+			switch(keyCode) {
+				case Keyboard.LEFT:
+				case Keyboard.RIGHT:
+					cube.deccelerateRotation = true;
+					break;
+				case Keyboard.UP:
+				case Keyboard.DOWN:
+					trace(cube.name)
+					cube.deccelerateVelocity = true;
+					break;
+			}
 			cube.removeUserInput(keyCode);
 		}
 		
@@ -250,40 +321,51 @@ package com.pranks.game
 			var elapsed:Number = new Date().getTime() - timestamp
 			_incFrame = 0;
 			var cube:MovingCube = _allPlayers[userId];
-			var val:Number = (elapsed * 500) / 1000
 			
-			var moveX:Number = 0;
 			var moveZ:Number = 0;
-			
-			if (keyCode == Keyboard.LEFT)
-				moveX = -val;
-			else if (keyCode == Keyboard.RIGHT)
-				moveX = val;
-			if (keyCode == Keyboard.UP)
-				moveZ = val;
-			else if (keyCode == Keyboard.DOWN)
-				moveZ = -val;
-				
-			cube.body.applyCentralForce(new Vector3D(moveX, 0, moveZ ));
+			if (keyCode == Keyboard.LEFT ||keyCode == Keyboard.RIGHT ){
+				cube.deccelerateRotation = false;
+				cube.startedDeccelerateRotation = false
+			}			
+			if (keyCode == Keyboard.UP){
+				cube.deccelerateVelocity = false;
+				cube.startedDeccelerateVelocity = false
+				cube.startVelocity = 10
+			}else if (keyCode == Keyboard.DOWN){
+				cube.deccelerateVelocity = false;
+				cube.startedDeccelerateVelocity = false
+				cube.startVelocity = -10;
+			}
+			if(moveZ != 0){
+				var f:Vector3D = cube.body.front;
+				f.scaleBy(moveZ);	
+				cube.body.linearVelocity = f
+			}
 			cube.addUserInput(keyCode);			
 		}
 		
 		private function onUserRemoved(userId:String):void {
 			_view3D.scene.removeChild(_allPlayers[userId].mesh);
+			_physicsWorld.removeRigidBody(_allPlayers[userId].body);
 			delete _allPlayers[userId];
 		}
 		private function onUserCreated(dataObject:Object):void {
-			var movingCube:MovingCube = new MovingCube(dataObject.uid,dataObject.coords, dataObject.rotation,dataObject.velocity,dataObject.isMainUser);
+			var movingCube:MovingCube = new MovingCube(dataObject.uid,dataObject.coords, dataObject.rotation,dataObject.velocity,dataObject.isMainUser, _light);
 			_allPlayers[dataObject.uid] = movingCube;			
 			_view3D.scene.addChild(movingCube.mesh);
-			movingCube.material.lightPicker = _lightPicker;
 			_physicsWorld.addRigidBody(movingCube.body);
-			if (dataObject.isMainUser)
+			movingCube.material.lightPicker = _lightPicker;
+			trace("created",movingCube.name)
+			if (dataObject.isMainUser){
 				_ownerCube = movingCube;
-				_ownerCube.mesh.addEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
+				_ownerCube.mesh.addEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);	
+			}
 		}
 		
+		
 		private function onCubeChanged(event:Object3DEvent):void {
+			var movingCube:MovingCube = event.currentTarget.extra as MovingCube;
+			
 			if (!_updateTimer.running)
 				_updateTimer.start();
 		}

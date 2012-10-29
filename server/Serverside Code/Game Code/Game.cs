@@ -60,15 +60,15 @@ namespace MyGame {
                 return;
             }
 
-            PlayerIO.BigDB.LoadOrCreate("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
-            {
-                if (!userInfo.Contains("username"))
-                {
-                    //Empty object, initialize it
-                    userInfo.Set("username", player.JoinData["name"]);
-                }
-                userInfo.Save();
-            });
+            //PlayerIO.BigDB.LoadOrCreate("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
+            //{
+            //    if (!userInfo.Contains("username"))
+            //    {
+            //        //Empty object, initialize it
+            //        userInfo.Set("username", player.JoinData["name"]);
+            //    }
+            //    userInfo.Save();
+            //});
 
 			// this is how you send a player a message
             Console.WriteLine("userId: " + player.ConnectUserId);

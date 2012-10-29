@@ -45,7 +45,7 @@ package com.pranks.multiplayer
 			trace("Sucessfully connected to player.io");
 			_client = client;
 			//Set developmentsever (Comment out to connect to your server online)
-			_client.multiplayer.developmentServer = "localhost:8184";
+			//_client.multiplayer.developmentServer = "localhost:8184";
 			
 			//Create pr join the room test
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);		
@@ -142,7 +142,6 @@ package com.pranks.multiplayer
 				var rotation:Vector3D = new Vector3D(rotX, rotY, rotZ);
 				var position:Vector3D = new Vector3D(posX, posY, posZ);
 				var velocity:Vector3D = new Vector3D(velX, velY, velZ);
-				trace(velocity)
 				UserInputSignals.USER_HAS_UPDATE_STATE.dispatch(userid, position, rotation,velocity);
 			});
 			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
