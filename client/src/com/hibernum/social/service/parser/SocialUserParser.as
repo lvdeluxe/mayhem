@@ -1,5 +1,5 @@
 package com.hibernum.social.service.parser {
-import com.pranks.social.model.SocialUser;
+import com.hibernum.social.model.SocialUser;
 
 import flash.utils.Dictionary;
 

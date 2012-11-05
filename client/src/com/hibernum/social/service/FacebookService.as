@@ -1,10 +1,10 @@
 package com.hibernum.social.service {
-import com.pranks.social.model.SocialPayment;
-import com.pranks.social.model.SocialPost;
-import com.pranks.social.model.SocialRequest;
-import com.pranks.social.model.SocialUser;
-import com.pranks.social.model.Token;
-import com.pranks.social.service.parser.FacebookUserParser;
+import com.hibernum.social.model.SocialPayment;
+import com.hibernum.social.model.SocialPost;
+import com.hibernum.social.model.SocialRequest;
+import com.hibernum.social.model.SocialUser;
+import com.hibernum.social.model.Token;
+import com.hibernum.social.service.parser.FacebookUserParser;
 
 import flash.utils.Dictionary;
 import flash.external.ExternalInterface;

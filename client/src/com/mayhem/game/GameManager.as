@@ -12,10 +12,6 @@ package com.mayhem.game
 	import away3d.lights.PointLight;
 	import away3d.materials.ColorMaterial;
 	import away3d.materials.lightpickers.StaticLightPicker;
-	import away3d.materials.methods.FilteredShadowMapMethod;
-	import away3d.materials.methods.HardShadowMapMethod;
-	import away3d.materials.methods.SoftShadowMapMethod;
-	import away3d.materials.methods.TripleFilteredShadowMapMethod;
 	import away3d.primitives.CubeGeometry;
 	import away3d.primitives.PlaneGeometry;
 	import away3d.primitives.WireframePlane;
@@ -23,26 +19,28 @@ package com.mayhem.game
 	import awayphysics.collision.dispatch.AWPGhostObject;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.collision.shapes.AWPStaticPlaneShape;
+	import awayphysics.data.AWPCollisionFlags;
+	import awayphysics.debug.AWPDebugDraw;
 	import awayphysics.dynamics.AWPDynamicsWorld;
 	import awayphysics.dynamics.AWPRigidBody;
 	import awayphysics.dynamics.character.AWPKinematicCharacterController;
 	import awayphysics.events.AWPEvent;
-	import flare.primitives.Cube;
 	import flash.display.Stage;
 	import flash.display.BitmapData
 	import away3d.materials.TextureMaterial;
-	import com.pranks.signals.MultiplayerSignals;
+	import com.mayhem.signals.MultiplayerSignals;
 	import flash.events.TimerEvent;
 	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
+	import flash.text.TextFormatAlign;
 	import flash.utils.Dictionary;
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
 	import flash.events.Event;
-	import com.pranks.signals.UserInputSignals;
+	import com.mayhem.signals.UserInputSignals;
 	import flash.utils.setInterval;
 	import flash.utils.Timer;
 	import flash.utils.getTimer;
@@ -80,10 +78,8 @@ package com.mayhem.game
 		
 		private var _updateTimer:Timer;
 		
-		private var _incFrame:uint = 0;
-		
 		private var _gameTimer:Timer;
-		private var _currentElapsed:Number;
+		private var _currentTime:Number;
 		
 		private var _camController:FollowController;
 		
@@ -95,11 +91,27 @@ package com.mayhem.game
 		private const collisionGround : int = 1;
 		private const collisionBox : int = 2;
 		
+		private var _debugDraw:AWPDebugDraw;
+		
+		private var _debugTextField:TextField
+		
+		//private startMovingAt:Number
+		//private stopMovingAt:Number;
+		
 		public function GameManager(stage:Stage, proxy:Stage3DProxy) 
 		{
 			_allPlayers = new Dictionary();
 			
-			_currentElapsed = getTimer();			
+			_debugTextField = new TextField();
+			
+			
+			_debugTextField.width = 800;
+			_debugTextField.height = 600;
+			stage.addChild(_debugTextField);
+			_debugTextField.text = 'yo';
+			_debugTextField.textColor = 0xcc0000;
+			
+			_currentTime = getTimer();			
 			
 			_updateTimer = new Timer(500);
 			_updateTimer.addEventListener(TimerEvent.TIMER, updatePosition);
@@ -122,9 +134,12 @@ package com.mayhem.game
 			
 			_lightPicker = new StaticLightPicker([_light]);
 			
-			_physicsWorld = AWPDynamicsWorld.getInstance();			
+			_physicsWorld = AWPDynamicsWorld.getInstance();		
+			
 			_physicsWorld.initWithDbvtBroadphase();
 			_physicsWorld.collisionCallbackOn = true;
+			
+			_debugDraw = new AWPDebugDraw(_view3D, _physicsWorld);
 			
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
@@ -137,124 +152,92 @@ package com.mayhem.game
 			UserInputSignals.USER_HAS_STOPPED_MOVING.add(onUserStoppedMoving);
 			UserInputSignals.USER_HAS_UPDATE_STATE.add(onUserUpdateState);
 			
-			createArena();			
+			createArena();
 		}
 		
 		private function createArena():void {
 			
 			var material : ColorMaterial = new ColorMaterial(0x00cc00);
 			material.lightPicker = _lightPicker;
-			//material.shadowMethod = new TripleFilteredShadowMapMethod(DirectionalLight(_light));
 			
 			var groundMesh:Mesh = new Mesh(new CubeGeometry(2500, 50, 2500), material);			
 			var groundShape : AWPBoxShape = new AWPBoxShape(2500, 50, 2500);
 			var groundRigidbody : AWPRigidBody = new AWPRigidBody(groundShape,groundMesh, 0);
 			groundRigidbody.y = -25;
 			_physicsWorld.addRigidBody(groundRigidbody);
-			_physicsWorld.addRigidBodyWithGroup(groundRigidbody, collisionGround, collisionNone);
+			//_physicsWorld.addRigidBodyWithGroup(groundRigidbody, collisionGround, collisionBox);
 			_view3D.scene.addChild(groundMesh);
-			
-			//var leftMesh:Mesh = new Mesh(new CubeGeometry(50, 200, 2500), material);			
-			//var leftShape : AWPBoxShape = new AWPBoxShape(50, 200, 2500);
-			//var leftRigidbody : AWPRigidBody = new AWPRigidBody(leftShape,leftMesh, 0);
-			//leftRigidbody.x = -1275;
-			//leftRigidbody.y = -25;
-			//_physicsWorld.addRigidBody(leftRigidbody);
-			//_view3D.scene.addChild(leftMesh);
-			//
-			//var rightMesh:Mesh = new Mesh(new CubeGeometry(50, 200, 2500), material);			
-			//var rightShape : AWPBoxShape = new AWPBoxShape(50, 200, 2500);
-			//var rightRigidbody : AWPRigidBody = new AWPRigidBody(rightShape,rightMesh, 0);
-			//rightRigidbody.x = 1275;
-			//rightRigidbody.y = -25;
-			//_physicsWorld.addRigidBody(rightRigidbody);
-			//_view3D.scene.addChild(rightMesh);
-			//
-			//
-			//var upMesh:Mesh = new Mesh(new CubeGeometry(2500, 200, 50), material);			
-			//var upShape : AWPBoxShape = new AWPBoxShape(2500, 200, 50);
-			//var upRigidbody : AWPRigidBody = new AWPRigidBody(upShape,upMesh, 0);
-			//upRigidbody.z = 1275;
-			//rightRigidbody.y = -25;
-			//_physicsWorld.addRigidBody(upRigidbody);
-			//_view3D.scene.addChild(upMesh);
 		}
 		
 		private function onUserUpdateState(uid:String, position:Vector3D, rotation:Vector3D, velocity:Vector3D):void {
 			var cube:MovingCube = _allPlayers[uid]			
 			if (cube != _ownerCube) {
-				//cube.interpolateRotationTo = rotation;
-				//var substractRotation:Vector3D = rotation.subtract(cube.body.rotation)
-				//trace("substractRotation",substractRotation)
-				//if (substractRotation.y > 5 || substractRotation.y < -5)
-					//cube.doInterpolateRotation = true;
-				//else
-				//cube.interpolateRotationTo = rotation;
-				cube.body.rotation = rotation;
-				//var substractPosition:Vector3D = position.subtract(cube.body.position)
-				//trace("substractPosition",substractPosition)
-				//if (substractPosition.x > 5 || substractPosition.z > 5 || substractPosition.x < -5 || substractPosition.z < -5){
-					//cube.interpolatePositionTo = position;
-					//cube.doInterpolatePosition = true;
-					//
-				//}else
-				//cube.doInterpolatePosition = true;
-				cube.body.position = position;
-				cube.body.linearVelocity = velocity;
+				//cube.body.clearForces();
+				//cube.mesh. = rotation;
+				cube.mesh.position = position;
+				//cube.body.linearVelocity = velocity;
 			}
 		}
 		
 		private function updatePosition(event:TimerEvent):void {
-			if (_ownerCube.body.linearVelocity.equals(new Vector3D(0, 0, 0))) {
-				_updateTimer.stop();
-				return;
-			}
-			//trace("send",_ownerCube.name, _ownerCube.body.linearVelocity)
-			//if(!_ownerCube.deccelerateRotation && !_ownerCube.deccelerateVelocity)
-			UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.position,_ownerCube.body.rotation,_ownerCube.body.linearVelocity);
+			//if (_ownerCube.body.linearVelocity.equals(new Vector3D(0, 0, 0))) {
+				//_updateTimer.stop();
+				//return;
+			//}
+			//UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.position,_ownerCube.body.rotation,_ownerCube.body.linearVelocity);
+			//UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.mesh.position,new Vector3D(),new Vector3D());
 		}
 		
 		
-		private function moveObjects():void {
-			var t:int = getTimer();
-			var dt:Number = (t - _currentElapsed);
-			_currentElapsed = t;
+		private function moveObjects(elapsed:Number):void {
+			
 			//apply 500 force per second.
-			var val:Number = (dt * 500) / 1000
+			var force:Number = (elapsed * 500) / 1000
+			//apply 50 torque per second
+			var torque:Number = (elapsed * 50) / 1000
+			
 			var moveX:Number = 0;
 			var moveZ:Number = 0;			
 				
 			for each(var cube:MovingCube in _allPlayers) {
 				moveX = 0;
 				moveZ = 0;
-				cube.checkDeccelerate();
-				cube.checkInterpolate();
-				var  prev:Vector3D = cube.body.position
+				//cube.body.clearForces(); 
 				if (cube.userInputs[MOVE_LEFT_KEY])
-					moveX = -cube.rotationSpeed;
+					moveX = -torque;
 				else if (cube.userInputs[MOVE_RIGHT_KEY])
-					moveX = cube.rotationSpeed;
+					moveX = torque;
 				if (cube.userInputs[MOVE_UP_KEY])
-					moveZ = val;
+					moveZ = force;
 				else if (cube.userInputs[MOVE_DOWN_KEY])
-					moveZ = -val;				
+					moveZ = -force;				
 				
 				if (moveX != 0) {
-					cube.body.angularVelocity = new Vector3D(0, moveX, 0);					
+					//cube.body.applyTorque(new Vector3D(0, moveX, 0));					
 				}
 				
 				if (moveZ != 0) {
-					var f:Vector3D = cube.body.front;
-					f.scaleBy(moveZ);
-					cube.body.applyCentralForce(f);
+					//var f:Vector3D = cube.body.front;
+					//f.scaleBy(moveZ);
+					//trace(moveZ)
+					//trace(cube.mesh.position)
+					var pos:Vector3D = cube.mesh.position
+					pos.z += moveZ
+					cube.mesh.position = pos
+					//cube.body.applyCentralForce(f);
+					//displayDebugInfo(cube.body.linearVelocity);
 				}				
 			}				
 		}		
 		
 		
 		public function renderPhysics():void {
-			moveObjects();
-			_physicsWorld.step(_timeStep, 1, _timeStep);
+			var t:int = getTimer();
+			var dt:Number = (t - _currentTime);
+			_currentTime = t;
+			moveObjects(dt);
+			//_physicsWorld.step(dt / 1000, 1, _timeStep);
+			//_debugDraw.debugDrawWorld();
 		}
 		
 		private function onKeyUp(event:KeyboardEvent):void {
@@ -272,8 +255,10 @@ package com.mayhem.game
 					downPressed = false;
 					break;
 			}
-			
-			UserInputSignals.USER_STOPPED_MOVING.dispatch(event.keyCode);
+			//if (!_updateTimer.running)
+				//_updateTimer.start();
+			//UserInputSignals.USER_UPDATE_STATE.dispatch(_ownerCube.body.position,_ownerCube.body.rotation,_ownerCube.body.linearVelocity);
+			UserInputSignals.USER_STOPPED_MOVING.dispatch(event.keyCode,new Date().getTime());
 		}
 		private function onKeyDown(event:KeyboardEvent):void {
 			_sendMoveMessage = false;
@@ -299,69 +284,123 @@ package com.mayhem.game
 					downPressed = true;
 					break;
 			}
-			if (_sendMoveMessage) {
-				trace("sendingMessage")
+			
+			if (_sendMoveMessage) {				
+				//trace("sendingMessage")
 				UserInputSignals.USER_IS_MOVING.dispatch(event.keyCode,new Date().getTime());
 			}
 		}
 		
-		private function onUserStoppedMoving(userId:String, keyCode:uint):void {
+		private function onUserStoppedMoving(userId:String, keyCode:uint, timestamp:Number):void {
+			
+			//var elapsed:Number = new Date().getTime() - timestamp
+			
 			var cube:MovingCube = _allPlayers[userId];
-			trace(keyCode)
+			cube.stopMovingAt = timestamp
+			var elapsed:Number = cube.stopMovingAt - cube.startMovingAt
+			displayDebugInfo(cube.stopMovingAt - cube.startMovingAt);
+			var force:Number = (elapsed * 500) / 1000
+			var moveZ:Number = 0;
 			switch(keyCode) {
 				case Keyboard.LEFT:
 				case Keyboard.RIGHT:
-					cube.deccelerateRotation = true;
+					//cube.body.angularDamping = 0.98;
 					break;
 				case Keyboard.UP:
+					moveZ = force;
+					//cube.body.linearDamping = 0.98;
+					break;
 				case Keyboard.DOWN:
-					trace(cube.name)
-					cube.deccelerateVelocity = true;
+					moveZ = -force;
+					//cube.body.linearDamping = 0.98;
 					break;
 			}
+			var f:Vector3D = cube.startPosition
+			f.z += moveZ
+			cube.mesh.position = f;
+			displayDebugInfo(("end " + cube.mesh.position.toString()))
+			//_updateTimer.stop();
 			cube.removeUserInput(keyCode);
 		}
 		
+		private function displayDebugInfo(data:*):void {
+			_debugTextField.text = data.toString();			
+			var myFormat:TextFormat = new TextFormat();
+			myFormat.align = TextFormatAlign.RIGHT;
+			myFormat.size = 12;
+			myFormat.bold = true;
+			myFormat.font = "Verdana";
+			_debugTextField.setTextFormat(myFormat);
+		}
+		
 		private function onUserMoved(userId:String, keyCode:uint, timestamp:Number):void {
-			var elapsed:Number = new Date().getTime() - timestamp
-			_incFrame = 0;
-			var cube:MovingCube = _allPlayers[userId];
 			
+			var elapsed:Number = new Date().getTime() - timestamp
+			//displayDebugInfo(elapsed);
+			var cube:MovingCube = _allPlayers[userId];
+			cube.startPosition = cube.mesh.position;
+			cube.startMovingAt = timestamp
+			
+			var force:Number = (elapsed * 500) / 1000
+			var torque:Number = (elapsed * 50) / 1000
+			
+			var moveX:Number = 0;
 			var moveZ:Number = 0;
-			if (keyCode == Keyboard.LEFT ||keyCode == Keyboard.RIGHT ){
-				cube.deccelerateRotation = false;
-				cube.startedDeccelerateRotation = false
+			if (keyCode == Keyboard.LEFT) {
+				moveX = -torque;
+				//cube.body.angularDamping = 0;
+			}else if (keyCode == Keyboard.RIGHT ) {
+				moveX = torque;
+				//cube.body.angularDamping = 0;
 			}			
-			if (keyCode == Keyboard.UP){
-				cube.deccelerateVelocity = false;
-				cube.startedDeccelerateVelocity = false
-				cube.startVelocity = 10
-			}else if (keyCode == Keyboard.DOWN){
-				cube.deccelerateVelocity = false;
-				cube.startedDeccelerateVelocity = false
-				cube.startVelocity = -10;
+			if (keyCode == Keyboard.UP) {
+				//cube.body.linearDamping = 0;
+				moveZ = force;
+			}else if (keyCode == Keyboard.DOWN) {
+				//cube.body.linearDamping = 0;
+				moveZ = -force;
 			}
-			if(moveZ != 0){
-				var f:Vector3D = cube.body.front;
-				f.scaleBy(moveZ);	
-				cube.body.linearVelocity = f
+			if (moveZ != 0) {
+				//displayDebugInfo(moveZ);
+				//var f:Vector3D = cube.body.front;
+				//f.scaleBy(moveZ);	
+				//displayDebugInfo(force)
+				//cube.body.position =  f
+				//displayDebugInfo(f)
+				
+				//cube.body.linearVelocity = f
+				//trace(cube.body.position.x + 10*elapsed)
+				//trace(cube.body.position.y + 10*elapsed)
+				//trace(cube.body.position.z + 10*elapsed)
+				//position = position + velocity*dt;
+				//position = position + velocity*elapsed;
+				//cube.body.applyCentralForce(f);
+				//cube.body.applyImpulse(f, new Vector3D(0,0,0))
+				var f:Vector3D = cube.mesh.position
+				
+				f.z += moveZ
+				//cube.mesh.position = f;
+				displayDebugInfo(("start " + cube.mesh.position.toString()))
+			}
+			if (moveX != 0) {
+				//cube.body.angularVelocity = new Vector3D(0,moveX,0);
 			}
 			cube.addUserInput(keyCode);			
 		}
 		
 		private function onUserRemoved(userId:String):void {
 			_view3D.scene.removeChild(_allPlayers[userId].mesh);
-			_physicsWorld.removeRigidBody(_allPlayers[userId].body);
+			//_physicsWorld.removeRigidBody(_allPlayers[userId].body);
 			delete _allPlayers[userId];
 		}
 		private function onUserCreated(dataObject:Object):void {
 			var movingCube:MovingCube = new MovingCube(dataObject.uid,dataObject.coords, dataObject.rotation,dataObject.velocity,dataObject.isMainUser, _light);
 			_allPlayers[dataObject.uid] = movingCube;			
 			_view3D.scene.addChild(movingCube.mesh);
-			_physicsWorld.addRigidBody(movingCube.body);
+			//_physicsWorld.addRigidBody(movingCube.body);
 			movingCube.material.lightPicker = _lightPicker;
-			_physicsWorld.addRigidBodyWithGroup(movingCube.body, collisionBox, collisionNone);
-			movingCube.body.addEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
+			//_physicsWorld.addRigidBodyWithGroup(movingCube.body, collisionBox, collisionGround);
+			//movingCube.body.addEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
 
 			trace("created",movingCube.name)
 			if (dataObject.isMainUser){
@@ -372,7 +411,7 @@ package com.mayhem.game
 		
 		protected function collisionDetectionHandler(event:AWPEvent):void
 		{
-		  trace("collision detected");
+		  //trace("collision detected");
 		  //if (event.collisionObject == ballBody)
 		  //{
 			//trace("collision detected with ball");

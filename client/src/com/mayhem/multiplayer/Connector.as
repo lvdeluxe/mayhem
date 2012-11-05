@@ -5,14 +5,14 @@ package com.mayhem.multiplayer
 	 * @author availlant
 	 */
 	
-	import com.pranks.social.model.SocialUser;
+	import com.hibernum.social.model.SocialUser;
 	import flash.display.Stage;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
 	import org.osflash.signals.Signal;
 	import playerio.*;
-	import com.pranks.signals.*;
+	import com.mayhem.signals.*;
 	 
 	public class Connector 
 	{
@@ -45,7 +45,7 @@ package com.mayhem.multiplayer
 			trace("Sucessfully connected to player.io");
 			_client = client;
 			//Set developmentsever (Comment out to connect to your server online)
-			//_client.multiplayer.developmentServer = "localhost:8184";
+			_client.multiplayer.developmentServer = "localhost:8184";
 			
 			//Create pr join the room test
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);		
@@ -70,10 +70,11 @@ package com.mayhem.multiplayer
 			_mainConnection.sendMessage(mess);	
 		}
 		
-		private function onPlayerStopMoving(keyCode:uint):void {
+		private function onPlayerStopMoving(keyCode:uint, timestamp:Number):void {
 			var mess:Message = _mainConnection.createMessage("PlayerStoppedMoving");
 			//mess.add("PlayerIsMoving");
 			mess.add(keyCode);
+			mess.add(timestamp);
 			//mess.add(position.z);
 			_mainConnection.sendMessage(mess);			
 		}
@@ -147,8 +148,8 @@ package com.mayhem.multiplayer
 			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
 				UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);
 			});
-			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint):void {
-				UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode);
+			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
+				UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode,timestamp);
 			});
 			
 			

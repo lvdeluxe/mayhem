@@ -119,7 +119,7 @@ namespace MyGame {
                     player.Send(msg);
                     break;
                 case "PlayerStoppedMoving":
-                    Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0));
+                    Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
                     break;
                 case "PlayerUpdateState":
                     player.positionX = message.GetDouble(0);

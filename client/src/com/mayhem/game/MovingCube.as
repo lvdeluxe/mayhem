@@ -37,16 +37,7 @@ package com.mayhem.game
 		public var rotationSpeed:Number = 5;
 		public var startVelocity:Number = 10;
 		
-		public var deccelerateRotation:Boolean = false;
-		public var deccelerateVelocity:Boolean = false;
-		public var startedDeccelerateRotation:Boolean = false;
-		public var startedDeccelerateVelocity:Boolean = false;
-		public var startDeccelerateVelocityTime:Number;
-		public var startDeccelerateRotationTime:Number;
-		public var deccelerateVelocityVector3:Vector3D
-		public var deccelerateRotationVector3:Vector3D
-		private var deccelRotationTime:Number = 500;
-		private var deccelVelocityTime:Number = 500;
+		
 		public var doInterpolatePosition:Boolean = false;
 		public var doInterpolateRotation:Boolean = false;		
 		public var startedInterpolatePosition:Boolean = false;
@@ -57,6 +48,12 @@ package com.mayhem.game
 		private var interpolatePositionTime:Number = 400;
 		private var interpolatePositionStartTime:Number = 400;
 		private var startInterpolateAt:Vector3D;
+		
+		public var startMovingAt:Number
+		public var stopMovingAt:Number;
+		public var startPosition:Vector3D
+		//public var startPosition:Vector3D
+		
 		
 		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean, light:LightBase) 
 		{
@@ -84,15 +81,16 @@ package com.mayhem.game
 			trace('rotate=',rotation)
 
 			var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
-			body = new AWPRigidBody(boxShape, mesh, 1);
-			body.gravity = new Vector3D(0,-1,0);
-			body.friction = .1;
-			body.restitution = 0.1
-			body.ccdSweptSphereRadius = 0.5;
-			body.ccdMotionThreshold = 1;
-			body.position = coords;
-			body.rotation = rotation;
-			body.linearVelocity = velocity;
+			//body = new AWPRigidBody(boxShape, mesh, 1);
+			//body.gravity = new Vector3D(0,-1,0);
+			//body.friction = .1;
+			//body.restitution = 0.1
+			//body.ccdSweptSphereRadius = 0.5;
+			//body.ccdMotionThreshold = 1;
+			//body.position = coords;
+			//body.rotation = rotation;
+			//body.linearVelocity = velocity;
+			//trace('damping',body.linearDamping, body.angularDamping)
 		}
 		
 		public function addUserInput(keyCode:uint):void {
@@ -129,24 +127,7 @@ package com.mayhem.game
 		}
 		
 		
-		private function doDecceleration(started:String, startTime:String, startVector:String, value:String,deccelType:String, totalTime:String):void {
-			if (!this[started]) {
-				this[started] = true;
-				this[startTime] = getTimer();
-				this[startVector] = this.body[value];
-			}
-			var factor:Number = quadOut(getTimer() - this[startTime], 0, 1, this[totalTime]);
-			var tmpX:Number = this[startVector].x + (0 - this[startVector].x) * factor;
-			var tmpY:Number = this[startVector].y + (0 - this[startVector].y) * factor;
-			var tmpZ:Number = this[startVector].z + (0 - this[startVector].z) * factor;
-			
-			this.body[value] = (new Vector3D(tmpX, tmpY, tmpZ))
-			
-			if (factor >= 1 || this.body[value].equals(new Vector3D())) {
-				this[deccelType] = false;
-				this.body[value] = new Vector3D();
-			}
-		}
+		
 		
 		private function linearEase(t:Number, b:Number, c:Number, d:Number):Number {
 			//t  = current time
@@ -186,22 +167,7 @@ package com.mayhem.game
 			}
 		}
 		
-		public function checkDeccelerate():void {
-			
-			
-			if (deccelerateRotation) {
-				//doInterpolateRotation = true
-					
-				doDecceleration("startedDeccelerateRotation", "startDeccelerateRotationTime","deccelerateRotationVector3","angularVelocity", "deccelerateRotation", "deccelRotationTime");
-			}
-			if (deccelerateVelocity) {
-				//doInterpolatePosition = true;
-				if (!startedDeccelerateVelocity){
-					deccelVelocityTime = Math.round(Math.abs(body.linearVelocity.z) * 500);					
-				}
-				doDecceleration("startedDeccelerateVelocity", "startDeccelerateVelocityTime", "deccelerateVelocityVector3", "linearVelocity", "deccelerateVelocity", "deccelVelocityTime");
-			}
-		}
+		
 		private function quadOut(currTime:Number, start:Number, end:Number, totalTime:Number):Number {
 			//t  = current time
 			//b = beggining value

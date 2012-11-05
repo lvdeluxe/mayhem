@@ -5,7 +5,7 @@ package com.hibernum.social.model
 	 * @author availlant
 	 */
 	
-	import com.pranks.social.service.FacebookService;
+	import com.hibernum.social.service.FacebookService;
 	 
 	public class SocialModel 
 	{

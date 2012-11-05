@@ -3,11 +3,11 @@ package
 	import away3d.core.managers.Stage3DManager;
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.debug.AwayStats;
-	import com.pranks.game.GameManager;
-	import com.pranks.multiplayer.Connector;
-	import com.pranks.social.model.SocialModel;
-	import com.pranks.social.model.SocialUser;
-	import com.pranks.ui.UIManager;
+	import com.mayhem.game.GameManager;
+	import com.mayhem.multiplayer.Connector;
+	import com.hibernum.social.model.SocialModel;
+	import com.hibernum.social.model.SocialUser;
+	import com.mayhem.ui.UIManager;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.display.StageScaleMode;
@@ -15,7 +15,7 @@ package
 	import away3d.events.Stage3DEvent;
 	import flash.utils.getTimer;
 	import flash.display.StageQuality;
-	import com.pranks.social.service.FacebookService;
+	import com.hibernum.social.service.FacebookService;
 	import flash.system.Security;
 	
 	

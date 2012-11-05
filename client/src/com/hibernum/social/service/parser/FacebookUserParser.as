@@ -1,8 +1,8 @@
 package com.hibernum.social.service.parser {
-import com.pranks.social.model.AppRequestUserVO;
-import com.pranks.social.model.AppRequestVO;
-import com.pranks.social.model.SocialUser;
-import com.pranks.social.service.FacebookService;
+import com.hibernum.social.model.AppRequestUserVO;
+import com.hibernum.social.model.AppRequestVO;
+import com.hibernum.social.model.SocialUser;
+import com.hibernum.social.service.FacebookService;
 
 public class FacebookUserParser extends SocialUserParser {
 	public function FacebookUserParser() {
