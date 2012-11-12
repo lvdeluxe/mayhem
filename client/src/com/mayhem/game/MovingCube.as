@@ -10,9 +10,13 @@ package com.mayhem.game
 	import away3d.materials.methods.FilteredShadowMapMethod;
 	import away3d.materials.methods.HardShadowMapMethod;
 	import away3d.materials.methods.TripleFilteredShadowMapMethod;
+	import away3d.materials.TextureMaterial;
 	import away3d.primitives.CubeGeometry;
+	import away3d.primitives.PlaneGeometry;
+	import away3d.textures.BitmapTexture;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.dynamics.AWPRigidBody;
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -35,7 +39,6 @@ package com.mayhem.game
 		
 		public var speed:Number = 20;
 		public var rotationSpeed:Number = 5;
-		public var startVelocity:Number = 10;
 		
 		
 		public var doInterpolatePosition:Boolean = false;
@@ -49,13 +52,25 @@ package com.mayhem.game
 		private var interpolatePositionStartTime:Number = 400;
 		private var startInterpolateAt:Vector3D;
 		
-		public var startMovingAt:Number
-		public var stopMovingAt:Number;
-		public var startPosition:Vector3D
+		public var startMovingTime:Number
+		public var startMovingVelocity:Vector3D
+		public var startMovingPosition:Vector3D;
+		
+		public var stopMovingTime:Number
+		public var stopMovingVelocity:Vector3D
+		public var stopMovingPosition:Vector3D;
+		
+		public var currentVelocity:Vector3D = new Vector3D();
+		public var velocityBeforeCollision:Vector3D = new Vector3D();
+		public var hasCollided:Boolean = false;
+		
 		//public var startPosition:Vector3D
 		
+		[Embed(source = "/assets/shadow.png")]
+		private var ShadowClass:Class;
 		
-		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean, light:LightBase) 
+		
+		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
 		{
 			name = id;
 			userInputs = new Dictionary();
@@ -63,6 +78,17 @@ package com.mayhem.game
 			userInputs[GameManager.MOVE_LEFT_KEY] = false;
 			userInputs[GameManager.MOVE_RIGHT_KEY] = false;
 			userInputs[GameManager.MOVE_UP_KEY] = false;
+			
+			var shadow:Bitmap = new ShadowClass();
+			var texture:BitmapTexture = new BitmapTexture(shadow.bitmapData);
+			var mat:TextureMaterial = new TextureMaterial(texture);
+			mat.alphaBlending = true;
+			var shadowPlane:PlaneGeometry = new PlaneGeometry(200, 200);
+			var shadowMesh:Mesh = new Mesh(shadowPlane, mat);
+			shadowMesh.y = -49;
+			
+			
+			
 			
 			var color:Number = isMainUser ? 0xcc0000 : 0x0000cc;
 			var cubeBmd:BitmapData = new BitmapData(128, 128, false, color);
@@ -75,21 +101,24 @@ package com.mayhem.game
 			mesh.y = coords.y;
 			mesh.z = coords.z;	
 			
+			mesh.addChild(shadowMesh);
+			
 			mesh.extra = this;
 			
 			trace('coords=',coords)
 			trace('rotate=',rotation)
 
 			var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
-			//body = new AWPRigidBody(boxShape, mesh, 1);
+			body = new AWPRigidBody(boxShape, mesh, 1);
 			//body.gravity = new Vector3D(0,-1,0);
-			//body.friction = .1;
-			//body.restitution = 0.1
-			//body.ccdSweptSphereRadius = 0.5;
-			//body.ccdMotionThreshold = 1;
-			//body.position = coords;
-			//body.rotation = rotation;
-			//body.linearVelocity = velocity;
+			body.friction = .1;
+			body.restitution = 0.1
+			body.ccdSweptSphereRadius = 0.5;
+			body.ccdMotionThreshold = 1;
+			body.angularFactor= new Vector3D(0.25,1,0.25);
+			body.position = coords;
+			body.rotation = rotation;
+			body.linearVelocity = velocity;
 			//trace('damping',body.linearDamping, body.angularDamping)
 		}
 		

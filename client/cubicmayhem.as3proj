@@ -5,11 +5,11 @@
     <movie outputType="Application" />
     <movie input="" />
     <movie path="bin\cubicmayhem.swf" />
-    <movie fps="50" />
+    <movie fps="60" />
     <movie width="800" />
     <movie height="600" />
     <movie version="11" />
-    <movie minorVersion="3" />
+    <movie minorVersion="4" />
     <movie platform="Flash Player" />
     <movie background="#FFFFFF" />
     <movie preferredSDK="Flex 4.6.0, AIR 3.4;4.6.0, 3.4;" />
@@ -41,7 +41,7 @@
     <option linkReport="" />
     <option loadExterns="" />
     <option staticLinkRSL="True" />
-    <option additional="" />
+    <option additional="-swf-version=18" />
     <option compilerConstants="" />
     <option minorVersion="" />
   </build>
@@ -52,7 +52,7 @@
   <!-- SWC Libraries -->
   <libraryPaths>
     <element path="lib\AwayPhysics.swc" />
-    <element path="lib\Flare3D_Commercial_2048c.swc" />
+    <element path="lib\base64.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

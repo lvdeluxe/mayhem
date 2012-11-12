@@ -4,6 +4,7 @@ package away3d.core.managers
 	import away3d.arcane;
 	import away3d.debug.Debug;
 	import away3d.events.Stage3DEvent;
+	import flash.display3D.Context3DProfile;
 	
 	import flash.display.Stage3D;
 	import flash.display3D.Context3D;
@@ -493,6 +494,7 @@ package away3d.core.managers
 			_usesSoftwareRendering ||= forceSoftware;
 			
 			_stage3D.requestContext3D(forceSoftware? Context3DRenderMode.SOFTWARE : Context3DRenderMode.AUTO);
+			//_stage3D.requestContext3D(forceSoftware? Context3DRenderMode.SOFTWARE : Context3DRenderMode.AUTO, Context3DProfile.BASELINE_CONSTRAINED);
 			_contextRequested = true;
 		}
 		

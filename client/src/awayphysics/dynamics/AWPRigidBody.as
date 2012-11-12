@@ -22,7 +22,7 @@ package awayphysics.dynamics {
 		private var m_totalForce : AWPVector3;
 		private var m_totalTorque : AWPVector3;
 		private var m_invMass : AWPVector3;
-
+		
 		/**
 		 * rigidbody is static if mass is zero, otherwise is dynamic
 		 */
