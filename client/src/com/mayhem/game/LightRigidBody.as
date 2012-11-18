@@ -14,6 +14,7 @@ package com.mayhem.game
 		public var position:Vector3D;
 		public var rotation:Vector3D;
 		public var totalForce:Vector3D;
+		public var totalTorque:Vector3D;
 		
 		public function LightRigidBody() 
 		{
@@ -27,7 +28,17 @@ package com.mayhem.game
 			lightRigidBody.position = rBody.position.clone();
 			lightRigidBody.rotation = rBody.rotation.clone();
 			lightRigidBody.totalForce = rBody.totalForce.clone();
+			lightRigidBody.totalTorque = rBody.totalTorque.clone();
 			return lightRigidBody;
+		}
+		
+		public function applyToRigidBody(rBody:AWPRigidBody):void {
+			rBody.rotation = rotation;
+			rBody.position = position;
+			rBody.linearVelocity = linearVelocity;
+			rBody.angularVelocity = angularVelocity;
+			rBody.applyCentralForce(totalForce);
+			rBody.applyTorque(totalTorque);
 		}
 		
 		

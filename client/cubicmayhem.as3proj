@@ -53,6 +53,7 @@
   <libraryPaths>
     <element path="lib\AwayPhysics.swc" />
     <element path="lib\base64.swc" />
+    <element path="lib\tweener.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

@@ -55,7 +55,7 @@ package com.mayhem.multiplayer
 			trace("Sucessfully connected to player.io");
 			_client = client;
 			//Set developmentsever (Comment out to connect to your server online)
-			_client.multiplayer.developmentServer = "localhost:8184";
+			//_client.multiplayer.developmentServer = "localhost:8184";
 			
 			//Create pr join the room test
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);		
@@ -77,19 +77,15 @@ package com.mayhem.multiplayer
 		
 		private function onPlayerStopMoving(keyCode:uint, timestamp:Number):void {
 			var mess:Message = _mainConnection.createMessage("PlayerStoppedMoving");
-			//mess.add("PlayerIsMoving");
 			mess.add(keyCode);
 			mess.add(timestamp);
-			//mess.add(position.z);
 			_mainConnection.sendMessage(mess);			
 		}
 		
 		private function onPlayerMoving(keyCode:uint, timestamp:Number):void {
 			var mess:Message = _mainConnection.createMessage("PlayerIsMoving");
-			//mess.add("PlayerIsMoving");
 			mess.add(keyCode);
 			mess.add(timestamp);
-			//mess.add(position.z);
 			_mainConnection.sendMessage(mess);
 		}
 		
