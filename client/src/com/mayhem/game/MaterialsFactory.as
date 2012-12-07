@@ -20,6 +20,7 @@ package com.mayhem.game
 	{
 		public static const BUMPER_MATERIAL:String = "bumperMaterial";
 		public static const WALLS_MATERIAL:String = "wallsMaterial";
+		public static const AI_CUBE_MATERIAL:String = "AICubeMaterial";
 		public static const OWNER_CUBE_MATERIAL:String = "ownerCubeMaterial";
 		public static const OTHER_CUBE_MATERIAL:String = "otherCubeMaterial";
 		public static const SHADOW_CUBE_MATERIAL:String = "shadowCubeMaterial";
@@ -66,6 +67,9 @@ package com.mayhem.game
 					break;
 				case SHADOW_CUBE_MATERIAL:
 					mat = getShadowMaterial();
+					break;
+				case AI_CUBE_MATERIAL:
+					mat = getAICubeMaterial();
 					break;
 			}
 			return mat;
@@ -126,6 +130,11 @@ package com.mayhem.game
 			return mat;
 		}
 		
+		private static function getAICubeMaterial():MaterialBase {
+			var mat:ColorMaterial = new ColorMaterial(0x999999);
+			mat.lightPicker = _mainLightPicker;
+			return mat;
+		}
 		private static function getOwnerCubeMaterial():MaterialBase {
 			var mat:ColorMaterial = new ColorMaterial(0xcc0000);
 			mat.lightPicker = _mainLightPicker;

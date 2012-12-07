@@ -7,7 +7,8 @@ package com.mayhem.ui
 	
 	import flash.display.Stage;
 	import starling.core.Starling;
-	import starling.events.Event
+	import starling.events.Event;
+	import flash.display.StageQuality;
 	 
 	public class UIManager 
 	{
@@ -18,6 +19,7 @@ package com.mayhem.ui
 		{
 			_starling = new Starling( UIDisplay, pStage, null, pStage.stage3Ds[0] );			
 			_starling.shareContext = true;
+			pStage.quality = StageQuality.LOW;
 		}
 		
 		public function get renderer():Starling {
