@@ -5,7 +5,7 @@ package com.mayhem.multiplayer
 	 * @author availlant
 	 */
 	
-	import awayphysics.dynamics.AWPRigidBody;
+	//import awayphysics.dynamics.AWPRigidBody;
 	import com.hibernum.social.model.SocialUser;
 	import com.mayhem.game.CollisionManifold;
 	import com.mayhem.game.LightRigidBody;
@@ -20,7 +20,7 @@ package com.mayhem.multiplayer
 	import com.mayhem.signals.*;
 	import flash.net.registerClassAlias;
 	import flash.geom.Matrix3D;
-	import away3d.containers.ObjectContainer3D;
+	//import away3d.containers.ObjectContainer3D;
 	 
 	public class Connector 
 	{

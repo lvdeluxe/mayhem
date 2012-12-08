@@ -1,6 +1,7 @@
 package com.mayhem.game 
 {
-	import away3d.materials.MaterialBase;
+	//import away3d.materials.MaterialBase;
+	import flare.materials.Shader3D;
 	import flash.geom.Vector3D;
 	
 	/**
@@ -20,8 +21,8 @@ package com.mayhem.game
 			
 		}
 		
-		override public function getMaterial(bool:Boolean):MaterialBase {
-			var mat:MaterialBase = MaterialsFactory.getMaterialById(MaterialsFactory.AI_CUBE_MATERIAL);
+		override public function getMaterial(bool:Boolean):Shader3D {
+			var mat:Shader3D = MaterialsFactory.getMaterialById(MaterialsFactory.AI_CUBE_MATERIAL);
 			return mat;
 		}
 		

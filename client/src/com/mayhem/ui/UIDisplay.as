@@ -21,6 +21,10 @@ package com.mayhem.ui
 			UISignals.ENERGY_UPDATE.add(onEnergyUpdate);
 			UISignals.ENERGY_OUT.add(onEnergyOut);
 			createUI();
+			trace(this.parent)
+			var textField:TextField = new TextField(800, 600, "WTF!!!", "Verdana", 48);
+			textField.color = 0xffffff;
+			addChild(textField);	
 			
 		}
 		

@@ -11,7 +11,7 @@
     <movie version="11" />
     <movie minorVersion="4" />
     <movie platform="Flash Player" />
-    <movie background="#FFFFFF" />
+    <movie background="#CCFF99" />
     <movie preferredSDK="Flex 4.6.0, AIR 3.4;4.6.0, 3.4;" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
@@ -54,6 +54,8 @@
     <element path="lib\AwayPhysics.swc" />
     <element path="lib\base64.swc" />
     <element path="lib\tweener.swc" />
+    <element path="lib\Flare3D_Physics_1000.swc" />
+    <element path="lib\Flare3D_2.5.15_Beta_Trial.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

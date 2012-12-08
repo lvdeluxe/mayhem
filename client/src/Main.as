@@ -1,8 +1,8 @@
 package
 {
-	import away3d.core.managers.Stage3DManager;
-	import away3d.core.managers.Stage3DProxy;
-	import away3d.debug.AwayStats;
+	//import away3d.core.managers.Stage3DManager;
+	//import away3d.core.managers.Stage3DProxy;
+	//import away3d.debug.AwayStats;
 	import com.mayhem.game.GameManager;
 	import com.mayhem.multiplayer.Connector;
 	import com.hibernum.social.model.SocialModel;
@@ -12,7 +12,7 @@ package
 	import flash.events.Event;
 	import flash.display.StageScaleMode;
 	import flash.display.StageAlign;
-	import away3d.events.Stage3DEvent;
+	//import away3d.events.Stage3DEvent;
 	import flash.utils.getTimer;
 	import flash.display.StageQuality;
 	import com.hibernum.social.service.FacebookService;
@@ -31,8 +31,8 @@ package
 		private var _gameManager:GameManager;
 		private var _social:SocialModel;
 		
-		private var _stage3DProxy:Stage3DProxy;
-		private var _stage3DManager:Stage3DManager;
+		//private var _stage3DProxy:Stage3DProxy;
+		//private var _stage3DManager:Stage3DManager;
 		
 		private var ticks:uint = 0;
 		private var last:uint = getTimer();
@@ -51,6 +51,7 @@ package
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			setStageProperties();
 			setStage3DProxy();
+			trace("yo1")
 		}
 		
 		private function setStageProperties():void {
@@ -60,23 +61,28 @@ package
 		}
 		
 		private function setStage3DProxy():void{			
-			_stage3DManager = Stage3DManager.getInstance(stage);
-			_stage3DProxy = Stage3DManager.getInstance(stage).getFreeStage3DProxy();
-			_stage3DProxy.addEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
-			_stage3DProxy.antiAlias = 0;
-			_stage3DProxy.color = 0x0;		
+			//_stage3DManager = Stage3DManager.getInstance(stage);
+			//_stage3DProxy = Stage3DManager.getInstance(stage).getFreeStage3DProxy();
+			stage.stage3Ds[0].addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+			stage.stage3Ds[0].requestContext3D();
+			//trace(stage.stage3Ds[0].context3D)
+			//stage.stagq
+			//_stage3DProxy.antiAlias = 0;
+			//_stage3DProxy.color = 0x0;		
+			//onContextCreated(null)
 		}
 		
-		private function onContextCreated(event : Stage3DEvent) : void {
+		private function onContextCreated(event : Event) : void {
+			trace("created!",stage.stage3Ds[0].context3D)
 			_uiManager = new UIManager(stage);
-			_gameManager = new GameManager(stage, _stage3DProxy);
+			//_gameManager = new GameManager(stage);
 			//_social = new SocialModel(connectedToSocial);
 			var socialUser:SocialUser = new SocialUser();
 			socialUser.social_id = Math.round(Math.random() * 10000).toString();
 			socialUser.name = getRandomName();
 			trace("socialUser.name",socialUser.name);
 			_connector = new Connector(stage,socialUser);
-			_stage3DProxy.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		private function getRandomName():String {
@@ -93,8 +99,9 @@ package
 		}
 		
 		private function onEnterFrame(event : Event) : void {
-			_gameManager.renderPhysics();
-			_gameManager.renderer.render();
+			//_gameManager.renderPhysics();
+			//_gameManager.render();
+			//trace(_uiManager.renderer)
 			_uiManager.renderer.nextFrame();
 		}		
 	}

@@ -1,14 +1,20 @@
 package com.mayhem.game 
 {
-	import away3d.entities.Mesh;
-	import away3d.events.Object3DEvent;
-	import away3d.materials.ColorMaterial;
-	import away3d.materials.MaterialBase;
-	import away3d.primitives.CubeGeometry;
-	import awayphysics.collision.shapes.AWPBoxShape;
-	import awayphysics.data.AWPCollisionFlags;
-	import awayphysics.dynamics.AWPRigidBody;
+	//import away3d.entities.Mesh;
+	//import away3d.events.Object3DEvent;
+	//import away3d.materials.ColorMaterial;
+	//import away3d.materials.MaterialBase;
+	//import away3d.primitives.CubeGeometry;
+	//import awayphysics.collision.shapes.AWPBoxShape;
+	//import awayphysics.data.AWPCollisionFlags;
+	//import awayphysics.dynamics.AWPRigidBody;
+	import flare.core.Mesh3D;
+	import flare.materials.Shader3D;
+	import flare.physics.core.PhysicsBox;
+	import flare.physics.core.RigidBody;
+	import flare.primitives.Cube;
 	import flash.events.TimerEvent;
+	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
@@ -22,8 +28,8 @@ package com.mayhem.game
 	public class MovingCube 
 	{
 		
-		public var body:AWPRigidBody;
-		public var mesh:Mesh
+		public var body:PhysicsBox;
+		public var mesh:Cube
 		public var userInputs:Dictionary;
 		public var name:String;
 		
@@ -78,30 +84,40 @@ package com.mayhem.game
 			//var matId:String = isMainUser ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
 			//var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
 			
-			var cG:CubeGeometry = new CubeGeometry(100, 100, 100);
-			mesh = new Mesh(cG, getMaterial(isMainUser));
-			mesh.x = coords.x;
-			mesh.y = coords.y;
-			mesh.z = coords.z;	
+			mesh = new Cube( "cube", 100, 100, 100, 1, getMaterial(isMainUser));
+			//var cG:CubeGeometry = new CubeGeometry(100, 100, 100);
+			//mesh = new Mesh(cG, getMaterial(isMainUser));
+			mesh.setPosition(coords.x,coords.y,coords.z);
+			//cube.x = coords.x;
+			//cube.y = coords.y;
+			//cube.z = coords.z;	
 			
-			mesh.extra = this;
+			mesh.userData = this;
 			
-			var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
-			body = new AWPRigidBody(boxShape, mesh, 1);
+			//var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
+			body = new PhysicsBox();
 			//body.gravity = new Vector3D(0,-1,0);
 			body.friction = .1;
 			body.restitution = 0.1
-			body.ccdSweptSphereRadius = 0.5;
-			body.ccdMotionThreshold = 1;
-			body.angularFactor= new Vector3D(0.25,1,0.25);
-			body.position = coords;
-			body.rotation = rotation;
-			body.linearVelocity = velocity;
+			//body.ccdSweptSphereRadius = 0.5;
+			//body.ccdMotionThreshold = 1;
+			//body.= new Vector3D(0.25,1,0.25);
+			//body.s = coords;
+			var m:Matrix3D = new Matrix3D();
+			var v:Vector.<Vector3D> = new Vector.<Vector3D>();
+			v.push(new Vector3D());
+			v.push(rotation);
+			v.push(new Vector3D(1, 1, 1));
+			m.recompose(v);
+			body.setOrientation(m);
+			body.setLinearVelocity(velocity);
+			
+			mesh.addComponent(body);
 		}
 		
-		public function getMaterial(bool:Boolean):MaterialBase {
+		public function getMaterial(bool:Boolean):Shader3D {
 			var matId:String = bool ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
-			var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
+			var mat:Shader3D = MaterialsFactory.getMaterialById(matId);
 			return mat;
 		}
 		
@@ -162,52 +178,52 @@ package com.mayhem.game
 		
 		
 		
-		private function linearEase(t:Number, b:Number, c:Number, d:Number):Number {
+		//private function linearEase(t:Number, b:Number, c:Number, d:Number):Number {
 			//t  = current time
 			//b = beggining value
 			//c = end value
 			//d = total time
-			return c*t/d + b;
-		};
+			//return c*t/d + b;
+		//};
 		
-		public function checkInterpolate():void {
-			if (doInterpolatePosition) {
-				if (interpolatePositionTo == null)
-						return;
-				if (!startedInterpolatePosition) {
-					startedInterpolatePosition = true;
-					interpolatePositionStartTime = getTimer();
-					startInterpolateAt = body.position;
-					
-				}
-				var factor:Number = linearEase(getTimer() - interpolatePositionStartTime, 0, 1, 450);
-				var tmpX:Number = startInterpolateAt.x + ((interpolatePositionTo.x - startInterpolateAt.x )* factor);
-				var tmpY:Number = startInterpolateAt.y + ((interpolatePositionTo.y - startInterpolateAt.y )* factor);
-				var tmpZ:Number = startInterpolateAt.z + ((interpolatePositionTo.z - startInterpolateAt.z )* factor);
-				trace(factor)
-				trace(startInterpolateAt)
-				trace(new Vector3D(tmpX, tmpY, tmpZ))
-				trace(interpolatePositionTo)
-				body.position = (new Vector3D(tmpX, tmpY, tmpZ))
-			
-				if (factor >= 1 || body.position.equals(interpolatePositionTo)) {
-					doInterpolatePosition = false;
-					startedInterpolatePosition = false;
-					
-					trace("////////////////////")
-					body.position = interpolatePositionTo;
-				}
-			}
-		}
-		
-		
-		private function quadOut(currTime:Number, start:Number, end:Number, totalTime:Number):Number {
+		//public function checkInterpolate():void {
+			//if (doInterpolatePosition) {
+				//if (interpolatePositionTo == null)
+						//return;
+				//if (!startedInterpolatePosition) {
+					//startedInterpolatePosition = true;
+					//interpolatePositionStartTime = getTimer();
+					//startInterpolateAt = body.position;
+					//
+				//}
+				//var factor:Number = linearEase(getTimer() - interpolatePositionStartTime, 0, 1, 450);
+				//var tmpX:Number = startInterpolateAt.x + ((interpolatePositionTo.x - startInterpolateAt.x )* factor);
+				//var tmpY:Number = startInterpolateAt.y + ((interpolatePositionTo.y - startInterpolateAt.y )* factor);
+				//var tmpZ:Number = startInterpolateAt.z + ((interpolatePositionTo.z - startInterpolateAt.z )* factor);
+				//trace(factor)
+				//trace(startInterpolateAt)
+				//trace(new Vector3D(tmpX, tmpY, tmpZ))
+				//trace(interpolatePositionTo)
+				//body.position = (new Vector3D(tmpX, tmpY, tmpZ))
+			//
+				//if (factor >= 1 || body.position.equals(interpolatePositionTo)) {
+					//doInterpolatePosition = false;
+					//startedInterpolatePosition = false;
+					//
+					//trace("////////////////////")
+					//body.position = interpolatePositionTo;
+				//}
+			//}
+		//}
+		//
+		//
+		//private function quadOut(currTime:Number, start:Number, end:Number, totalTime:Number):Number {
 			//t  = current time
 			//b = beggining value
 			//c = end value
 			//d = total time
-			return 1 - Math.pow(1 - (currTime / totalTime), 5);
-		}
+			//return 1 - Math.pow(1 - (currTime / totalTime), 5);
+		//}
 		
 	}
 
