@@ -60,11 +60,12 @@ package
 			stage.align = StageAlign.TOP_LEFT;
 		}
 		
-		private function setStage3DProxy():void{			
+		private function setStage3DProxy():void {
+			_gameManager = new GameManager(stage);
 			//_stage3DManager = Stage3DManager.getInstance(stage);
 			//_stage3DProxy = Stage3DManager.getInstance(stage).getFreeStage3DProxy();
-			stage.stage3Ds[0].addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
-			stage.stage3Ds[0].requestContext3D();
+			_gameManager.renderer.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+			//stage.stage3Ds[0].requestContext3D();
 			//trace(stage.stage3Ds[0].context3D)
 			//stage.stagq
 			//_stage3DProxy.antiAlias = 0;
@@ -73,6 +74,7 @@ package
 		}
 		
 		private function onContextCreated(event : Event) : void {
+			stage.stage3Ds[0].removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
 			trace("created!",stage.stage3Ds[0].context3D)
 			_uiManager = new UIManager(stage);
 			//_gameManager = new GameManager(stage);
@@ -103,6 +105,7 @@ package
 			//_gameManager.render();
 			//trace(_uiManager.renderer)
 			_uiManager.renderer.nextFrame();
+			_gameManager.render();
 		}		
 	}
 	

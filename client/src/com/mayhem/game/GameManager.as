@@ -80,7 +80,7 @@ package com.mayhem.game
 			//var stats:AwayStats = new AwayStats(_view3D)
 			//stage.addChild(stats);
 			ArenaFactory.instance.initialize(_physicsWorld);
-			ParticlesFactory.instance.initialize(_view3D);
+			//ParticlesFactory.instance.initialize(_view3D);
 			CameraManager.instance.initialize(_view3D.camera);
 			_view3D.addChild(ArenaFactory.instance.getDefaultArena());
 		}
@@ -207,7 +207,8 @@ package com.mayhem.game
 				if (moveZ != 0) {
 					var f:Vector3D = cube.mesh.getDir();
 					f.scaleBy(moveZ);
-					cube.body.addForce(f, new Vector3D());
+					trace('yeah')
+					cube.body.addForce(f, new Vector3D(1,1,1));
 				}
 			}				
 		}	
@@ -220,7 +221,9 @@ package com.mayhem.game
 		}
 		
 		public function render():void {
-			_physicsWorld.step();
+			_view3D.render(_view3D.camera);
+			//_physicsWorld.step();
+			renderPhysics()
 		}
 		
 		public function renderPhysics():void {
@@ -230,7 +233,8 @@ package com.mayhem.game
 			moveObjects(dt);
 			ParticlesFactory.instance.checkRemoveParticles();
 			setLastVelocity();
-			setAIBehavior();			
+			setAIBehavior();	
+			_physicsWorld.step(1);
 			//_physicsWorld.step(dt / 1000, 1, _timeStep);	
 			//_physicsWorld.step(_timeStep, 1, _timeStep);	
 			

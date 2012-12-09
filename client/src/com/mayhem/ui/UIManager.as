@@ -18,7 +18,7 @@ package com.mayhem.ui
 		public function UIManager(pStage:Stage) 
 		{
 			_starling = new Starling( UIDisplay, pStage, null, pStage.stage3Ds[0] );			
-			//_starling.shareContext = true;
+			_starling.shareContext = true;
 			pStage.quality = StageQuality.LOW;
 			//_starling.start();
 		}
