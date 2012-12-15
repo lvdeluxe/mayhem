@@ -15,19 +15,32 @@ package com.mayhem.ui
 	public class UIDisplay extends Sprite
 	{
 		private var _healthBar:Quad;
+		private var _deathTextField:TextField;
 		
 		public function UIDisplay() 
 		{
 			UISignals.ENERGY_UPDATE.add(onEnergyUpdate);
 			UISignals.ENERGY_OUT.add(onEnergyOut);
+			UISignals.OWNER_FELT.add(onOwnerFelt);
+			UISignals.OWNER_RESPAWNED.add(clearTextFields);
 			createUI();
 			
 		}
 		
+		private function clearTextFields():void {
+			removeChild(_deathTextField);
+			_deathTextField.dispose();
+		}
+		
+		private function onOwnerFelt():void {
+			_deathTextField = new TextField(800, 600, "YOU FELT, YOU MORON!!!", "Verdana", 48);
+			_deathTextField.color = 0xffffff;
+			addChild(_deathTextField);	
+		}
 		private function onEnergyOut():void {
-			var textField:TextField = new TextField(800, 600, "YOU DIED!!!", "Verdana", 48);
-			textField.color = 0xffffff;
-			addChild(textField);	
+			_deathTextField = new TextField(800, 600, "YOU DIED, YOU MORON!!!", "Verdana", 48);
+			_deathTextField.color = 0xffffff;
+			addChild(_deathTextField);	
 		}
 		private function onEnergyUpdate(prct:Number):void {
 			_healthBar.width = MovingCube.MAX_ENERGY * prct;

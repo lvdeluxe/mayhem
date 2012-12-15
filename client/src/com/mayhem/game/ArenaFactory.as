@@ -2,11 +2,17 @@ package com.mayhem.game
 {
 	import away3d.containers.ObjectContainer3D;
 	import away3d.materials.MaterialBase;
+	import away3d.primitives.PlaneGeometry;
+	import awayphysics.collision.dispatch.AWPGhostObject;
+	import awayphysics.collision.shapes.AWPStaticPlaneShape;
+	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.dynamics.AWPDynamicsWorld;
 	import away3d.entities.Mesh;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.dynamics.AWPRigidBody;
 	import away3d.primitives.CubeGeometry;
+	import awayphysics.events.AWPEvent;
+	import com.mayhem.signals.UserInputSignals;
 	import flash.geom.Vector3D;
 	/**
 	 * ...
@@ -14,6 +20,8 @@ package com.mayhem.game
 	 */
 	public class ArenaFactory 
 	{
+		
+		public static const FALL_FROM_ARENA:String = "fallFromArena";
 		
 		private static var _instance:ArenaFactory;
 		private static var _enableInstantiation:Boolean = false;
@@ -43,7 +51,7 @@ package com.mayhem.game
 			var container:ObjectContainer3D = new ObjectContainer3D();
 			var mat:MaterialBase = MaterialsFactory.getMaterialById(MaterialsFactory.WALLS_MATERIAL);
 			
-			var groundMesh:Mesh = new Mesh(new CubeGeometry(5000, 50, 5000), mat);			
+			var groundMesh:Mesh = new Mesh(new CubeGeometry(5000, 50, 5000), mat);	
 			var groundShape : AWPBoxShape = new AWPBoxShape(5000, 50, 5000);
 			var groundRigidbody : AWPRigidBody = new AWPRigidBody(groundShape,groundMesh, 0);
 			groundRigidbody.y = -25;
@@ -113,7 +121,27 @@ package com.mayhem.game
 			_physicsWorld.addRigidBody(landingPlatformBody);
 			container.addChild(landingPlatformMesh);
 			
+			//var fallingMesh:Mesh = new Mesh(new PlaneGeometry(50000, 50000), mat);
+			//fallingMesh.name = FALL_FROM_ARENA;
+			var fallingShape : AWPStaticPlaneShape = new AWPStaticPlaneShape(new Vector3D(0, 1, 0));
+			var fallingRigidbody : AWPGhostObject = new AWPGhostObject(fallingShape);
+			fallingRigidbody.addEventListener(AWPEvent.COLLISION_ADDED, onFallingCollision);
+			fallingRigidbody.y = -25;
+			fallingRigidbody.collisionFlags |= AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+			//fallingRigidbody.collisionFlags |= AWPCollisionFlags.CF_DISABLE_VISUALIZE_OBJECT;
+			_physicsWorld.addCollisionObject(fallingRigidbody);
+			//container.addChild(fallingMesh);
+			
 			return container;
+		}
+		
+		private function onFallingCollision(event:AWPEvent):void {
+			var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
+			if (fallingCube && !fallingCube.hasFelt) {
+				fallingCube.hasFelt = true;
+				//fallingCube.car..linearDamping = 0;
+				UserInputSignals.USER_IS_FALLING.dispatch(fallingCube);
+			}
 		}
 	}
 

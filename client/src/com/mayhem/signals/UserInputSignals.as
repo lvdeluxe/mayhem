@@ -15,6 +15,7 @@ package com.mayhem.signals
 		public static var USER_HAS_STOPPED_MOVING:Signal = new Signal();
 		public static var USER_HAS_UPDATE_STATE:Signal = new Signal();
 		public static var USER_IS_COLLIDING:Signal = new Signal();
+		public static var USER_IS_FALLING:Signal = new Signal();
 		
 		
 		

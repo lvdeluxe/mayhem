@@ -43,7 +43,8 @@ package com.mayhem.game
 				var subs:Vector3D = cubeCollider.mesh.position.subtract(mesh.position);
 				subs.normalize();
 				subs.scaleBy(20);
-				cubeCollider.body.applyCentralImpulse(subs);
+				//cubeCollider.car.
+				cubeCollider.car.getRigidBody().applyCentralImpulse(subs);
 				var particlesPosition:Vector3D = mesh.transform.transformVector(event.manifoldPoint.localPointA);
 				setBumpingAnimation(particlesPosition);
 				_lastCollided = event.collisionObject;
