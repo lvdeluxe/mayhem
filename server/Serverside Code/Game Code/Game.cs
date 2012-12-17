@@ -49,20 +49,20 @@ namespace MyGame {
 			Console.WriteLine("Game is started: " + RoomId);
 
 			// This is how you setup a timer
-			AddTimer(delegate {
-				// code here will code every 100th millisecond (ten times a second)
-			}, 100);
+            //AddTimer(delegate {
+            //    // code here will code every 100th millisecond (ten times a second)
+            //}, 100);
 			
 			// Debug Example:
 			// Sometimes, it can be very usefull to have a graphical representation
 			// of the state of your game.
 			// An easy way to accomplish this is to setup a timer to update the
 			// debug view every 250th second (4 times a second).
-			AddTimer(delegate {
-				// This will cause the GenerateDebugImage() method to be called
-				// so you can draw a grapical version of the game state.
-				RefreshDebugView(); 
-			}, 250);
+            //AddTimer(delegate {
+            //    // This will cause the GenerateDebugImage() method to be called
+            //    // so you can draw a grapical version of the game state.
+            //    RefreshDebugView(); 
+            //}, 250);
 		}
 
 		// This method is called when the last player leaves the room, and it's closed down.
@@ -135,6 +135,10 @@ namespace MyGame {
                     break;
                 case "PlayerIsMoving":
                     Broadcast("PlayerHasMoved",player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
+                    break;
+                case "PlayerIsColliding":
+                    Byte[] collisionByteArray = message.GetByteArray(0);
+                    Broadcast("PlayerHasCollided", collisionByteArray);
                     break;
 			}
 		}

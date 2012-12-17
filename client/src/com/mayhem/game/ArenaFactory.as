@@ -107,9 +107,9 @@ package com.mayhem.game
 			var landingPlatformMesh:Mesh = new Mesh(new CubeGeometry(400, 50, 500), mat);
 			var landingPlatformShape:AWPBoxShape = new AWPBoxShape(400, 50, 500);
 			var landingPlatformBody:AWPRigidBody = new AWPRigidBody(landingPlatformShape, landingPlatformMesh, 0);
-			landingPlatformBody.rotationX = 30;
-			landingPlatformBody.z = -2500 - ((Math.sin(60 * Math.PI / 180) * 500) / 2)
-			landingPlatformBody.y = ((Math.cos(60 * Math.PI / 180) * 500) / 2)
+			//landingPlatformBody.rotationX = 30;
+			landingPlatformBody.z = -2500 - 250 //- ((Math.sin(60 * Math.PI / 180) * 500) / 2)
+			landingPlatformBody.y = -25//((Math.cos(60 * Math.PI / 180) * 500) / 2)
 			_physicsWorld.addRigidBody(landingPlatformBody);
 			container.addChild(landingPlatformMesh);
 			

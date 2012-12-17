@@ -7,6 +7,7 @@ package com.mayhem.multiplayer
 	
 	import awayphysics.dynamics.AWPRigidBody;
 	import com.hibernum.social.model.SocialUser;
+	import com.mayhem.game.CollisionManifold;
 	import com.mayhem.game.LightRigidBody;
 	import flash.display.Stage;
 	import flash.geom.Point;
@@ -38,6 +39,7 @@ package com.mayhem.multiplayer
 			_allUsers = new Dictionary();
 			_socialUser = user;
 			registerClassAlias("LightRigidBody", LightRigidBody);
+			registerClassAlias("CollisionManifold", CollisionManifold);
 			registerClassAlias("Vector3D", Vector3D);
 			
 			PlayerIO.connect(
@@ -63,7 +65,17 @@ package com.mayhem.multiplayer
 			UserInputSignals.USER_IS_MOVING.add(onPlayerMoving);
 			UserInputSignals.USER_STOPPED_MOVING.add(onPlayerStopMoving);
 			UserInputSignals.USER_UPDATE_STATE.add(onPlayerUpdateState);
+			UserInputSignals.USER_IS_COLLIDING.add(onCollision);
 			
+		}
+		
+		private function onCollision(manifold:CollisionManifold):void
+		{
+			var mess:Message = _mainConnection.createMessage("PlayerIsColliding");
+			var collisionBytes:ByteArray = new ByteArray();
+			collisionBytes.writeObject(manifold);
+			mess.add(collisionBytes);
+			_mainConnection.sendMessage(mess);	
 		}
 		
 		//private function onPlayerUpdateState(position:Vector3D,rotation:Vector3D, velocity:Vector3D):void {
@@ -153,14 +165,17 @@ package com.mayhem.multiplayer
 			});
 			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
 				UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode,timestamp);
-			});
-			
-			
+			});			
 			
 			//Add message listener for users leaving the room
 			connection.addMessageHandler("UserLeft", function(m:Message, userid:String):void{
 				trace("Player with the userid", userid, "just left the room");
 				MultiplayerSignals.USER_REMOVED.dispatch(userid);
+			});
+			
+			connection.addMessageHandler("PlayerHasCollided", function(m:Message, byteArray:ByteArray):void {
+				var manifold:CollisionManifold = byteArray.readObject();
+				MultiplayerSignals.USER_HAS_COLLIDED.dispatch(manifold);
 			});
 			
 			//Listen to all messages using a private function

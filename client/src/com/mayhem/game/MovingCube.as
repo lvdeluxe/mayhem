@@ -2,14 +2,19 @@ package com.mayhem.game
 {
 	import away3d.entities.Mesh;
 	import away3d.events.Object3DEvent;
+	import away3d.materials.ColorMaterial;
 	import away3d.materials.MaterialBase;
 	import away3d.primitives.CubeGeometry;
 	import awayphysics.collision.shapes.AWPBoxShape;
+	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.dynamics.AWPRigidBody;
+	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
+	import flash.utils.SetIntervalTimer;
+	import flash.utils.Timer;
 	/**
 	 * ...
 	 * @author availlant
@@ -49,6 +54,13 @@ package com.mayhem.game
 		public var velocityBeforeCollision:Vector3D = new Vector3D();
 		public var hasCollided:Boolean = false;
 		
+		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
+		
+		private var _collisionTimer:Timer;
+		
+		public static const MAX_ENERGY:int = 100;
+		public var totalEnergy:int = MAX_ENERGY;
+		
 		
 		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
 		{
@@ -59,11 +71,15 @@ package com.mayhem.game
 			userInputs[GameManager.MOVE_RIGHT_KEY] = false;
 			userInputs[GameManager.MOVE_UP_KEY] = false;
 			
-			var matId:String = isMainUser ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
-			var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
+			_collisionTimer = new Timer(200, 10);
+			_collisionTimer.addEventListener(TimerEvent.TIMER,onTimer);
+			_collisionTimer.addEventListener(TimerEvent.TIMER_COMPLETE,onTimerComplete);
+			
+			//var matId:String = isMainUser ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
+			//var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
 			
 			var cG:CubeGeometry = new CubeGeometry(100, 100, 100);
-			mesh = new Mesh(cG, mat);
+			mesh = new Mesh(cG, getMaterial(isMainUser));
 			mesh.x = coords.x;
 			mesh.y = coords.y;
 			mesh.z = coords.z;	
@@ -83,11 +99,28 @@ package com.mayhem.game
 			body.linearVelocity = velocity;
 		}
 		
-		//public function triggerBumpParticles(position:Vector3D):void {
-			//if(!hasCollided)
-				//ParticlesFactory.instance.getSparksParticles(position, enableCollision);
-			//hasCollided = true;
-		//}
+		public function getMaterial(bool:Boolean):MaterialBase {
+			var matId:String = bool ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
+			var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
+			return mat;
+		}
+		
+		private function onTimer(event:TimerEvent):void {
+			var visib:Boolean = mesh.visible
+			mesh.visible = !visib;
+		}
+		
+		private function onTimerComplete(event:TimerEvent):void {
+			trace('back to normal')
+			hasCollided = false;
+		}
+		
+		public function setImpactState(position:Vector3D):void {
+			var particlesPosition:Vector3D = mesh.transform.transformVector(position);
+			ParticlesFactory.instance.getSparksParticles(particlesPosition, null);
+			_collisionTimer.reset();
+			_collisionTimer.start();
+		}
 		
 		private function enableCollision():void {
 			hasCollided = false;
