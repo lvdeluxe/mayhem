@@ -122,7 +122,7 @@ package com.mayhem.game
 			_physicsWorld = AWPDynamicsWorld.getInstance();					
 			_physicsWorld.initWithDbvtBroadphase();
 			_physicsWorld.collisionCallbackOn = true;			
-			//_debugDraw = new AWPDebugDraw(_view3D, _physicsWorld);
+			_debugDraw = new AWPDebugDraw(_view3D, _physicsWorld);
 		}
 		
 		private function setSignals():void{			
@@ -144,14 +144,14 @@ package com.mayhem.game
 		}
 		private function respawn():void {
 			UISignals.OWNER_RESPAWNED.dispatch();
-			//_ownerCube.body.angularVelocity = new Vector3D();
-			//_ownerCube.body.linearVelocity = new Vector3D();
-			//_ownerCube.body.linearDamping = 0.98;
-			//_ownerCube.body.angularDamping = 0.98;
+			_ownerCube.body.angularVelocity = new Vector3D();
+			_ownerCube.body.linearVelocity = new Vector3D();
+			_ownerCube.body.linearDamping = 0.98;
+			_ownerCube.body.angularDamping = 0.98;
 			_ownerCube.hasFelt = false;
 			
-			//_ownerCube.car.getRigidBody().rotation = new Vector3D(0, 0, 0);
-			_ownerCube.car.getRigidBody().position = new Vector3D(0, 50, -2600);
+			_ownerCube.body.rotation = new Vector3D(0, 0, 0);
+			_ownerCube.body.position = new Vector3D(0, 50, -2600);
 		}
 		
 		private function onCubeCollision(manifold:CollisionManifold):void {
@@ -189,24 +189,23 @@ package com.mayhem.game
 		}
 		
 		private function updateCube(cube:MovingCube, rBodyObject:LightRigidBody):void {
-			if(rBodyObject && cube)rBodyObject.applyToVehicle(cube.car);
+			if(rBodyObject && cube)rBodyObject.applyToRigidBody(cube.body);
 		}
 		
 		private function updatePosition(event:TimerEvent):void {
-			if (_ownerCube.car.getRigidBody().linearVelocity.nearEquals(new Vector3D(0, 0, 0),0.00001)) {
+			if (_ownerCube.body.linearVelocity.nearEquals(new Vector3D(0, 0, 0),0.00001)) {
 				_updateTimer.stop();
 				return;
 			}
-			//UserInputSignals.USER_UPDATE_STATE.dispatch(LightRigidBody.fromAWPRigidBody(_ownerCube.car.getRigidBody()));
-			UserInputSignals.USER_UPDATE_STATE.dispatch(LightRigidBody.fromVehicle(_ownerCube.car));
+			UserInputSignals.USER_UPDATE_STATE.dispatch(LightRigidBody.fromAWPRigidBody(_ownerCube.body));
 		}
 		
 		
 		private function moveObjects(elapsed:Number):void {			
 			//apply 500 force per second.
-			var force:Number = 5000//(elapsed * 500) / 1000
+			var force:Number = 10//(elapsed * 500) / 1000
 			//apply 50 torque per second
-			var torque:Number = 0.1//(elapsed * 2) / 1000
+			var torque:Number = 1//0.1//(elapsed * 2) / 1000
 			
 			var moveX:Number = 0;
 			var moveZ:Number = 0;			
@@ -219,52 +218,35 @@ package com.mayhem.game
 				else if (cube.userInputs[MOVE_RIGHT_KEY])
 					moveX = torque;
 				if (cube.userInputs[MOVE_UP_KEY])
-					moveZ = force;
+					moveZ = 0.5;
 				else if (cube.userInputs[MOVE_DOWN_KEY])
-					moveZ = -force;				
+					moveZ = - 0.5;				
 				
-				//if (moveX != 0) {
-				//cube.steering = cube.car.getSteeringValue(0)
-				cube.steering += moveX
-				if (moveX < 0) {
-					if (cube.steering < -Math.PI / 6) {
-						cube.steering = -Math.PI / 6;
-					}
-				}
-				if (moveX > 0) {
-					if (cube.steering > Math.PI / 6) {
-						cube.steering = Math.PI / 6;
-					}
-				}
-				if (cube.steering > Math.PI / 6) {
-					cube.steering = Math.PI / 6;
-				}
-					cube.car.setSteeringValue(cube.steering,0);					
-					cube.car.setSteeringValue(cube.steering,1);					
-				//}else {
-				trace(cube.steering)
-				cube.steering *= 0.9;
-				
-					//
-				//}
-				
-				//if (moveZ != 0) {
-					//var f:Vector3D = cube.body.front;
-					//f.scaleBy(moveZ);
-					cube.car.applyEngineForce(moveZ,0);
-					cube.car.applyEngineForce(moveZ,1);
-					cube.car.applyEngineForce(moveZ,2);
-					cube.car.applyEngineForce(moveZ,3);
-				//}
-				if (moveZ == 0) {
-					cube.car.setBrake(50, 0);
-					cube.car.setBrake(50, 1);
-					cube.car.setBrake(50, 2);
-					cube.car.setBrake(50, 3);
+				if (moveZ != 0) {
+					cube.velocityLenght += moveZ;
+					//cube.velocityLenght+=cube.bumpingVelocity
+					//trace(cube.bumpingVelocity)
+					var f:Vector3D = cube.body.front;
+					f = f.add(cube.bumpingVelocity)
+					f.scaleBy(cube.velocityLenght);
+					
+					cube.body.activate(true);
+					//f.add(cube.bumpingVelocity)
+					cube.body.linearVelocity = f;
+					
+					
+					if (cube.velocityLenght > 20)
+						cube.velocityLenght = 20;
+					else if (cube.velocityLenght < -20)
+						cube.velocityLenght = -20;
+						
 				}else {
-					trace(moveZ, cube.car.getRigidBody().linearVelocity)
+					cube.velocityLenght = 0;
 				}
-				
+				var totalForce:Number = cube.body.linearVelocity.clone().normalize();
+				if (moveX != 0) {					
+					cube.body.angularVelocity = new Vector3D(0,moveX * (totalForce / 10),0);
+				}				
 			}				
 		}	
 		
@@ -286,9 +268,8 @@ package com.mayhem.game
 			setLastVelocity();
 			setAIBehavior();			
 			_physicsWorld.step(dt / 1000, 5, _timeStep);	
-			//_physicsWorld.step(1/30, 1, _timeStep);	
 			
-			//_debugDraw.debugDrawWorld();
+			_debugDraw.debugDrawWorld();
 		}
 		
 		private function getClosestTarget(position:Vector3D):MovingCube {
@@ -297,30 +278,26 @@ package com.mayhem.game
 		
 		private function chaseTarget(chaser:MovingAICube, target:MovingCube):void {
 			if (target) {				
-				//var a:Number = target.body.position.z - chaser.body.z;
-				//var b:Number = target.body.position.x - chaser.body.x;
-				//var rads:Number = Math.atan2(a, b);
-				//chaser.body.rotation = new Vector3D(0, -(rads * 180 / Math.PI) + 90, 0);
+				var a:Number = target.body.position.z - chaser.body.z;
+				var b:Number = target.body.position.x - chaser.body.x;
+				var rads:Number = Math.atan2(a, b);
+				chaser.body.rotation = new Vector3D(0, -(rads * 180 / Math.PI) + 90, 0);
 				//
-				//var f:Vector3D = chaser.body.front;
-				//f.scaleBy(10);
-				//chaser.car.applyEngineForce(10,0);				
-				//chaser.car.applyEngineForce(10,1);				
-				//chaser.car.applyEngineForce(10,2);				
-				//chaser.car.applyEngineForce(10,3);				
+				var f:Vector3D = chaser.body.front;
+				f.scaleBy(10);
+				chaser.body.applyCentralForce(f);		
 			}
 		}
 		
 		private function setAIBehavior():void {
 			for (var i:uint = 0 ; i < _allAICubes.length ; i++ )
-				chaseTarget(_allAICubes[i], getClosestTarget(_allAICubes[i].car.getRigidBody().position));
-				//_allAICubes[i].setAIBehavior();
+				chaseTarget(_allAICubes[i], getClosestTarget(_allAICubes[i].body.position));
 		}
 		
 		private function setLastVelocity():void
 		{
 			for each(var cube:MovingCube in _allPlayers) {
-				cube.linearVelocityBeforeCollision = cube.car.getRigidBody().linearVelocity.clone();
+				cube.linearVelocityBeforeCollision = cube.body.linearVelocity.clone();
 			}
 		}
 		
@@ -384,29 +361,23 @@ package com.mayhem.game
 			switch(keyCode) {
 				case Keyboard.LEFT:
 				case Keyboard.RIGHT:
-					//cube.body.angularDamping = 0.98;
+					cube.body.angularDamping = 0.98;
 					break;
 				case Keyboard.UP:
 					moveZ = -force;
-					//cube.body.linearDamping = 0.98;
+					cube.body.linearDamping = 0.98;
 					break;
 				case Keyboard.DOWN:
 					moveZ = force;
-					//cube.body.linearDamping = 0.98;
+					cube.body.linearDamping = 0.98;
 					break;
 			}
 			if (cube != _ownerCube){
-				//if (moveZ != 0) {
-					//var f:Vector3D = cube.body.front;
-					//f.scaleBy(moveZ);				
-					cube.car.applyEngineForce(moveZ,0);
-					cube.car.applyEngineForce(moveZ,1);
-					cube.car.applyEngineForce(moveZ,2);
-					cube.car.applyEngineForce(moveZ,3);
-				//}
-				cube.car.setSteeringValue(0, 0);
-				cube.car.setSteeringValue(0, 1);
-			
+				if (moveZ != 0) {
+					var f:Vector3D = cube.body.front;
+					f.scaleBy(moveZ);	
+					cube.body.applyCentralForce(f)
+				}
 				cube.removeUserInput(keyCode);
 			}
 		}
@@ -422,29 +393,26 @@ package com.mayhem.game
 			var moveZ:Number = 0;
 			if (keyCode == Keyboard.LEFT) {
 				moveX = -torque;
-				//cube.body.angularDamping = 0;
+				cube.body.angularDamping = 0;
 			}else if (keyCode == Keyboard.RIGHT ) {
 				moveX = torque;
-				//cube.body.angularDamping = 0;
+				cube.body.angularDamping = 0;
 			}			
 			if (keyCode == Keyboard.UP) {
-				//cube.body.linearDamping = 0;
+				cube.body.linearDamping = 0;
 				moveZ = force;
 			}else if (keyCode == Keyboard.DOWN) {
-				//cube.body.linearDamping = 0;
+				cube.body.linearDamping = 0;
 				moveZ = -force;
 			}
 			if (cube != _ownerCube){
 				if (moveZ != 0) {
-					//var f:Vector3D = cube.body.front;
-					//f.scaleBy(moveZ);	
-					cube.car.applyEngineForce(moveZ,0);
+					var f:Vector3D = cube.body.front;
+					f.scaleBy(5);	
+					cube.body.linearVelocity = f;
 				}
 				if (moveX != 0) {
-					cube.car.setSteeringValue(1,0)//.angularVelocity = new Vector3D(0,moveX,0);
-					cube.car.setSteeringValue(1,1)//.angularVelocity = new Vector3D(0,moveX,0);
-					cube.car.setSteeringValue(1,2)//.angularVelocity = new Vector3D(0,moveX,0);
-					cube.car.setSteeringValue(1,3)//.angularVelocity = new Vector3D(0,moveX,0);
+					cube.body.angularVelocity = new Vector3D(0,moveX,0);
 				}
 				cube.addUserInput(keyCode);		
 			}
@@ -468,18 +436,12 @@ package com.mayhem.game
 			var movingCube:MovingCube = new MovingCube(name,  new Vector3D(0,50,-2600),  new Vector3D(0,0,0), new Vector3D(0,0,0), isOwner);
 			_view3D.scene.addChild(movingCube.mesh);
 			_physicsWorld.addRigidBody(movingCube.body);
-			_physicsWorld.addVehicle(movingCube.car);
 			trace("created", movingCube.name);
 			if (isOwner){
 				_ownerCube = movingCube;
-				_ownerCube.car.getRigidBody().addEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
+				_ownerCube.body.addEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
 				_ownerCube.mesh.addEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
 				_ownerCube.mesh.addEventListener(Object3DEvent.ROTATION_CHANGED, onCubeChanged);
-				//var f:Vector3D = _ownerCube.car.front;
-				//_ownerCube.body.linearDamping = 1;
-				//f.scaleBy(20);
-				//_ownerCube.body.applyImpulse(f,new Vector3D())
-				//_ownerCube.body.applyCentralForce(f)
 			}
 			if (lightRigidBody) {
 				updateCube(movingCube, lightRigidBody);
@@ -497,9 +459,7 @@ package com.mayhem.game
 		
 		protected function collisionDetectionHandler(event:AWPEvent):void
 		{
-			//if (event.collisionObject.skin.name == ArenaFactory.FALL_FROM_ARENA) {
-				//trace("touched falling stuff")
-			//}
+			
 			if (!event.collisionObject.skin)
 				return;
 				
@@ -507,8 +467,6 @@ package com.mayhem.game
 			
 			if (cubeCollider)
 			{
-				//cubeCollider.body.linearDamping = 0;
-				//_ownerCube.body.linearDamping = 0;
 				if (!_ownerCube.hasCollided && !cubeCollider.hasCollided) {
 					var manifold:CollisionManifold = new CollisionManifold();
 					manifold.colliderA = cubeCollider.name;
@@ -517,9 +475,7 @@ package com.mayhem.game
 					manifold.positionB = event.manifoldPoint.localPointB;
 					manifold.forceA = cubeCollider.linearVelocityBeforeCollision.length;
 					manifold.forceB = _ownerCube.linearVelocityBeforeCollision.length;
-					trace(manifold.forceA, manifold.forceB)
 					if (manifold.forceA > manifold.forceB) {
-						trace(manifold.colliderA,manifold.colliderB)
 						UserInputSignals.USER_IS_COLLIDING.dispatch(manifold);
 					}
 					_ownerCube.hasCollided = true;
@@ -531,7 +487,7 @@ package com.mayhem.game
 		}		
 		
 		private function onCubeChanged(event:Object3DEvent):void {
-			_ownerCube.currentVelocity = _ownerCube.car.getRigidBody().linearVelocity;
+			_ownerCube.currentVelocity = _ownerCube.body.linearVelocity;
 			if (!_updateTimer.running)
 				_updateTimer.start();
 		}	

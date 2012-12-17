@@ -48,10 +48,9 @@ package com.mayhem.game
 		public var isTouchingGround:Boolean = true;
 		public var floorCollidingFrames:Vector.<uint> = new Vector.<uint>();
 		
-		public var car:AWPRaycastVehicle;
+		public var velocityLenght:Number = 0;	
 		
-		public var steering:Number = 0;
-		
+		public var bumpingVelocity:Vector3D = new Vector3D();
 		
 		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
 		{
@@ -66,9 +65,6 @@ package com.mayhem.game
 			_collisionTimer.addEventListener(TimerEvent.TIMER,onTimer);
 			_collisionTimer.addEventListener(TimerEvent.TIMER_COMPLETE,onTimerComplete);
 			
-			//var matId:String = isMainUser ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
-			//var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
-			
 			var cG:CubeGeometry = new CubeGeometry(100, 100, 100);
 			mesh = new Mesh(cG, getMaterial(isMainUser));
 			mesh.x = coords.x;
@@ -79,53 +75,20 @@ package com.mayhem.game
 			
 			mesh.extra = this;
 			
-			//var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
-			//body = new AWPRigidBody(boxShape, mesh, 1);
-			//var trident:Trident = new Trident(150);
-			//mesh.addChild(trident)
-			//body.gravity = new Vector3D(0,-1,0);
-			//body.friction = .1;
-			//body.restitution = 0.1
-			//body.ccdSweptSphereRadius = 0.5;
-			//body.ccdMotionThreshold = 1;
-			//body.angularFactor= new Vector3D(0.25,1,0.25);
-			//body.position = coords;
-			//body.rotation = rotation;
-			//body.linearVelocity = velocity;
-			
-			createCar(coords);
-		}
-		
-		private function createCar(coords:Vector3D):void {
-			var carShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
-			//var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
-			body = new AWPRigidBody(carShape, mesh, 1200);
-			//carBody.activationState = AWPCollisionObject.DISABLE_DEACTIVATION;
-			body.linearDamping = 0.1;
-			body.angularDamping = 0.1;
-			body.position = new Vector3D(0, 1500, 0);
-			
+			var boxShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
+			body = new AWPRigidBody(boxShape, mesh, 1);
+			var trident:Trident = new Trident(150);
+			mesh.addChild(trident)
+			body.gravity = new Vector3D(0,-1,0);
+			body.friction = .1;
+			body.restitution = 0.1
+			body.ccdSweptSphereRadius = 0.5;
+			body.ccdMotionThreshold = 1;
+			body.angularFactor= new Vector3D(0.25,1,0.25);
 			body.position = coords;
-			//physicsWorld.addRigidBody(carBody);
-
-			// create vehicle
-			var turning : AWPVehicleTuning = new AWPVehicleTuning();
-			turning.frictionSlip = 2;
-			turning.suspensionStiffness = 100;
-			turning.suspensionDamping = 0.85;
-			turning.suspensionCompression = 0.83;
-			turning.maxSuspensionTravelCm = 20;
-			turning.maxSuspensionForce = 8000;
-			car = new AWPRaycastVehicle(turning, body);
-			//physicsWorld.addVehicle(car);
-
-			// add four wheels
-			car.addWheel(null, new Vector3D(-110, 80, 170), new Vector3D(0, -1, 0), new Vector3D(-1, 0, 0), 50, 100, turning, true);
-			car.addWheel(null, new Vector3D(110, 80, 170), new Vector3D(0, -1, 0), new Vector3D(-1, 0, 0), 50, 100, turning, true);
-			car.addWheel(null, new Vector3D(-110, 90, -210), new Vector3D(0, -1, 0), new Vector3D(-1, 0, 0), 50, 100, turning, false);
-			car.addWheel(null, new Vector3D(110, 90, -210), new Vector3D(0, -1, 0), new Vector3D(-1, 0, 0), 50, 100, turning, false);
+			body.rotation = rotation;
+			body.linearVelocity = velocity;
 		}
-		
 		
 		public function getMaterial(bool:Boolean):MaterialBase {
 			var matId:String = bool ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
@@ -139,7 +102,6 @@ package com.mayhem.game
 		}
 		
 		private function onTimerComplete(event:TimerEvent):void {
-			trace('back to normal')
 			hasCollided = false;
 		}
 		
@@ -185,58 +147,6 @@ package com.mayhem.game
 					userInputs[GameManager.MOVE_DOWN_KEY] = false;
 					break;
 			}
-		}
-		
-		
-		
-		
-		//private function linearEase(t:Number, b:Number, c:Number, d:Number):Number {
-			//t  = current time
-			//b = beggining value
-			//c = end value
-			//d = total time
-			//return c*t/d + b;
-		//};
-		//
-		//public function checkInterpolate():void {
-			//if (doInterpolatePosition) {
-				//if (interpolatePositionTo == null)
-						//return;
-				//if (!startedInterpolatePosition) {
-					//startedInterpolatePosition = true;
-					//interpolatePositionStartTime = getTimer();
-					//startInterpolateAt = body.position;
-					//
-				//}
-				//var factor:Number = linearEase(getTimer() - interpolatePositionStartTime, 0, 1, 450);
-				//var tmpX:Number = startInterpolateAt.x + ((interpolatePositionTo.x - startInterpolateAt.x )* factor);
-				//var tmpY:Number = startInterpolateAt.y + ((interpolatePositionTo.y - startInterpolateAt.y )* factor);
-				//var tmpZ:Number = startInterpolateAt.z + ((interpolatePositionTo.z - startInterpolateAt.z )* factor);
-				//trace(factor)
-				//trace(startInterpolateAt)
-				//trace(new Vector3D(tmpX, tmpY, tmpZ))
-				//trace(interpolatePositionTo)
-				//body.position = (new Vector3D(tmpX, tmpY, tmpZ))
-			//
-				//if (factor >= 1 || body.position.equals(interpolatePositionTo)) {
-					//doInterpolatePosition = false;
-					//startedInterpolatePosition = false;
-					//
-					//trace("////////////////////")
-					//body.position = interpolatePositionTo;
-				//}
-			//}
-		//}
-		//
-		//
-		//private function quadOut(currTime:Number, start:Number, end:Number, totalTime:Number):Number {
-			//t  = current time
-			//b = beggining value
-			//c = end value
-			//d = total time
-			//return 1 - Math.pow(1 - (currTime / totalTime), 5);
-		//}
-		
+		}		
 	}
-
 }

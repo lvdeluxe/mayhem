@@ -126,7 +126,7 @@ package com.mayhem.game
 			var fallingShape : AWPStaticPlaneShape = new AWPStaticPlaneShape(new Vector3D(0, 1, 0));
 			var fallingRigidbody : AWPGhostObject = new AWPGhostObject(fallingShape);
 			fallingRigidbody.addEventListener(AWPEvent.COLLISION_ADDED, onFallingCollision);
-			fallingRigidbody.y = -25;
+			fallingRigidbody.y = -50;
 			fallingRigidbody.collisionFlags |= AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
 			//fallingRigidbody.collisionFlags |= AWPCollisionFlags.CF_DISABLE_VISUALIZE_OBJECT;
 			_physicsWorld.addCollisionObject(fallingRigidbody);
