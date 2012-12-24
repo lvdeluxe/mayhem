@@ -34,12 +34,12 @@ package com.mayhem.ui
 		
 		private function onOwnerFelt():void {
 			_deathTextField = new TextField(800, 600, "YOU FELT, YOU MORON!!!", "Verdana", 48);
-			_deathTextField.color = 0xffffff;
+			_deathTextField.color = 0x151515;
 			addChild(_deathTextField);	
 		}
 		private function onEnergyOut():void {
 			_deathTextField = new TextField(800, 600, "YOU DIED, YOU MORON!!!", "Verdana", 48);
-			_deathTextField.color = 0xffffff;
+			_deathTextField.color = 0x151515;
 			addChild(_deathTextField);	
 		}
 		private function onEnergyUpdate(prct:Number):void {

@@ -48,6 +48,7 @@ package
 		private function init(e:Event = null):void 
 		{
 			Security.allowDomain("*") ;
+			Security.loadPolicyFile("http://cdn.playerio.com/crossdomain.xml");
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			setStageProperties();
 			setStage3DProxy();

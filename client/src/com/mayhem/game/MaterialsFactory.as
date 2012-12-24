@@ -29,7 +29,7 @@ package com.mayhem.game
 		private static var ShadowClass:Class;
 		
 		private static var _allMaterials:Dictionary = new Dictionary();		
-		private static var _mainLightPicker:StaticLightPicker;
+		public static var mainLightPicker:StaticLightPicker;
 		
 		public function MaterialsFactory() 
 		{
@@ -39,7 +39,7 @@ package com.mayhem.game
 		
 		
 		public static function initialize(lights:Array):void {
-			_mainLightPicker = new StaticLightPicker(lights);
+			mainLightPicker = new StaticLightPicker(lights);
 		}
 		
 		public static function getMaterialById(id:String):MaterialBase {
@@ -80,7 +80,7 @@ package com.mayhem.game
 			var texture:BitmapTexture = new BitmapTexture(shadow.bitmapData);
 			var mat:TextureMaterial = new TextureMaterial(texture);
 			mat.alphaBlending = true;
-			mat.lightPicker = _mainLightPicker
+			mat.lightPicker = mainLightPicker
 			return mat;
 		}
 		
@@ -103,7 +103,7 @@ package com.mayhem.game
 			mat.specularColor = 0xFFFFFF;
 			mat.color = 0x666666;
 			mat.specular = 0;
-			mat.lightPicker = _mainLightPicker;
+			mat.lightPicker = mainLightPicker;
 			return mat;
 		}
 		
@@ -126,24 +126,24 @@ package com.mayhem.game
 			mat.specularColor = 0xFFFFFF;
 			mat.color = 0x3E9613;
 			mat.specular = 0;
-			mat.lightPicker = _mainLightPicker;
+			mat.lightPicker = mainLightPicker;
 			return mat;
 		}
 		
 		private static function getAICubeMaterial():MaterialBase {
 			var mat:ColorMaterial = new ColorMaterial(0x999999);
-			mat.lightPicker = _mainLightPicker;
+			mat.lightPicker = mainLightPicker;
 			return mat;
 		}
 		private static function getOwnerCubeMaterial():MaterialBase {
 			var mat:ColorMaterial = new ColorMaterial(0xcc0000);
-			mat.lightPicker = _mainLightPicker;
+			mat.lightPicker = mainLightPicker;
 			return mat;
 		}
 		
 		private static function getOtherCubeMaterial():MaterialBase {
 			var mat:ColorMaterial = new ColorMaterial(0x0000cc);
-			mat.lightPicker = _mainLightPicker;
+			mat.lightPicker = mainLightPicker;
 			return mat;
 		}
 		

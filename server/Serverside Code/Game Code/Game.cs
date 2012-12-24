@@ -5,6 +5,8 @@ using PlayerIO.GameLibrary;
 
 namespace MyGame {
 
+    
+
     public struct Vector3
     {
         public double x, y, z;
@@ -18,35 +20,29 @@ namespace MyGame {
 
 	public class Player : BasePlayer {
 		public string Name;
-        //public Vector3 Position;
-        //public Vector3 Rotation;
-        //public Vector3 Velocity;
-
+        public int UserIndex;
         public Byte[] RigidBodyDescription;
-
-
-        //public double positionX;
-        //public double positionY;
-        //public double positionZ;
-        //public double rotationX;
-        //public double rotationY;
-        //public double rotationZ;
-        //public double velocityX;
-        //public double velocityY;
-        //public double velocityZ;
 	}
 
 	[RoomType("OfficeMayhem")]
 	public class GameCode : Game<Player> {
 
         private Dictionary<string, Player> allUsers;
+        private Dictionary<string, Player> allAICubes;
+        private int maxPerRoom = 10;
+
 
 		// This method is called when an instance of your the game is created
 		public override void GameStarted() {
-            allUsers = new Dictionary<string,Player>();
-			// anything you write to the Console will show up in the 
-			// output window of the development server
-			Console.WriteLine("Game is started: " + RoomId);
+            allUsers = new Dictionary<string, Player>();
+            allAICubes = new Dictionary<string, Player>();
+            
+            for (int i = 0; i < maxPerRoom; i++)
+            {
+                allAICubes["ai_" + allAICubes.Count.ToString()] = GetAICube(i);
+            }
+
+            Console.WriteLine("Game is started: " + RoomId);
 
 			// This is how you setup a timer
             //AddTimer(delegate {
@@ -88,28 +84,31 @@ namespace MyGame {
             //    }
             //    userInfo.Save();
             //});
-
-			// this is how you send a player a message
+            
             Console.WriteLine("userId: " + player.ConnectUserId);
+            player.UserIndex = allUsers.Count;
 
             allUsers.Add(player.ConnectUserId, player);
+            allAICubes.Remove("ai_" + player.UserIndex.ToString());
 
-            //Random rand = new Random();
-            //player.Position = new Vector3(1250 - (rand.NextDouble() * 2500), 50.0f, 1250 - (rand.NextDouble() * 2500));
-            //player.Rotation = new Vector3(0.0f, 0.0f, 0.0f);
-            //player.Velocity = new Vector3(0.0f, 0.0f, 0.0f);
-
-            Broadcast("UserJoined", player.ConnectUserId);
+            Broadcast("UserJoined", player.ConnectUserId, player.UserIndex);
 		}
 
-		// This method is called when a player leaves the game
+        private Player GetAICube(int index)
+        {
+            Player p = new Player();
+            p.Name = "ai_" + index.ToString();
+            p.UserIndex = index;
+            return p;
+        }
+
 		public override void UserLeft(Player player) {
             allUsers.Remove(player.ConnectUserId);
+            allAICubes.Add("ai_" + player.UserIndex.ToString(), GetAICube(player.UserIndex));
             Console.WriteLine("userId left: " + player.ConnectUserId);
-            Broadcast("UserLeft", player.ConnectUserId);
+            Broadcast("UserLeft", player.ConnectUserId, player.UserIndex);
 		}
 
-		// This method is called when a player sends a message into the server code
 		public override void GotMessage(Player player, Message message) {
             switch(message.Type) {
                 case "GetRoomUsers":
@@ -119,13 +118,19 @@ namespace MyGame {
                         if (plyr.Value.ConnectUserId != player.ConnectUserId)
                         {
                             msg.Add(plyr.Value.ConnectUserId);
-                            msg.Add(plyr.Value.RigidBodyDescription); 
+                            msg.Add(plyr.Value.RigidBodyDescription);
                         }
                     }
                     player.Send(msg);
                     break;
                 case "PlayerStoppedMoving":
                     Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
+                    break;
+                case "AIUpdateState":
+                    Byte[] AIByteArray = message.GetByteArray(0);
+                    //player.RigidBodyDescription = byteArray;
+                    Console.WriteLine("AIUpdateState");
+                    Broadcast("AIHasStateUpdate", AIByteArray);
                     break;
                 case "PlayerUpdateState":                   
                     Byte[] byteArray = message.GetByteArray(0);

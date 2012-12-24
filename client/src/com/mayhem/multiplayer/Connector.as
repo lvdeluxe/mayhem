@@ -5,6 +5,7 @@ package com.mayhem.multiplayer
 	 * @author availlant
 	 */
 	
+	import away3d.entities.Mesh;
 	import awayphysics.dynamics.AWPRigidBody;
 	import com.hibernum.social.model.SocialUser;
 	import com.mayhem.game.CollisionManifold;
@@ -31,6 +32,8 @@ package com.mayhem.multiplayer
 		private var _socialUser:SocialUser;
 		private var _mainConnection:Connection;
 		
+		public static const MAX_USER_PER_ROOM:uint = 10;
+		
 		//url for live deployment
 		//https://office-mayhem-g9omnsmpskqoxaolbzotca.fb.playerio.com/fb/omfb/
 		
@@ -41,6 +44,7 @@ package com.mayhem.multiplayer
 			registerClassAlias("LightRigidBody", LightRigidBody);
 			registerClassAlias("CollisionManifold", CollisionManifold);
 			registerClassAlias("Vector3D", Vector3D);
+			registerClassAlias("Vector", Vector);
 			
 			PlayerIO.connect(
 				pStage,								//Referance to stage
@@ -56,18 +60,20 @@ package com.mayhem.multiplayer
 		private function handleConnect(client:Client):void{
 			trace("Sucessfully connected to player.io");
 			_client = client;
-			//Set developmentsever (Comment out to connect to your server online)
-			//_client.multiplayer.developmentServer = "localhost:8184";
-			
-			//Create pr join the room test
-			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);		
-			
+			_client.multiplayer.developmentServer = "localhost:8184";
+			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
+			setSignals();
+		}
+		
+		
+		private function setSignals():void {
 			UserInputSignals.USER_IS_MOVING.add(onPlayerMoving);
 			UserInputSignals.USER_STOPPED_MOVING.add(onPlayerStopMoving);
 			UserInputSignals.USER_UPDATE_STATE.add(onPlayerUpdateState);
+			UserInputSignals.AI_UPDATE_STATE.add(onAIUpdateState);
 			UserInputSignals.USER_IS_COLLIDING.add(onCollision);
-			
 		}
+		
 		
 		private function onCollision(manifold:CollisionManifold):void
 		{
@@ -78,7 +84,14 @@ package com.mayhem.multiplayer
 			_mainConnection.sendMessage(mess);	
 		}
 		
-		//private function onPlayerUpdateState(position:Vector3D,rotation:Vector3D, velocity:Vector3D):void {
+		private function onAIUpdateState(allAI:Vector.<Object>):void {
+			var mess:Message = _mainConnection.createMessage("AIUpdateState");
+			var allAIBytes:ByteArray = new ByteArray();
+			allAIBytes.writeObject(allAI);
+			mess.add(allAIBytes);
+			_mainConnection.sendMessage(mess);			
+		}
+		
 		private function onPlayerUpdateState(rigidBody:LightRigidBody):void {
 			var mess:Message = _mainConnection.createMessage("PlayerUpdateState");
 			var rigidBodyBytes:ByteArray = new ByteArray();
@@ -102,13 +115,26 @@ package com.mayhem.multiplayer
 		}
 		
 		private function onGetRoomList(rooms:Array):void {
-			for each(var room:RoomInfo in rooms) {
-				trace(room.id)
-				trace(room.onlineUsers)
-				trace(room.roomType)
+			var numRooms:uint = rooms.length;
+			var roomsComplete:uint = 0;
+			var room:RoomInfo
+			for each(room in rooms) {
+				trace('roomId',room.id)
+				if (room.onlineUsers == MAX_USER_PER_ROOM) {
+					room.data.isFull = true;
+					roomsComplete ++;
+				}else {
+					room.data.isFull = false;
+				}
 			}
-			if (rooms.length > 0) {
-				_client.multiplayer.joinRoom(rooms[0].id, {name:_socialUser.name }, handleJoin, handleError);
+			if (rooms.length > 0 && roomsComplete < numRooms) {
+				for each(room in rooms) {
+					if (!room.data.isFull) {
+						_client.multiplayer.joinRoom(room.id, { name:_socialUser.name }, handleJoin, handleError);
+						return;
+					}
+				}
+					
 			}else {
 				_client.multiplayer.createJoinRoom(
 					null,								//Room id. If set to null a random roomid is used
@@ -122,68 +148,72 @@ package com.mayhem.multiplayer
 			}
 		}
 		
-		private function handleJoin(connection:Connection):void {
-			_mainConnection = connection;
-			trace("Sucessfully connected to the multiplayer server");			
-			//Add disconnect listener
-			connection.addDisconnectHandler(handleDisconnect);
-			//Add message listener for users joining the room
-			connection.addMessageHandler("SetRoomUsers", function(m:Message):void {
-				for (var i:uint = 0; i < m.length; i++ ) {
-					if (i % 2 == 1) {
-						trace(i)
-						var byteArray:ByteArray = m.getByteArray(i);
-						var lightBody:LightRigidBody = byteArray.readObject();
-						trace("SetRoomUsers",lightBody)
-						MultiplayerSignals.USERS_IN_ROOM.dispatch( { uid:m.getString( i - 1), isMainUser:false, rigidBody:lightBody} );
-					}
+		private function setRoomUsersHandler(m:Message):void {
+			for (var i:uint = 0; i < m.length; i++ ) {
+				if (i % 2 == 1) {
+					trace(i)
+					var byteArray:ByteArray = m.getByteArray(i);
+					var lightBody:LightRigidBody = byteArray.readObject();
+					trace("SetRoomUsers",lightBody)
+					MultiplayerSignals.USERS_IN_ROOM.dispatch( { uid:m.getString( i - 1), isMainUser:false, rigidBody:lightBody} );
 				}
-			});
-			
-			//Add message listener for users joining the room
-			connection.addMessageHandler("UserJoined", function(m:Message, userid:String):void {
-				_allUsers[userid] = new GameUserVO(userid);
-				var isMain:Boolean;
-				if (userid == "user_"+_socialUser.social_id){
-					trace("You are the main user", userid);
-					isMain = true
-				}else{
-					trace("Player with the userid", userid, "just joined the room");
-					isMain = false;
-				}
-				MultiplayerSignals.USER_JOINED.dispatch( { uid:userid, isMainUser:isMain } );
-				if (isMain)
-					connection.send("GetRoomUsers");
-			});
-
-			connection.addMessageHandler("PlayerHasStateUpdate", function(m:Message, userid:String, byteArray:ByteArray):void {
-				var rBody:LightRigidBody = byteArray.readObject();
-				UserInputSignals.USER_HAS_UPDATE_STATE.dispatch(userid, rBody);
-			});
-			connection.addMessageHandler("PlayerHasMoved", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
-				UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);
-			});
-			connection.addMessageHandler("PlayerHasStoppedMoving", function(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
-				UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode,timestamp);
-			});			
-			
-			//Add message listener for users leaving the room
-			connection.addMessageHandler("UserLeft", function(m:Message, userid:String):void{
-				trace("Player with the userid", userid, "just left the room");
-				MultiplayerSignals.USER_REMOVED.dispatch(userid);
-			});
-			
-			connection.addMessageHandler("PlayerHasCollided", function(m:Message, byteArray:ByteArray):void {
-				var manifold:CollisionManifold = byteArray.readObject();
-				MultiplayerSignals.USER_HAS_COLLIDED.dispatch(manifold);
-			});
-			
-			//Listen to all messages using a private function
-			//connection.addMessageHandler("*", handleMessages);
+			}
 		}
 		
-		private function handleMessages(m:Message):void{
-			trace("Recived the message", m)
+		private function UserJoinedHandler(m:Message, userid:String, userIndex:int):void {
+			_allUsers[userid] = new GameUserVO(userid);
+			var isMain:Boolean;
+			if (userid == "user_"+_socialUser.social_id){
+				trace("You are the main user", userid);
+				isMain = true
+			}else{
+				trace("Player with the userid", userid, "just joined the game");
+				isMain = false;
+			}
+			MultiplayerSignals.USER_JOINED.dispatch( { uid:userid, user_index:userIndex, isMainUser:isMain } );
+			if (isMain)
+				_mainConnection.send("GetRoomUsers");
+		}
+		
+		private function AIStateUpdateHandler(m:Message, byteArray:ByteArray):void {
+			var allAI:Vector.<Object> = byteArray.readObject();
+			UserInputSignals.AI_HAS_UPDATE_STATE.dispatch(allAI);
+		}
+		private function playerStateUpdateHandler(m:Message, userid:String, byteArray:ByteArray):void {
+			var rBody:LightRigidBody = byteArray.readObject();
+			UserInputSignals.USER_HAS_UPDATE_STATE.dispatch(userid, rBody);
+		}
+		
+		private function playerHasMovedHandler(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
+			UserInputSignals.USER_HAS_MOVED.dispatch(userid, keyCode,timestamp);
+		}
+		
+		private function playerStoppedMovingHandler(m:Message, userid:String, keyCode:uint, timestamp:Number):void {
+			UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode,timestamp);
+		}
+		
+		private function userLeftHandler(m:Message, userid:String, userIndex:int):void{
+			trace("Player with the userid", userid, "just left the room");
+			MultiplayerSignals.USER_REMOVED.dispatch(userid,userIndex);
+		}
+		
+		private function playerHasCollidedHandler(m:Message, byteArray:ByteArray):void {
+			var manifold:CollisionManifold = byteArray.readObject();
+			MultiplayerSignals.USER_HAS_COLLIDED.dispatch(manifold);
+		}
+		
+		private function handleJoin(connection:Connection):void {
+			_mainConnection = connection;
+			trace("Sucessfully connected to the multiplayer server");
+			_mainConnection.addDisconnectHandler(handleDisconnect);			
+			_mainConnection.addMessageHandler("SetRoomUsers", setRoomUsersHandler);
+			_mainConnection.addMessageHandler("UserJoined", UserJoinedHandler);
+			_mainConnection.addMessageHandler("PlayerHasStateUpdate", playerStateUpdateHandler);
+			_mainConnection.addMessageHandler("AIHasStateUpdate", AIStateUpdateHandler);
+			_mainConnection.addMessageHandler("PlayerHasMoved", playerHasMovedHandler);
+			_mainConnection.addMessageHandler("PlayerHasStoppedMoving", playerStoppedMovingHandler);			
+			_mainConnection.addMessageHandler("UserLeft", userLeftHandler);			
+			_mainConnection.addMessageHandler("PlayerHasCollided", playerHasCollidedHandler);
 		}
 		
 		private function handleDisconnect():void{

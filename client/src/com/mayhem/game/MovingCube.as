@@ -52,6 +52,8 @@ package com.mayhem.game
 		
 		public var bumpingVelocity:Vector3D = new Vector3D();
 		
+		public var spawnPosition:Vector3D = new Vector3D();
+		
 		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
 		{
 			name = id;
