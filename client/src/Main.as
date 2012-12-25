@@ -17,6 +17,7 @@ package
 	import flash.display.StageQuality;
 	import com.hibernum.social.service.FacebookService;
 	import flash.system.Security;
+	import com.mayhem.game.ModelsManager;
 	
 	
 	/**
@@ -48,8 +49,13 @@ package
 		private function init(e:Event = null):void 
 		{
 			Security.allowDomain("*") ;
-			Security.loadPolicyFile("http://cdn.playerio.com/crossdomain.xml");
+			//Security.loadPolicyFile("http://cdn.playerio.com/crossdomain.xml");
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+			ModelsManager.instance.loadAllModels(setup);
+			
+		}
+		
+		private function setup():void {
 			setStageProperties();
 			setStage3DProxy();
 		}

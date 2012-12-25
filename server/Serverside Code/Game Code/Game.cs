@@ -29,7 +29,7 @@ namespace MyGame {
 
         private Dictionary<string, Player> allUsers;
         private Dictionary<string, Player> allAICubes;
-        private int maxPerRoom = 10;
+        private int maxPerRoom = 12;
 
 
 		// This method is called when an instance of your the game is created

@@ -32,7 +32,7 @@ package com.mayhem.multiplayer
 		private var _socialUser:SocialUser;
 		private var _mainConnection:Connection;
 		
-		public static const MAX_USER_PER_ROOM:uint = 10;
+		public static const MAX_USER_PER_ROOM:uint = 12;
 		
 		//url for live deployment
 		//https://office-mayhem-g9omnsmpskqoxaolbzotca.fb.playerio.com/fb/omfb/

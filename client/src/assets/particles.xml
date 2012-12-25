@@ -6,7 +6,7 @@
         <editor clazz="particleEditor.effect.generater.shape::PlaneEditor" varName="plane" width="100" height="5"/>
       </shape>
       <material>
-        <editor clazz="particleEditor.effect.generater.material::ColorMaterialEditor" varName="material" bothSides="1" requiresBlending="1" blendMode="0" multipleRendering="0" renderTimes="1" timeInterval="0.1" fadeFactor="0.5" color="ffcccccc"/>
+        <editor clazz="particleEditor.effect.generater.material::ColorMaterialEditor" varName="material" bothSides="1" requiresBlending="1" blendMode="0" multipleRendering="0" renderTimes="1" timeInterval="0.1" fadeFactor="0.5" color="ffFCFF28"/>
       </material>
       <sample>
         <editor clazz="SamplesFactory.as$582::SampleEdior" varName="sample" material="0" shape="0"/>
