@@ -1,9 +1,12 @@
 package com.mayhem.game 
 {
 	import away3d.containers.View3D;
+	import away3d.core.managers.Mouse3DManager;
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.core.math.Quaternion;
+	import away3d.core.math.Vector3DUtils;
 	import away3d.debug.AwayStats
+	import away3d.debug.Trident;
 	import away3d.entities.Mesh;
 	import away3d.events.Object3DEvent;
 	import away3d.lights.DirectionalLight;
@@ -16,6 +19,8 @@ package com.mayhem.game
 	import awayphysics.events.AWPEvent;
 	import caurina.transitions.Tweener;
 	import com.bit101.components.HUISlider;
+	import com.mayhem.game.powerups.ExplosionData;
+	import com.mayhem.game.powerups.PowerUpMessage;
 	import com.mayhem.multiplayer.Connector;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
@@ -216,7 +221,34 @@ package com.mayhem.game
 			UserInputSignals.USER_HAS_UPDATE_STATE.add(onUserUpdateState);
 			UserInputSignals.AI_HAS_UPDATE_STATE.add(onAIUpdateState);
 			UserInputSignals.USER_IS_FALLING.add(onUserFelt);
-			//GameSignals.ARENA_READY.add(onArenaReady);
+			MultiplayerSignals.POWERUP_TRIGGERED.add(onPowerUpTriggered)
+			GameSignals.REFILL_POWERUP.add(onPowerUpRefill);
+		}
+		
+		private function onPowerUpRefill(cube:MovingCube):void {
+			if (cube == _ownerCube) {
+				cube.powerupRefill++;
+				if (cube.powerupRefill > MovingCube.POWERUP_FULL) {
+					cube.powerupRefill = MovingCube.POWERUP_FULL;
+				}
+				UISignals.OWNER_POWERUP_FILL.dispatch(cube.powerupRefill);
+			}else if(cube is MovingAICube && _AIMaster){
+				cube.powerupRefill++;
+				if (cube.powerupRefill > MovingCube.POWERUP_FULL) {
+					cube.powerupRefill = MovingCube.POWERUP_FULL;
+					setExplosion(cube);
+				}
+			}
+		}
+		
+		private function onPowerUpTriggered(mess:PowerUpMessage):void {
+			if (mess.triggerdBy != _ownerCube.name) {
+				_allPlayers[mess.triggerdBy].triggerPowerUp();
+				for each(var eData:ExplosionData in mess.targets) {
+					var cube:MovingCube = _allPlayers[eData.target];
+					cube.body.applyCentralImpulse(eData.impulse);
+				}
+			}
 		}
 		
 		private function onUserFelt(cube:MovingCube):void {
@@ -375,8 +407,9 @@ package com.mayhem.game
 					var min:Number = Math.min(distanceTmp, dist);
 					if (min == dist) {
 						closest = user;
+						distanceTmp = dist;
 					}
-					distanceTmp = dist;
+					
 				}
 			}
 			return closest;
@@ -388,7 +421,6 @@ package com.mayhem.game
 				var b:Number = target.body.position.x - chaser.body.x;
 				var rads:Number = Math.atan2(a, b);
 				chaser.body.rotation = new Vector3D(0, -(rads * 180 / Math.PI) + 90, 0);
-				//
 				var f:Vector3D = chaser.body.front;
 				f.scaleBy(10);
 				chaser.body.applyCentralForce(f);		
@@ -407,8 +439,40 @@ package com.mayhem.game
 			}
 		}
 		
+		private function setExplosion(pCube:MovingCube):void {
+			pCube.triggerPowerUp();
+			var message:PowerUpMessage = new PowerUpMessage();
+			message.triggerdBy = pCube.name;
+			var radius:Number = 1000;
+			var maxForce:Number = 100;
+			for each(var cube:MovingCube in _allPlayers) {
+				if (cube != pCube)
+				var dist:Number = Vector3D.distance(pCube.body.position, cube.body.position);
+				if (dist <= radius) {
+					var data:ExplosionData = new ExplosionData();
+					data.target = cube.name;
+					var force:Number = ((radius - dist) * maxForce / radius);
+					var forceVector:Vector3D = cube.body.position.subtract(pCube.body.position)
+					forceVector.normalize();
+					forceVector.scaleBy(force);
+					cube.body.applyCentralImpulse(forceVector);
+					data.impulse = forceVector;
+					message.targets.push(data);
+				}
+			}
+			UserInputSignals.POWERUP_TRIGGER.dispatch(message);
+		}
+		
 		private function onKeyUp(event:KeyboardEvent):void {
 			switch(event.keyCode) {
+				case Keyboard.NUMBER_1:
+					trace(_ownerCube.powerupRefill, MovingCube.POWERUP_FULL)
+					if(_ownerCube.powerupRefill == MovingCube.POWERUP_FULL){
+						setExplosion(_ownerCube);
+						_ownerCube.powerupRefill = 0;
+						UISignals.OWNER_POWERUP_FILL.dispatch(_ownerCube.powerupRefill);
+					}
+					break;
 				case Keyboard.TAB:
 					_debugContainer.visible = ! _debugContainer.visible;
 					break;
@@ -435,6 +499,7 @@ package com.mayhem.game
 		private function onKeyDown(event:KeyboardEvent):void {
 			_sendMoveMessage = false;
 			switch(event.keyCode) {
+
 				case Keyboard.A:
 				case Keyboard.LEFT:
 					if (leftPressed == false)

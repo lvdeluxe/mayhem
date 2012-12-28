@@ -104,6 +104,7 @@ package com.mayhem.game
 					_mainContainer.addChild(mesh);
 					if (prefix == "refill") {
 						body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+						body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
 					}
 					
 				}
@@ -119,6 +120,12 @@ package com.mayhem.game
 			return _mainContainer;
 		}
 		
+		private function onRefillPowerUp(event:AWPEvent):void {
+			var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
+			if (fallingCube) {
+				GameSignals.REFILL_POWERUP.dispatch(fallingCube);
+			}
+		}
 		private function onFallingCollision(event:AWPEvent):void {
 			var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
 			if (fallingCube && !fallingCube.hasFelt) {

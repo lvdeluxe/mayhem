@@ -114,13 +114,7 @@ package
 			_cube.anisotropicFriction = new Vector3D()
 			
 			_cube.angularDamping = 0.99
-			//trace(_cube.anisotropicFriction)
 			_cube.angularFactor= new Vector3D(0.25,1,0.25);
-			//_cube.position = coords;
-			//_cube.rotation = rotation;
-			//_cube.linearVelocity = velocity;
-			//_cube.linearDamping = 0.1;
-			//_cube.angularDamping = 0.1;
 			_cube.position = new Vector3D(0, 50, 0);
 			
 			_view3D.scene.addChild(mesh);
@@ -178,11 +172,11 @@ package
 				if (upPressed) {
 					_cube.linearDamping = 0
 					f.scaleBy(20);
-					_cube.linearVelocity = f;
+					_cube.applyCentralForce(f);
 				}else if (downPressed) {
 					_cube.linearDamping = 0
 					f.scaleBy(-20);
-					_cube.linearVelocity = f;
+					_cube.applyCentralForce(f);
 				}else {
 					_cube.linearDamping = 0.98
 				}

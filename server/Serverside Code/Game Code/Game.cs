@@ -145,6 +145,11 @@ namespace MyGame {
                     Byte[] collisionByteArray = message.GetByteArray(0);
                     Broadcast("PlayerHasCollided", collisionByteArray);
                     break;
+                case "PowerUpTrigger":
+                    Console.WriteLine("PowerUpTrigger");
+                    Byte[] pUpByteArray = message.GetByteArray(0);
+                    Broadcast("PowerUpTriggered", pUpByteArray);
+                    break;
 			}
 		}
 

@@ -35,6 +35,7 @@ package com.mayhem.game
 		
 		public static var MAX_ROTATION:Number = 150;
 		public static var MAX_VELOCITY:Number = 1000;
+		public static var POWERUP_FULL:Number = 50;
 		
 		public var body:AWPRigidBody;
 		public var mesh:Mesh
@@ -57,6 +58,8 @@ package com.mayhem.game
 		public var totalEnergy:int = MAX_ENERGY;
 		
 		public var spawnPosition:Vector3D = new Vector3D();
+		
+		public var powerupRefill:uint = 0;
 		
 		
 		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
@@ -98,6 +101,11 @@ package com.mayhem.game
 			body.rotation = rotation;
 			body.linearVelocity = velocity;
 		}
+		
+		public function triggerPowerUp():void {
+			ParticlesFactory.instance.getExplosionParticles(body.position.clone(), null);
+		}
+		
 		
 		public function getMaterial(bool:Boolean):MaterialBase {
 			var matId:String = bool ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;

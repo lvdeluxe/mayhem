@@ -10,6 +10,8 @@ package com.mayhem.multiplayer
 	import com.hibernum.social.model.SocialUser;
 	import com.mayhem.game.CollisionManifold;
 	import com.mayhem.game.LightRigidBody;
+	import com.mayhem.game.powerups.ExplosionData;
+	import com.mayhem.game.powerups.PowerUpMessage;
 	import flash.display.Stage;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
@@ -45,6 +47,8 @@ package com.mayhem.multiplayer
 			registerClassAlias("CollisionManifold", CollisionManifold);
 			registerClassAlias("Vector3D", Vector3D);
 			registerClassAlias("Vector", Vector);
+			registerClassAlias("PowerUpMessage", PowerUpMessage);
+			registerClassAlias("ExplosionData", ExplosionData);
 			
 			PlayerIO.connect(
 				pStage,								//Referance to stage
@@ -72,8 +76,18 @@ package com.mayhem.multiplayer
 			UserInputSignals.USER_UPDATE_STATE.add(onPlayerUpdateState);
 			UserInputSignals.AI_UPDATE_STATE.add(onAIUpdateState);
 			UserInputSignals.USER_IS_COLLIDING.add(onCollision);
+			UserInputSignals.POWERUP_TRIGGER.add(onPowerupTrigger);
 		}
 		
+		
+		private function onPowerupTrigger(pUpMesage:PowerUpMessage):void {
+			var mess:Message = _mainConnection.createMessage("PowerUpTrigger");
+			var pUpBytes:ByteArray = new ByteArray();
+			pUpBytes.writeObject(pUpMesage);
+			mess.add(pUpBytes);
+			_mainConnection.sendMessage(mess);	
+			trace("send from connector")
+		}
 		
 		private function onCollision(manifold:CollisionManifold):void
 		{
@@ -197,6 +211,12 @@ package com.mayhem.multiplayer
 			MultiplayerSignals.USER_REMOVED.dispatch(userid,userIndex);
 		}
 		
+		private function powerUpTriggered(m:Message, byteArray:ByteArray):void {
+			trace("message received")
+			var pupMessage:PowerUpMessage = byteArray.readObject();
+			MultiplayerSignals.POWERUP_TRIGGERED.dispatch(pupMessage);
+		}
+		
 		private function playerHasCollidedHandler(m:Message, byteArray:ByteArray):void {
 			var manifold:CollisionManifold = byteArray.readObject();
 			MultiplayerSignals.USER_HAS_COLLIDED.dispatch(manifold);
@@ -214,6 +234,7 @@ package com.mayhem.multiplayer
 			_mainConnection.addMessageHandler("PlayerHasStoppedMoving", playerStoppedMovingHandler);			
 			_mainConnection.addMessageHandler("UserLeft", userLeftHandler);			
 			_mainConnection.addMessageHandler("PlayerHasCollided", playerHasCollidedHandler);
+			_mainConnection.addMessageHandler("PowerUpTriggered", powerUpTriggered);
 		}
 		
 		private function handleDisconnect():void{

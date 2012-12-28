@@ -18,6 +18,7 @@ package com.mayhem.signals
 		public static var AI_HAS_UPDATE_STATE:Signal = new Signal();
 		public static var USER_IS_COLLIDING:Signal = new Signal();
 		public static var USER_IS_FALLING:Signal = new Signal();
+		public static var POWERUP_TRIGGER:Signal = new Signal();
 		
 		
 		

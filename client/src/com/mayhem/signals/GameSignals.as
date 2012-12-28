@@ -8,7 +8,7 @@ package com.mayhem.signals
 	public class GameSignals 
 	{
 		
-		//public static var ARENA_READY:Signal = new Signal();
+		public static var REFILL_POWERUP:Signal = new Signal();
 		
 		public function GameSignals() 
 		{

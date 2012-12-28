@@ -15,6 +15,7 @@ package com.mayhem.ui
 	public class UIDisplay extends Sprite
 	{
 		private var _healthBar:Quad;
+		private var _powerUpBar:Quad;
 		private var _deathTextField:TextField;
 		
 		public function UIDisplay() 
@@ -23,8 +24,13 @@ package com.mayhem.ui
 			UISignals.ENERGY_OUT.add(onEnergyOut);
 			UISignals.OWNER_FELT.add(onOwnerFelt);
 			UISignals.OWNER_RESPAWNED.add(clearTextFields);
+			UISignals.OWNER_POWERUP_FILL.add(updatePowerMeter);
 			createUI();
 			
+		}
+		
+		private function updatePowerMeter(pupValue:uint):void {
+			_powerUpBar.scaleX = (pupValue / MovingCube.POWERUP_FULL);
 		}
 		
 		private function clearTextFields():void {
@@ -66,6 +72,24 @@ package com.mayhem.ui
 			textField.color = 0xffffff;
 			textField.hAlign = HAlign.LEFT;
 			addChild(textField);
+			
+			var quad2:Quad = new Quad(150, 20, 0x666666);
+			quad2.x = _healthBar.x;
+			quad2.y = 35;
+			addChild(quad2);
+			
+			_powerUpBar = new Quad(150, 20, 0xcc0000);
+			_powerUpBar.x = _healthBar.x;
+			_powerUpBar.y = 35;
+			addChild(_powerUpBar);
+			_powerUpBar.scaleX = 0;
+			
+			var textField2:TextField = new TextField(200, 24, "PowerUp Meter");
+			textField2.x = textField.x;
+			textField2.y = 32;
+			textField2.color = 0xffffff;
+			textField2.hAlign = HAlign.LEFT;
+			addChild(textField2);
 		}
 		
 	}
