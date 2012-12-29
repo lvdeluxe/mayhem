@@ -1,6 +1,8 @@
 package com.mayhem.game 
 {
 	import away3d.materials.MaterialBase;
+	import away3d.materials.TextureMaterial;
+	import away3d.textures.BitmapTexture;
 	import flash.geom.Vector3D;
 	
 	/**
@@ -10,18 +12,15 @@ package com.mayhem.game
 	public class MovingAICube extends MovingCube
 	{
 		
-		public function MovingAICube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
+		public function MovingAICube(id:String, isMainUser:Boolean) 
 		{
-			super(id, coords, rotation, velocity, isMainUser);
-			//setAIBehavior();
+			super(id, isMainUser);
 		}
+	
 		
-		public function setAIBehavior():void {
-			
-		}
-		
-		override public function getMaterial(bool:Boolean):MaterialBase {
-			var mat:MaterialBase = MaterialsFactory.getMaterialById(MaterialsFactory.AI_CUBE_MATERIAL);
+		override public function getMaterial():TextureMaterial {
+			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getAIVehicleTexture());
+			var mat:TextureMaterial = new TextureMaterial(bmp);
 			return mat;
 		}
 		

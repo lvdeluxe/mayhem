@@ -10,12 +10,17 @@ package com.mayhem.game
 	import away3d.entities.Mesh;
 	import away3d.library.assets.AssetType;
 	import away3d.loaders.parsers.AWDParser;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	
 	public class ModelsManager 
 	{
 		private static var _instance:ModelsManager;
 		private static var _enableInstantiation:Boolean = false;
 		private var _fullyLoadedCallback:Function;
+		
+		private var _allVehicleBitmaps:Vector.<Bitmap> = new Vector.<Bitmap>();
+		private var _aiVehicleTexture:Bitmap;
 		
 		public var allArenaMeshes:Vector.<Mesh> = new Vector.<Mesh>();
 		public var allVehicleMeshes:Vector.<Mesh> = new Vector.<Mesh>();
@@ -24,6 +29,19 @@ package com.mayhem.game
 		private var ArenaClass:Class;
 		[Embed(source = "/assets/Vehicle.awd", mimeType = "application/octet-stream")]
 		private var VehicleClass:Class;
+		
+		[Embed(source = "/assets/AIVehicleTexture.jpg")]
+		private var Vehicle_AI_Texture:Class;
+		[Embed(source = "/assets/VehicleTexture_0.jpg")]
+		private var Vehicle_Texture_0:Class;
+		[Embed(source = "/assets/VehicleTexture_1.jpg")]
+		private var Vehicle_Texture_1:Class;
+		[Embed(source = "/assets/VehicleTexture_2.jpg")]
+		private var Vehicle_Texture_2:Class;
+		[Embed(source = "/assets/VehicleTexture_3.jpg")]
+		private var Vehicle_Texture_3:Class;
+		[Embed(source = "/assets/VehicleTexture_4.jpg")]
+		private var Vehicle_Texture_4:Class;
 		
 		
 		public function ModelsManager() 
@@ -44,8 +62,21 @@ package com.mayhem.game
 		public function loadAllModels(pCallback:Function):void {
 			_fullyLoadedCallback = pCallback;
 			AssetLibrary.enableParser(AWDParser);
+			_allVehicleBitmaps.push(new Vehicle_Texture_0() as Bitmap);
+			_allVehicleBitmaps.push(new Vehicle_Texture_1() as Bitmap);
+			_allVehicleBitmaps.push(new Vehicle_Texture_2() as Bitmap);
+			_allVehicleBitmaps.push(new Vehicle_Texture_3() as Bitmap);
+			_allVehicleBitmaps.push(new Vehicle_Texture_4() as Bitmap);
+			_aiVehicleTexture = new Vehicle_AI_Texture() as Bitmap;
+			//loadTextures();
 			loadArena();
 		}
+		
+		public function getAIVehicleTexture():BitmapData {
+			return _aiVehicleTexture.bitmapData;
+		}
+		
+		
 		
 		private function onVehicleComplete(event:AssetEvent):void {
 			trace(event.asset.assetType)
@@ -64,6 +95,12 @@ package com.mayhem.game
 		}
 		private function onArenaFullyLoaded(event:LoaderEvent):void {
 			loadVehicle();
+		}
+		
+		public function getRandomVehicleTexture():BitmapData {
+			var rnd:uint = Math.floor(Math.random() * _allVehicleBitmaps.length)
+			trace(rnd);
+			return _allVehicleBitmaps[rnd].bitmapData;
 		}
 		
 		private function loadVehicle():void {

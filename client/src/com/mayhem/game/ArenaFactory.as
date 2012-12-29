@@ -75,6 +75,16 @@ package com.mayhem.game
 			return slotsAvail;
 		}
 		
+		public function getSpawnIndexByPosition(pos:Vector3D):int {
+			var index:int = -1
+			for (var i:uint = 0 ; i < allSpawnPoints.length ; i++ ) {
+				trace(allSpawnPoints[i].position, pos)
+				if (allSpawnPoints[i].position.x == pos.x && allSpawnPoints[i].position.z == pos.z)
+					return i;
+			}
+			return index;
+		}
+		
 		public function getSpawnPoint(index:int):Vector3D {
 			var pos:Vector3D = allSpawnPoints[index].position.clone();
 			allSpawnPoints[index].extra.occupied = true;

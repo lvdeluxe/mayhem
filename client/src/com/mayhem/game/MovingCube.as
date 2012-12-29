@@ -13,6 +13,8 @@ package com.mayhem.game
 	import away3d.materials.methods.SoftShadowMapMethod;
 	import away3d.materials.TextureMaterial;
 	import away3d.primitives.CubeGeometry;
+	import away3d.textures.BitmapTexture;
+	import away3d.textures.Texture2DBase;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.collision.shapes.AWPBvhTriangleMeshShape;
 	import awayphysics.data.AWPCollisionFlags;
@@ -33,18 +35,10 @@ package com.mayhem.game
 	public class MovingCube 
 	{
 		
-		public static var MAX_ROTATION:Number = 150;
-		public static var MAX_VELOCITY:Number = 1000;
-		public static var POWERUP_FULL:Number = 50;
-		
 		public var body:AWPRigidBody;
 		public var mesh:Mesh
 		public var userInputs:Dictionary;
-		public var name:String;
-		
-		public var speed:Number = 20;
-		public var rotationSpeed:Number = 5;
-		
+		public var name:String;			
 		public var currentVelocity:Vector3D = new Vector3D();
 		public var velocityBeforeCollision:Vector3D = new Vector3D();
 		public var hasCollided:Boolean = false;
@@ -52,17 +46,16 @@ package com.mayhem.game
 		
 		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
 		
-		private var _collisionTimer:Timer;
+		private var _collisionTimer:Timer;		
 		
-		public static const MAX_ENERGY:int = 150;
-		public var totalEnergy:int = MAX_ENERGY;
+		public var totalEnergy:int = GameData.VEHICLE_MAX_ENERGY;
 		
 		public var spawnPosition:Vector3D = new Vector3D();
 		
 		public var powerupRefill:uint = 0;
 		
 		
-		public function MovingCube(id:String, coords: Vector3D, rotation: Vector3D,velocity: Vector3D,isMainUser:Boolean) 
+		public function MovingCube(id:String, isMainUser:Boolean) 
 		{
 			name = id;
 			userInputs = new Dictionary();
@@ -76,43 +69,35 @@ package com.mayhem.game
 			_collisionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete);
 
 			mesh = ModelsManager.instance.allVehicleMeshes[0].clone() as Mesh;
+			mesh.material = getMaterial();
 			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;
+			//var 
 			TextureMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
-			//var m:TextureMaterial
-			//m.sha
 			mesh.extra = this;
 			
 			var boxShape : AWPBoxShape = new AWPBoxShape(150, 100, 300);
 			body = new AWPRigidBody(boxShape, mesh, 1);
 			var trident:Trident = new Trident(150);
 			mesh.addChild(trident)
-			body.gravity = new Vector3D(0,-1,0);
+			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
 			body.friction = 0.1;
 			body.restitution = 0.1
 			body.ccdSweptSphereRadius = 0.5;
 			body.ccdMotionThreshold = 1;
 			body.angularFactor = new Vector3D(0.25, 1, 0.25);
 			
-			body.anisotropicFriction
-			body.linearFactor
-			body.mass
-			
-			body.position = coords;
-			body.rotation = rotation;
-			body.linearVelocity = velocity;
+		}
+		
+		public function getMaterial():TextureMaterial {
+			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getRandomVehicleTexture());
+			var mat:TextureMaterial = new TextureMaterial(bmp);
+			return mat;
 		}
 		
 		public function triggerPowerUp():void {
 			ParticlesFactory.instance.getExplosionParticles(body.position.clone(), null);
 		}
-		
-		
-		public function getMaterial(bool:Boolean):MaterialBase {
-			var matId:String = bool ? MaterialsFactory.OWNER_CUBE_MATERIAL : MaterialsFactory.OTHER_CUBE_MATERIAL;
-			var mat:MaterialBase = MaterialsFactory.getMaterialById(matId);
-			return mat;
-		}
-		
+
 		private function onTimer(event:TimerEvent):void {
 			var visib:Boolean = mesh.visible
 			mesh.visible = !visib;

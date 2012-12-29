@@ -8,8 +8,10 @@ package com.mayhem.multiplayer
 	import away3d.entities.Mesh;
 	import awayphysics.dynamics.AWPRigidBody;
 	import com.hibernum.social.model.SocialUser;
+	import com.mayhem.game.ArenaFactory;
 	import com.mayhem.game.CollisionManifold;
 	import com.mayhem.game.LightRigidBody;
+	import com.mayhem.game.MovingCube;
 	import com.mayhem.game.powerups.ExplosionData;
 	import com.mayhem.game.powerups.PowerUpMessage;
 	import flash.display.Stage;
@@ -64,6 +66,7 @@ package com.mayhem.multiplayer
 		private function handleConnect(client:Client):void{
 			trace("Sucessfully connected to player.io");
 			_client = client;
+			//uncomment this line for live server 
 			_client.multiplayer.developmentServer = "localhost:8184";
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			setSignals();
@@ -77,8 +80,15 @@ package com.mayhem.multiplayer
 			UserInputSignals.AI_UPDATE_STATE.add(onAIUpdateState);
 			UserInputSignals.USER_IS_COLLIDING.add(onCollision);
 			UserInputSignals.POWERUP_TRIGGER.add(onPowerupTrigger);
+			MultiplayerSignals.SESSION_PAUSE.add(onSessionPause);
 		}
 		
+		private function onSessionPause(cube:MovingCube):void {
+			var mess:Message = _mainConnection.createMessage("UserSessionExpire");
+			mess.add(cube.name);
+			mess.add(ArenaFactory.instance.getSpawnIndexByPosition(cube.spawnPosition));
+			_mainConnection.sendMessage(mess);	
+		}
 		
 		private function onPowerupTrigger(pUpMesage:PowerUpMessage):void {
 			var mess:Message = _mainConnection.createMessage("PowerUpTrigger");
@@ -222,6 +232,10 @@ package com.mayhem.multiplayer
 			MultiplayerSignals.USER_HAS_COLLIDED.dispatch(manifold);
 		}
 		
+		private function userSessionExpired(m:Message, uid:String, spawnIndex:int):void {
+			MultiplayerSignals.SESSION_PAUSED.dispatch(uid,spawnIndex);
+		}
+		
 		private function handleJoin(connection:Connection):void {
 			_mainConnection = connection;
 			trace("Sucessfully connected to the multiplayer server");
@@ -235,6 +249,7 @@ package com.mayhem.multiplayer
 			_mainConnection.addMessageHandler("UserLeft", userLeftHandler);			
 			_mainConnection.addMessageHandler("PlayerHasCollided", playerHasCollidedHandler);
 			_mainConnection.addMessageHandler("PowerUpTriggered", powerUpTriggered);
+			_mainConnection.addMessageHandler("UserSessionExpired", userSessionExpired);
 		}
 		
 		private function handleDisconnect():void{

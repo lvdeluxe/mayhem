@@ -128,14 +128,11 @@ namespace MyGame {
                     break;
                 case "AIUpdateState":
                     Byte[] AIByteArray = message.GetByteArray(0);
-                    //player.RigidBodyDescription = byteArray;
-                    Console.WriteLine("AIUpdateState");
                     Broadcast("AIHasStateUpdate", AIByteArray);
                     break;
                 case "PlayerUpdateState":                   
                     Byte[] byteArray = message.GetByteArray(0);
                     player.RigidBodyDescription = byteArray;
-                    Console.WriteLine("user has moved");
                     Broadcast("PlayerHasStateUpdate", player.ConnectUserId, byteArray);
                     break;
                 case "PlayerIsMoving":
@@ -149,6 +146,12 @@ namespace MyGame {
                     Console.WriteLine("PowerUpTrigger");
                     Byte[] pUpByteArray = message.GetByteArray(0);
                     Broadcast("PowerUpTriggered", pUpByteArray);
+                    break;
+                case "UserSessionExpire":
+                    string user_id = message.GetString(0);
+                    int spawnIndex = message.GetInt(1);
+                    Console.WriteLine(user_id + " / " +spawnIndex.ToString());
+                    Broadcast("UserSessionExpired", user_id, spawnIndex);
                     break;
 			}
 		}

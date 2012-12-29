@@ -76,12 +76,18 @@ package com.mayhem.game
 		
 		private var _AIMaster:Boolean = false;
 		
-		private var _debugCubes:Boolean = false;
-		private var _debugContainer:Sprite;
+		private var _propsMenu:VehiclePropertiesMenu;
+		
+		private var _totalGameTime:uint = 0;
+		
+		private var _endSession:Boolean = false;
+		
+		private var _stage:Stage;
 		
 	
 		public function GameManager(stage:Stage, proxy:Stage3DProxy) 
 		{
+			_stage = stage;
 			_allPlayers = new Dictionary();			
 			_allAICubes = new Dictionary();			
 			setUpdateTimer();
@@ -98,78 +104,11 @@ package com.mayhem.game
 			ParticlesFactory.instance.initialize(_view3D.scene);
 			CameraManager.instance.initialize(_view3D.camera);
 			_view3D.scene.addChild(ArenaFactory.instance.getDefaultArena());
-			setDebugCubes(stage, stats.height);
+			_propsMenu = new VehiclePropertiesMenu(stage, this, new Point(0,stats.height + 10));
 		}
 		
-		private function onSlideFriction(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			_ownerCube.body.friction = slider.value
-		}
-		private function onSlideRestitution(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			_ownerCube.body.restitution = slider.value
-		}
-		private function onSlideMass(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			_ownerCube.body.mass = slider.value
-		}
-		private function onSlideAngSpeed(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			MovingCube.MAX_ROTATION = slider.value;
-		}
-		private function onSlideLinSpeed(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			MovingCube.MAX_VELOCITY = slider.value;
-		}
-		private function onSlideGravity(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			_ownerCube.body.gravity = new Vector3D(0, slider.value, 0);
-		}
-		private function onSlideAngular(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			_ownerCube.body.angularFactor = new Vector3D(slider.value, 1, slider.value);
-		}
-		private function onSlideLinear(e:Event):void {
-			var slider:HUISlider = e.currentTarget as HUISlider;
-			_ownerCube.body.linearFactor = new Vector3D(slider.value, 1, slider.value);
-		}
-		
-		private function setDebugCubes(stage:Stage, x:Number):void {
-			_debugContainer = new Sprite();
-			_debugContainer.y = x + 10
-			var sliderFriction:HUISlider = new HUISlider(_debugContainer, 10, 10, 'friction', onSlideFriction);
-			sliderFriction.minimum = 0;
-			sliderFriction.maximum = 1;
-			sliderFriction.value = 0.1;
-			var sliderGravity:HUISlider = new HUISlider(_debugContainer, 10, 22, 'gravity', onSlideGravity);
-			sliderGravity.minimum = 0;
-			sliderGravity.maximum = -100;
-			sliderGravity.value = -1;
-			var sliderRestitution:HUISlider = new HUISlider(_debugContainer, 10, 34, 'restitution', onSlideRestitution);
-			sliderRestitution.minimum = 0;
-			sliderRestitution.maximum = 10;
-			sliderRestitution.value = 0.1;
-			var sliderAngularFactor:HUISlider = new HUISlider(_debugContainer, 10, 46, 'angular F', onSlideAngular);
-			sliderAngularFactor.minimum = 0;
-			sliderAngularFactor.maximum = 1;
-			sliderAngularFactor.value = 0.25;
-			var sliderMass:HUISlider = new HUISlider(_debugContainer, 10, 58, 'mass', onSlideMass);
-			sliderMass.minimum = 0;
-			sliderMass.maximum = 100;
-			sliderMass.value = 1;
-			var sliderLinearF:HUISlider = new HUISlider(_debugContainer, 10, 70, 'linear F', onSlideLinear);
-			sliderLinearF.minimum = 0;
-			sliderLinearF.maximum = 1;
-			sliderLinearF.value = 0.25;
-			var sliderAngSpeed:HUISlider = new HUISlider(_debugContainer, 10, 82, 'Angular Speed', onSlideAngSpeed);
-			sliderAngSpeed.minimum = 50;
-			sliderAngSpeed.maximum = 500;
-			sliderAngSpeed.value = 150;
-			var sliderLinSpeed:HUISlider = new HUISlider(_debugContainer, 10, 94, 'Linear Speed', onSlideLinSpeed);
-			sliderLinSpeed.minimum = 50;
-			sliderLinSpeed.maximum = 5000;
-			sliderLinSpeed.value = 1000;
-			stage.addChild(_debugContainer);			
+		public function getOwnerVehicle():MovingCube {
+			return _ownerCube;
 		}
 		
 		private function setUpdateTimer():void{			
@@ -177,6 +116,7 @@ package com.mayhem.game
 			_updateTimer = new Timer(100);
 			_updateTimer.addEventListener(TimerEvent.TIMER, updatePosition);
 		}
+		
 		
 		private function setView(pStage:Stage, pProxy:Stage3DProxy):void{						
 			_view3D = new View3D();
@@ -215,27 +155,46 @@ package com.mayhem.game
 			MultiplayerSignals.USER_JOINED.add(onUserCreated);
 			MultiplayerSignals.USERS_IN_ROOM.add(onUserInRoom);
 			MultiplayerSignals.USER_REMOVED.add(onUserRemoved);
-			MultiplayerSignals.USER_HAS_COLLIDED.add(onCubeCollision)
+			MultiplayerSignals.USER_HAS_COLLIDED.add(onCubeCollision);
+			MultiplayerSignals.POWERUP_TRIGGERED.add(onPowerUpTriggered);
 			UserInputSignals.USER_HAS_MOVED.add(onUserMoved);
 			UserInputSignals.USER_HAS_STOPPED_MOVING.add(onUserStoppedMoving);
 			UserInputSignals.USER_HAS_UPDATE_STATE.add(onUserUpdateState);
 			UserInputSignals.AI_HAS_UPDATE_STATE.add(onAIUpdateState);
-			UserInputSignals.USER_IS_FALLING.add(onUserFelt);
-			MultiplayerSignals.POWERUP_TRIGGERED.add(onPowerUpTriggered)
+			UserInputSignals.USER_IS_FALLING.add(onUserFelt);			
 			GameSignals.REFILL_POWERUP.add(onPowerUpRefill);
+			MultiplayerSignals.SESSION_PAUSED.add(replaceUserByAIVehicle);
+		}
+		
+		private function replaceUserByAIVehicle(vehicleName:String, spawnIndex:int):void {
+			var movingCube:MovingAICube = createAICube(spawnIndex);
+			_allAICubes[movingCube.name] = movingCube;
+			_allAICubes[movingCube.name] = movingCube;
+			
+			if (_allPlayers[vehicleName] == _ownerCube) {
+				_stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				_stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			}
+			_allPlayers[vehicleName].body.removeEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
+			_allPlayers[vehicleName].mesh.removeEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
+			_allPlayers[vehicleName].mesh.removeEventListener(Object3DEvent.ROTATION_CHANGED, onCubeChanged);
+			_allPlayers[vehicleName].mesh.material.alpha = 0.25;
+			//_view3D.scene.removeChild(_allPlayers[userId].mesh);
+			_physicsWorld.removeRigidBody(_allPlayers[vehicleName].body);
+			delete _allPlayers[vehicleName];
 		}
 		
 		private function onPowerUpRefill(cube:MovingCube):void {
 			if (cube == _ownerCube) {
 				cube.powerupRefill++;
-				if (cube.powerupRefill > MovingCube.POWERUP_FULL) {
-					cube.powerupRefill = MovingCube.POWERUP_FULL;
+				if (cube.powerupRefill > GameData.POWERUP_FULL) {
+					cube.powerupRefill = GameData.POWERUP_FULL;
 				}
 				UISignals.OWNER_POWERUP_FILL.dispatch(cube.powerupRefill);
 			}else if(cube is MovingAICube && _AIMaster){
 				cube.powerupRefill++;
-				if (cube.powerupRefill > MovingCube.POWERUP_FULL) {
-					cube.powerupRefill = MovingCube.POWERUP_FULL;
+				if (cube.powerupRefill > GameData.POWERUP_FULL) {
+					cube.powerupRefill = GameData.POWERUP_FULL;
 					setExplosion(cube);
 				}
 			}
@@ -257,11 +216,12 @@ package com.mayhem.game
 				UISignals.OWNER_FELT.dispatch();
 			setTimeout(respawn, 2000, cube);
 		}
+		
 		private function respawn(cube:MovingCube):void {
 			if(cube == _ownerCube)
 				UISignals.OWNER_RESPAWNED.dispatch();
 			cube.hasCollided = false;
-			cube.totalEnergy = MovingCube.MAX_ENERGY;
+			cube.totalEnergy = GameData.VEHICLE_MAX_ENERGY;
 			cube.body.angularVelocity = new Vector3D();
 			cube.body.linearVelocity = new Vector3D();
 			if(!(cube is MovingAICube)){
@@ -287,11 +247,11 @@ package com.mayhem.game
 				}
 				if (loser.totalEnergy >= 0)
 					if (loser == _ownerCube)
-						UISignals.ENERGY_UPDATE.dispatch(_ownerCube.totalEnergy / MovingCube.MAX_ENERGY);
+						UISignals.ENERGY_UPDATE.dispatch(_ownerCube.totalEnergy / GameData.VEHICLE_MAX_ENERGY);
 				if (loser.totalEnergy == 0) {
 					if (loser == _ownerCube)
 						UISignals.ENERGY_OUT.dispatch();
-					setTimeout(respawn, 2000, loser);
+					setTimeout(respawn, GameData.VEHICLE_RESPAWN_TIME, loser);
 				}				
 			}
 			var collisionPosition:Vector3D = manifold.forceA > manifold.forceB ? manifold.positionB : manifold.positionA;
@@ -341,10 +301,8 @@ package com.mayhem.game
 		
 		
 		private function moveObjects(elapsed:Number):void {			
-			//apply 1000 force per second.
-			var force:Number = (elapsed * MovingCube.MAX_VELOCITY) / 1000;
-			//apply 50 torque per second
-			var torque:Number = (elapsed * MovingCube.MAX_ROTATION) / 1000;
+			var force:Number = (elapsed * GameData.VEHICLE_LIN_VELOCITY) / 1000;
+			var torque:Number = (elapsed * GameData.VEHICLE_ANG_VELOCITY) / 1000;
 			var moveX:Number = 0;
 			var moveZ:Number = 0;			
 				
@@ -380,18 +338,28 @@ package com.mayhem.game
 			var t:int = getTimer();
 			var dt:Number = (t - _currentTime);
 			_currentTime = t;
+			_totalGameTime += dt;
 			return dt;
 		}
 		
 		public function renderPhysics():void {
 			if (_ownerCube){
 				CameraManager.instance.updateCamera(_ownerCube.mesh.transform.clone(), _ownerCube.mesh.position.clone());
+				if(_totalGameTime < GameData.GAME_SESSION_DURATION){
+					UISignals.UPDATE_GAME_TIMER.dispatch(_totalGameTime);
+				}else {
+					if (!_endSession) {
+						MultiplayerSignals.SESSION_PAUSE.dispatch(_ownerCube);
+						_endSession = true;
+					}
+				}
 			}
 			var dt:Number = getElapsedTime();
 			moveObjects(dt);
 			ParticlesFactory.instance.checkRemoveParticles();
 			setLastVelocity();
 			setAIBehavior();			
+			
 			_physicsWorld.step(dt / 1000, 5, _timeStep);	
 			
 			//_debugDraw.debugDrawWorld();
@@ -408,8 +376,7 @@ package com.mayhem.game
 					if (min == dist) {
 						closest = user;
 						distanceTmp = dist;
-					}
-					
+					}					
 				}
 			}
 			return closest;
@@ -464,37 +431,43 @@ package com.mayhem.game
 		}
 		
 		private function onKeyUp(event:KeyboardEvent):void {
+			var _isVehicleInput:Boolean = false;
 			switch(event.keyCode) {
 				case Keyboard.NUMBER_1:
-					trace(_ownerCube.powerupRefill, MovingCube.POWERUP_FULL)
-					if(_ownerCube.powerupRefill == MovingCube.POWERUP_FULL){
+					if(_ownerCube.powerupRefill == GameData.POWERUP_FULL){
 						setExplosion(_ownerCube);
 						_ownerCube.powerupRefill = 0;
 						UISignals.OWNER_POWERUP_FILL.dispatch(_ownerCube.powerupRefill);
 					}
 					break;
 				case Keyboard.TAB:
-					_debugContainer.visible = ! _debugContainer.visible;
+					_propsMenu.visible = !_propsMenu.visible;
 					break;
 				case Keyboard.A:
 				case Keyboard.LEFT:
+					_isVehicleInput = true;
 					leftPressed = false;
 					break;
 				case Keyboard.D:
 				case Keyboard.RIGHT:
+					_isVehicleInput = true;
 					rightPressed = false;
 					break;
 				case Keyboard.W:
 				case Keyboard.UP:
+					_isVehicleInput = true;
 					upPressed = false;
 					break;
 				case Keyboard.S:
 				case Keyboard.DOWN:
+					_isVehicleInput = true;
 					downPressed = false;
 					break;
 			}
-			_ownerCube.removeUserInput(event.keyCode);		
-			UserInputSignals.USER_STOPPED_MOVING.dispatch(event.keyCode,new Date().getTime());
+			if(_isVehicleInput){
+				_ownerCube.removeUserInput(event.keyCode);		
+				UserInputSignals.USER_STOPPED_MOVING.dispatch(event.keyCode, new Date().getTime());
+			}
 		}
 		private function onKeyDown(event:KeyboardEvent):void {
 			_sendMoveMessage = false;
@@ -537,7 +510,7 @@ package com.mayhem.game
 			var cube:MovingCube = _allPlayers[userId];
 			var elapsed:Number = timestamp - new Date().getTime();
 			
-			var force:Number = (elapsed * 500) / 1000
+			var force:Number = (elapsed * GameData.VEHICLE_LIN_VELOCITY) / 1000;
 			var moveZ:Number = 0;
 			
 			switch(keyCode) {
@@ -572,8 +545,8 @@ package com.mayhem.game
 			var cube:MovingCube = _allPlayers[userId];			
 			var elapsed:Number = new Date().getTime() - timestamp
 			
-			var force:Number = (elapsed * 500) / 1000;
-			var torque:Number = (elapsed * 50) / 1000;		
+			var force:Number = (elapsed * GameData.VEHICLE_LIN_VELOCITY) / 1000;
+			var torque:Number = (elapsed * GameData.VEHICLE_ANG_VELOCITY) / 1000;		
 			
 			var moveX:Number = 0;
 			var moveZ:Number = 0;
@@ -594,8 +567,8 @@ package com.mayhem.game
 			if (cube != _ownerCube){
 				if (moveZ != 0) {
 					var f:Vector3D = cube.body.front;
-					f.scaleBy(5);	
-					cube.body.linearVelocity = f;
+					f.scaleBy(moveZ);	
+					cube.body.applyCentralForce(f);
 				}
 				if (moveX != 0) {
 					cube.body.angularVelocity = new Vector3D(0,moveX,0);
@@ -607,13 +580,21 @@ package com.mayhem.game
 		private function onUserRemoved(userId:String, userIndex:int):void {
 			var movingCube:MovingAICube = createAICube(userIndex);
 			_allAICubes[movingCube.name] = movingCube;
+			_allPlayers[movingCube.name] = movingCube;
+			if (_allPlayers[userId] == _ownerCube) {
+				_stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				_stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			}
+			_allPlayers[userId].body.removeEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
+			_allPlayers[userId].mesh.removeEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
+			_allPlayers[userId].mesh.removeEventListener(Object3DEvent.ROTATION_CHANGED, onCubeChanged);
 			_view3D.scene.removeChild(_allPlayers[userId].mesh);
 			_physicsWorld.removeRigidBody(_allPlayers[userId].body);
 			delete _allPlayers[userId];
 		}
 		
 		private function createAICube(index:int):MovingAICube {
-			var movingCube:MovingAICube = new MovingAICube("ai_"+(index.toString()),  new Vector3D(0, 50, -0),  new Vector3D(0, 180, 0), new Vector3D(0, 0, 0), false);
+			var movingCube:MovingAICube = new MovingAICube("ai_"+(index.toString()), false);
 			if (_AIMaster)
 				movingCube.body.addEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
 			movingCube.spawnPosition = ArenaFactory.instance.getSpawnPoint(index);
@@ -633,13 +614,12 @@ package com.mayhem.game
 		}
 		
 		private function createMovingCube(name:String, isOwner:Boolean, spawnPointIndex:int, lightRigidBody:LightRigidBody = null):MovingCube {
-			var movingCube:MovingCube = new MovingCube(name,  new Vector3D(0, 50, -2500),  new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), isOwner);
-			
+			var movingCube:MovingCube = new MovingCube(name, isOwner);			
 			_view3D.scene.addChild(movingCube.mesh);
-			_physicsWorld.addRigidBody(movingCube.body);
-			
+			_physicsWorld.addRigidBody(movingCube.body);			
 			trace("created", movingCube.name);
 			if (isOwner) {
+				_totalGameTime = 0;
 				if (spawnPointIndex == 0)
 					_AIMaster = true;
 				_ownerCube = movingCube;
@@ -675,24 +655,18 @@ package com.mayhem.game
 		}
 		
 		protected function collisionDetectionHandler(event:AWPEvent):void
-		{
-			
+		{			
 			if (!event.collisionObject.skin)
 				return;
 			if (event.collisionObject.skin.name == "main2")
-				return;	
-			
+				return;				
 				
 			var cubeCollider:MovingCube = event.collisionObject.skin.extra as MovingCube;
 			var targetCube:MovingCube = event.currentTarget.skin.extra as MovingCube
 			if (cubeCollider == null || targetCube == null)
 				return;
-			//trace(event.collisionObject.skin.extra)
-			//trace(cubeCollider, targetCube,(cubeCollider!=null && targetCube!=null))
 			if (cubeCollider!=null && targetCube!=null)
 			{
-				//trace((event.currentTarget.skin.extra.name))
-				//trace('collision!!!!!! ',_ownerCube.hasCollided, cubeCollider.hasCollided)
 				if (!targetCube.hasCollided && !cubeCollider.hasCollided) {
 					var manifold:CollisionManifold = new CollisionManifold();
 					manifold.colliderA = cubeCollider.name;
@@ -701,16 +675,10 @@ package com.mayhem.game
 					manifold.positionB = event.manifoldPoint.localPointB;
 					manifold.forceA = cubeCollider.linearVelocityBeforeCollision.length;
 					manifold.forceB = targetCube.linearVelocityBeforeCollision.length;
-					//trace(manifold.forceA,manifold.forceB)
-					//if (manifold.forceA > manifold.forceB) {
-					//trace('DISPATCH COLLISION')
 					UserInputSignals.USER_IS_COLLIDING.dispatch(manifold);
-					//}
 					targetCube.hasCollided = true;
 					cubeCollider.hasCollided = true;
 				}
-				
-				
 			}
 		}		
 		
