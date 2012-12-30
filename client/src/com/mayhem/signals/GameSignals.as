@@ -9,6 +9,8 @@ package com.mayhem.signals
 	{
 		
 		public static var REFILL_POWERUP:Signal = new Signal();
+		public static var SESSION_PAUSE:Signal = new Signal();
+		public static var SESSION_RESTART:Signal = new Signal();
 		
 		public function GameSignals() 
 		{

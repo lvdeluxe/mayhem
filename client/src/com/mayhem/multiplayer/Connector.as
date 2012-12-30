@@ -80,7 +80,15 @@ package com.mayhem.multiplayer
 			UserInputSignals.AI_UPDATE_STATE.add(onAIUpdateState);
 			UserInputSignals.USER_IS_COLLIDING.add(onCollision);
 			UserInputSignals.POWERUP_TRIGGER.add(onPowerupTrigger);
-			MultiplayerSignals.SESSION_PAUSE.add(onSessionPause);
+			GameSignals.SESSION_PAUSE.add(onSessionPause);
+			GameSignals.SESSION_RESTART.add(onSessionRestart);
+		}
+		
+		private function onSessionRestart(cubeId:String, spawnIndex:int):void {
+			var mess:Message = _mainConnection.createMessage("UserSessionRestart");
+			mess.add(cubeId);
+			mess.add(spawnIndex);
+			_mainConnection.sendMessage(mess);
 		}
 		
 		private function onSessionPause(cube:MovingCube):void {
@@ -236,6 +244,10 @@ package com.mayhem.multiplayer
 			MultiplayerSignals.SESSION_PAUSED.dispatch(uid,spawnIndex);
 		}
 		
+		private function userSessionRestarted(m:Message, uid:String, spawnIndex:int):void {
+			MultiplayerSignals.SESSION_RESTARTED.dispatch(uid,spawnIndex);
+		}
+		
 		private function handleJoin(connection:Connection):void {
 			_mainConnection = connection;
 			trace("Sucessfully connected to the multiplayer server");
@@ -250,6 +262,7 @@ package com.mayhem.multiplayer
 			_mainConnection.addMessageHandler("PlayerHasCollided", playerHasCollidedHandler);
 			_mainConnection.addMessageHandler("PowerUpTriggered", powerUpTriggered);
 			_mainConnection.addMessageHandler("UserSessionExpired", userSessionExpired);
+			_mainConnection.addMessageHandler("UserSessionRestarted", userSessionRestarted);
 		}
 		
 		private function handleDisconnect():void{

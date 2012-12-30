@@ -62,9 +62,39 @@ package com.mayhem.game
 			var sliderLinSpeed:HUISlider = new HUISlider(_container, 10, 94, 'Linear Speed', onSlideLinSpeed);
 			sliderLinSpeed.minimum = 50;
 			sliderLinSpeed.maximum = 5000;
-			sliderLinSpeed.value = GameData.VEHICLE_LIN_VELOCITY;
+			sliderLinSpeed.value = GameData.VEHICLE_LIN_VELOCITY;			
+			
+			var camOffsetY:HUISlider = new HUISlider(_container, 10, 106, 'Camera Y Offset', onCamOffsetY);
+			camOffsetY.minimum = 100;
+			camOffsetY.maximum = 2000;
+			camOffsetY.value = GameData.CAMERA_OFFSET_Y;
+			
+			var camOffsetZ:HUISlider = new HUISlider(_container, 10, 118, 'Camera Z Offset', onCamOffsetZ);
+			camOffsetZ.minimum = 100;
+			camOffsetZ.maximum = 5000;
+			camOffsetZ.value = GameData.CAMERA_OFFSET_Z;
+			
+			var camRotateX:HUISlider = new HUISlider(_container, 10, 130, 'Camera X Rotation', onCamRotateX);
+			camRotateX.minimum = Math.PI / 16;
+			camRotateX.maximum = Math.PI / 2;
+			camRotateX.value = GameData.CAMERA_ROTATION_X;
 			
 			stage.addChild(_container);	
+		}
+		
+		private function onCamRotateX(e:Event):void {
+			var slider:HUISlider = e.currentTarget as HUISlider;
+			GameData.CAMERA_ROTATION_X = slider.value
+		}
+		
+		private function onCamOffsetY(e:Event):void {
+			var slider:HUISlider = e.currentTarget as HUISlider;
+			GameData.CAMERA_OFFSET_Y = slider.value
+		}
+		
+		private function onCamOffsetZ(e:Event):void {
+			var slider:HUISlider = e.currentTarget as HUISlider;
+			GameData.CAMERA_OFFSET_Z = slider.value
 		}
 		
 		private function onSlideFriction(e:Event):void {

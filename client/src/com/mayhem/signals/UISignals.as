@@ -14,6 +14,7 @@ package com.mayhem.signals
 		public static var OWNER_RESPAWNED:Signal = new Signal();
 		public static var OWNER_POWERUP_FILL:Signal = new Signal();
 		public static var UPDATE_GAME_TIMER:Signal = new Signal();
+		public static var CLICK_RESTART:Signal = new Signal();
 		
 		public function UISignals() 
 		{

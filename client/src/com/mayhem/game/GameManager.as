@@ -12,6 +12,9 @@ package com.mayhem.game
 	import away3d.lights.DirectionalLight;
 	import away3d.lights.PointLight;
 	import away3d.containers.ObjectContainer3D;
+	import away3d.materials.TextureMaterial;
+	import away3d.primitives.SkyBox;
+	import away3d.textures.BitmapCubeTexture;
 	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.debug.AWPDebugDraw;
 	import awayphysics.dynamics.AWPDynamicsWorld;
@@ -84,6 +87,8 @@ package com.mayhem.game
 		
 		private var _stage:Stage;
 		
+		private var _pausedVehicles:Dictionary = new Dictionary();
+		
 	
 		public function GameManager(stage:Stage, proxy:Stage3DProxy) 
 		{
@@ -93,6 +98,7 @@ package com.mayhem.game
 			setUpdateTimer();
 			setView(stage,proxy);
 			setLights();
+			setSkybox();
 			setPhysics();
 			setSignals();			
 			MaterialsFactory.initialize([_light]);
@@ -105,6 +111,12 @@ package com.mayhem.game
 			CameraManager.instance.initialize(_view3D.camera);
 			_view3D.scene.addChild(ArenaFactory.instance.getDefaultArena());
 			_propsMenu = new VehiclePropertiesMenu(stage, this, new Point(0,stats.height + 10));
+		}
+		
+		private function setSkybox():void {
+			var cubemap:BitmapCubeTexture = ModelsManager.instance.getSkyboxTexture();
+			var sky:SkyBox = new SkyBox(cubemap);
+			_view3D.scene.addChild(sky);
 		}
 		
 		public function getOwnerVehicle():MovingCube {
@@ -164,14 +176,49 @@ package com.mayhem.game
 			UserInputSignals.USER_IS_FALLING.add(onUserFelt);			
 			GameSignals.REFILL_POWERUP.add(onPowerUpRefill);
 			MultiplayerSignals.SESSION_PAUSED.add(replaceUserByAIVehicle);
+			UISignals.CLICK_RESTART.add(sendRestart);
+			MultiplayerSignals.SESSION_RESTARTED.add(restartSession);
+		}
+		
+		private function restartSession(vehicleName:String, spawnIndex:int):void {
+			var aiVehicle:MovingAICube = _allAICubes["ai_" + spawnIndex.toString()];
+			_physicsWorld.removeRigidBody(aiVehicle.body);
+			_view3D.scene.removeChild(aiVehicle.mesh);
+			delete _allAICubes["ai_" + spawnIndex.toString()];
+			delete _allPlayers["ai_" + spawnIndex.toString()];
+			
+			var pausedVehicle:MovingCube = _pausedVehicles[vehicleName];
+			_allPlayers[vehicleName] = pausedVehicle;
+			_physicsWorld.addRigidBody(pausedVehicle.body);
+			if (pausedVehicle == _ownerCube) {
+				_stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				_stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			}
+			pausedVehicle.body.addEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
+			pausedVehicle.mesh.addEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
+			pausedVehicle.mesh.addEventListener(Object3DEvent.ROTATION_CHANGED, onCubeChanged);
+			TextureMaterial(pausedVehicle.mesh.material).alpha = 1;
+			_totalGameTime = 0;
+			_endSession = false;
+			respawn(pausedVehicle);
+			
+			delete _pausedVehicles[vehicleName];
+		}
+		
+		private function sendRestart():void
+		{
+			var index:int = ArenaFactory.instance.getSpawnIndexByPosition(_ownerCube.spawnPosition);
+			GameSignals.SESSION_RESTART.dispatch(_ownerCube.name, index);
 		}
 		
 		private function replaceUserByAIVehicle(vehicleName:String, spawnIndex:int):void {
+			_pausedVehicles[vehicleName] = _allPlayers[vehicleName]
 			var movingCube:MovingAICube = createAICube(spawnIndex);
 			_allAICubes[movingCube.name] = movingCube;
-			_allAICubes[movingCube.name] = movingCube;
+			_allPlayers[movingCube.name] = movingCube;
 			
 			if (_allPlayers[vehicleName] == _ownerCube) {
+				_ownerCube.removeAllUserInputs();
 				_stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 				_stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 			}
@@ -179,7 +226,6 @@ package com.mayhem.game
 			_allPlayers[vehicleName].mesh.removeEventListener(Object3DEvent.POSITION_CHANGED, onCubeChanged);
 			_allPlayers[vehicleName].mesh.removeEventListener(Object3DEvent.ROTATION_CHANGED, onCubeChanged);
 			_allPlayers[vehicleName].mesh.material.alpha = 0.25;
-			//_view3D.scene.removeChild(_allPlayers[userId].mesh);
 			_physicsWorld.removeRigidBody(_allPlayers[vehicleName].body);
 			delete _allPlayers[vehicleName];
 		}
@@ -195,18 +241,26 @@ package com.mayhem.game
 				cube.powerupRefill++;
 				if (cube.powerupRefill > GameData.POWERUP_FULL) {
 					cube.powerupRefill = GameData.POWERUP_FULL;
-					setExplosion(cube);
+					triggerExplosion(cube);
 				}
 			}
 		}
 		
 		private function onPowerUpTriggered(mess:PowerUpMessage):void {
 			if (mess.triggerdBy != _ownerCube.name) {
-				_allPlayers[mess.triggerdBy].triggerPowerUp();
-				for each(var eData:ExplosionData in mess.targets) {
-					var cube:MovingCube = _allPlayers[eData.target];
-					cube.body.applyCentralImpulse(eData.impulse);
+				switch(mess.powerUpId) {
+					case GameData.POWERUP_EXPLOSION:
+						_allPlayers[mess.triggerdBy].setExplosionState();
+						for each(var eData:ExplosionData in mess.targets) {
+							var cube:MovingCube = _allPlayers[eData.target];
+							cube.body.applyCentralImpulse(eData.impulse);
+						}
+						break;
+					case GameData.POWERUP_INVISIBILITY:
+						_allPlayers[mess.triggerdBy].setInvisibilityState(0.05);
+						break;
 				}
+				
 			}
 		}
 		
@@ -342,14 +396,14 @@ package com.mayhem.game
 			return dt;
 		}
 		
-		public function renderPhysics():void {
+		public function render():void {
 			if (_ownerCube){
 				CameraManager.instance.updateCamera(_ownerCube.mesh.transform.clone(), _ownerCube.mesh.position.clone());
 				if(_totalGameTime < GameData.GAME_SESSION_DURATION){
 					UISignals.UPDATE_GAME_TIMER.dispatch(_totalGameTime);
 				}else {
 					if (!_endSession) {
-						MultiplayerSignals.SESSION_PAUSE.dispatch(_ownerCube);
+						GameSignals.SESSION_PAUSE.dispatch(_ownerCube);
 						_endSession = true;
 					}
 				}
@@ -362,6 +416,8 @@ package com.mayhem.game
 			
 			_physicsWorld.step(dt / 1000, 5, _timeStep);	
 			
+			_view3D.render();
+			
 			//_debugDraw.debugDrawWorld();
 		}
 		
@@ -370,7 +426,7 @@ package com.mayhem.game
 			var position:Vector3D = aiCube.body.position;
 			var closest:MovingCube;
 			for each(var user:MovingCube in _allPlayers) {
-				if(user!=aiCube){
+				if(user!=aiCube && !user.isInvisible){
 					var dist:Number = Vector3D.distance(user.body.position, position);
 					var min:Number = Math.min(distanceTmp, dist);
 					if (min == dist) {
@@ -406,10 +462,19 @@ package com.mayhem.game
 			}
 		}
 		
-		private function setExplosion(pCube:MovingCube):void {
-			pCube.triggerPowerUp();
+		private function triggerInvisibility(pCube:MovingCube):void {
+			pCube.setInvisibilityState(0.25);
 			var message:PowerUpMessage = new PowerUpMessage();
 			message.triggerdBy = pCube.name;
+			message.powerUpId = GameData.POWERUP_INVISIBILITY;
+			UserInputSignals.POWERUP_TRIGGER.dispatch(message);
+		}
+		
+		private function triggerExplosion(pCube:MovingCube):void {
+			pCube.setExplosionState();
+			var message:PowerUpMessage = new PowerUpMessage();
+			message.triggerdBy = pCube.name;
+			message.powerUpId = GameData.POWERUP_EXPLOSION;
 			var radius:Number = 1000;
 			var maxForce:Number = 100;
 			for each(var cube:MovingCube in _allPlayers) {
@@ -433,9 +498,18 @@ package com.mayhem.game
 		private function onKeyUp(event:KeyboardEvent):void {
 			var _isVehicleInput:Boolean = false;
 			switch(event.keyCode) {
+				case Keyboard.NUMPAD_1:
 				case Keyboard.NUMBER_1:
 					if(_ownerCube.powerupRefill == GameData.POWERUP_FULL){
-						setExplosion(_ownerCube);
+						triggerExplosion(_ownerCube);
+						_ownerCube.powerupRefill = 0;
+						UISignals.OWNER_POWERUP_FILL.dispatch(_ownerCube.powerupRefill);
+					}
+					break;
+				case Keyboard.NUMPAD_2:
+				case Keyboard.NUMBER_2:
+					if(_ownerCube.powerupRefill == GameData.POWERUP_FULL){
+						triggerInvisibility(_ownerCube);
 						_ownerCube.powerupRefill = 0;
 						UISignals.OWNER_POWERUP_FILL.dispatch(_ownerCube.powerupRefill);
 					}

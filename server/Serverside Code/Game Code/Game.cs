@@ -153,6 +153,11 @@ namespace MyGame {
                     Console.WriteLine(user_id + " / " +spawnIndex.ToString());
                     Broadcast("UserSessionExpired", user_id, spawnIndex);
                     break;
+                case "UserSessionRestart":
+                    string user_id_restart = message.GetString(0);
+                    int spawnIndex_restart = message.GetInt(1);
+                    Broadcast("UserSessionRestarted", user_id_restart, spawnIndex_restart);
+                    break;
 			}
 		}
 

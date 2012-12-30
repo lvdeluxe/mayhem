@@ -8,6 +8,7 @@ package com.mayhem.game.powerups
 	{
 		
 		public var triggerdBy:String;
+		public var powerUpId:int;
 		public var targets:Vector.<ExplosionData> = new Vector.<ExplosionData>();
 		
 		public function PowerUpMessage() 

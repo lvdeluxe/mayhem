@@ -49,6 +49,8 @@ package
 		private function init(e:Event = null):void 
 		{
 			Security.allowDomain("*") ;
+			//this.mouseEnabled = false;
+			//this.mouseChildren = false;
 			//Security.loadPolicyFile("http://cdn.playerio.com/crossdomain.xml");
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			ModelsManager.instance.loadAllModels(setup);
@@ -75,7 +77,7 @@ package
 		}
 		
 		private function onContextCreated(event : Stage3DEvent) : void {
-			_uiManager = new UIManager(stage);
+			_uiManager = new UIManager(stage,_stage3DProxy);
 			_gameManager = new GameManager(stage, _stage3DProxy);
 			//_social = new SocialModel(connectedToSocial);
 			var socialUser:SocialUser = new SocialUser();
@@ -100,9 +102,8 @@ package
 		}
 		
 		private function onEnterFrame(event : Event) : void {
-			_gameManager.renderPhysics();
-			_gameManager.renderer.render();
-			_uiManager.renderer.nextFrame();
+			_gameManager.render();
+			_uiManager.render();
 		}		
 	}
 	

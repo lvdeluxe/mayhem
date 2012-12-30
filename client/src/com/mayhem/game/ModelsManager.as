@@ -10,6 +10,7 @@ package com.mayhem.game
 	import away3d.entities.Mesh;
 	import away3d.library.assets.AssetType;
 	import away3d.loaders.parsers.AWDParser;
+	import away3d.textures.BitmapCubeTexture;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	
@@ -41,7 +42,20 @@ package com.mayhem.game
 		[Embed(source = "/assets/VehicleTexture_3.jpg")]
 		private var Vehicle_Texture_3:Class;
 		[Embed(source = "/assets/VehicleTexture_4.jpg")]
-		private var Vehicle_Texture_4:Class;
+		private var Vehicle_Texture_4:Class;		
+		
+		[Embed(source = "/assets/cubemap/skybox3.jpg")]
+		private var cubemap_posZ:Class;		
+		[Embed(source = "/assets/cubemap/skybox1.jpg")]
+		private var cubemap_negZ:Class;		
+		[Embed(source = "/assets/cubemap/skybox4.jpg")]
+		private var cubemap_posX:Class;		
+		[Embed(source = "/assets/cubemap/skybox2.jpg")]
+		private var cubemap_negX:Class;	
+		[Embed(source = "/assets/cubemap/skybox6.jpg")]
+		private var cubemap_posY:Class;
+		[Embed(source = "/assets/cubemap/skybox5.jpg")]
+		private var cubemap_negY:Class;
 		
 		
 		public function ModelsManager() 
@@ -49,6 +63,17 @@ package com.mayhem.game
 			if (!_enableInstantiation) {
 				throw new Error('This class is a Singleton, should not be instanciated!');
 			}
+		}
+		
+		public function getSkyboxTexture():BitmapCubeTexture {
+			var posX:Bitmap = new cubemap_posX();
+			var negX:Bitmap = new cubemap_negX();
+			var posZ:Bitmap = new cubemap_posZ();
+			var negZ:Bitmap = new cubemap_negZ();
+			var posY:Bitmap = new cubemap_posY();
+			var negY:Bitmap = new cubemap_negY();
+			var bmpCubeText:BitmapCubeTexture = new BitmapCubeTexture(posX.bitmapData, negX.bitmapData, posY.bitmapData, negY.bitmapData, posZ.bitmapData, negZ.bitmapData);
+			return bmpCubeText;
 		}
 		public static function get instance():ModelsManager {
 			if (!_instance) {

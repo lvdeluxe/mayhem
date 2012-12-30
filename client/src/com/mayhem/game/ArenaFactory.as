@@ -78,7 +78,6 @@ package com.mayhem.game
 		public function getSpawnIndexByPosition(pos:Vector3D):int {
 			var index:int = -1
 			for (var i:uint = 0 ; i < allSpawnPoints.length ; i++ ) {
-				trace(allSpawnPoints[i].position, pos)
 				if (allSpawnPoints[i].position.x == pos.x && allSpawnPoints[i].position.z == pos.z)
 					return i;
 			}

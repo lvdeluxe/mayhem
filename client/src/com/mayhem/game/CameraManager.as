@@ -41,7 +41,7 @@ package com.mayhem.game
 		}
 		
 		public function updateCamera(pTransform:Matrix3D, pPos:Vector3D):void {
-			_axisQuaternion.fromAxisAngle(_rotateAxis, Math.PI / 4);
+			_axisQuaternion.fromAxisAngle(_rotateAxis, GameData.CAMERA_ROTATION_X);
 			
 			_targetQuaternion.fromMatrix(pTransform);
 			_targetQuaternion.multiply(_targetQuaternion, _axisQuaternion);
@@ -57,8 +57,8 @@ package com.mayhem.game
 			_camera.transform = newTransform;
 			
 			_camera.position = pPos;
-			_camera.moveBackward(3000);
-			_camera.moveDown(500); 
+			_camera.moveBackward(GameData.CAMERA_OFFSET_Z);
+			_camera.moveDown(GameData.CAMERA_OFFSET_Y); 
 		}
 		
 	}

@@ -1,12 +1,19 @@
 package com.mayhem.ui 
 {
 	import com.mayhem.game.GameData;
+	import com.mayhem.signals.GameSignals;
 	import com.mayhem.signals.MultiplayerSignals;
 	import com.mayhem.signals.UISignals;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import starling.display.Button;
+	import feathers.themes.AzureMobileTheme;
 	import starling.display.Quad;
 	import starling.display.Sprite;
+	import starling.events.TouchEvent;
 	import starling.text.TextField;
 	import starling.core.Starling;
+	import starling.textures.Texture;
 	import starling.utils.HAlign;
 	import starling.utils.VAlign;
 	import com.mayhem.game.MovingCube;
@@ -18,9 +25,10 @@ package com.mayhem.ui
 	{
 		private var _healthBar:Quad;
 		private var _powerUpBar:Quad;
-		private var _deathTextField:TextField;
+		private var _statusTextField:TextField;
 		private var _timerTextField:TextField;
 		private  var _totalTimeString:String;
+		private var _endSessionScreen:EndSessionScreen;
 		
 		public function UIDisplay() 
 		{
@@ -30,18 +38,24 @@ package com.mayhem.ui
 			UISignals.OWNER_RESPAWNED.add(clearTextFields);
 			UISignals.OWNER_POWERUP_FILL.add(updatePowerMeter);
 			UISignals.UPDATE_GAME_TIMER.add(updateGameTimer);
-			MultiplayerSignals.SESSION_PAUSE.add(stopGameTimer);
+			GameSignals.SESSION_PAUSE.add(stopGameTimer);
+			MultiplayerSignals.SESSION_PAUSED.add(showGameSessionStats);
+			MultiplayerSignals.SESSION_RESTARTED.add(removeEndSession);
+			
 			_totalTimeString = formatTime(GameData.GAME_SESSION_DURATION)
 			createUI();			
 		}
 		
-		private function showGameSessionStats():void {
-			
+		private function removeEndSession(vehicleName:String, spawnIndex:int):void {
+			_endSessionScreen.visible = false;
+		}
+		
+		private function showGameSessionStats(vehicleName:String, spawnIndex:int):void {
+			_endSessionScreen.visible = true;
 		}
 		
 		private function stopGameTimer(cube:MovingCube):void {
 			_timerTextField.text = _totalTimeString + "/" + _totalTimeString;
-			showGameSessionStats();
 		}
 		private function updateGameTimer(gameTime:uint):void {
 			_timerTextField.text = formatTime(gameTime) + "/" + _totalTimeString;
@@ -53,27 +67,28 @@ package com.mayhem.ui
 		
 		private function clearTextFields():void {
 			onEnergyUpdate(1);
-			removeChild(_deathTextField);
-			_deathTextField.dispose();
+			_statusTextField.visible = false;
 		}
 		
 		private function onOwnerFelt():void {
 			onEnergyUpdate(0);
-			_deathTextField = new TextField(800, 600, "YOU FELT, YOU MORON!!!", "Verdana", 48);
-			_deathTextField.color = 0x151515;
-			addChild(_deathTextField);	
+			_statusTextField.text = "YOU FELT, YOU MORON!!!";
+			_statusTextField.visible = true;
 		}
 		private function onEnergyOut():void {
-			_deathTextField = new TextField(800, 600, "YOU DIED, YOU MORON!!!", "Verdana", 48);
-			_deathTextField.color = 0x151515;
-			addChild(_deathTextField);	
+			_statusTextField.text = "YOU DIED, YOU MORON!!!";
+			_statusTextField.visible = true;
 		}
 		private function onEnergyUpdate(prct:Number):void {
-			trace("onEnergyUpdate", prct)
 			_healthBar.width = GameData.VEHICLE_MAX_ENERGY * prct;
 		}
 		
 		private function createUI():void {
+			_statusTextField = new TextField(800, 600, "---", "Verdana", 48);
+			_statusTextField.color = 0x151515;
+			addChild(_statusTextField);	
+			_statusTextField.visible = false;
+			
 			var quad:Quad = new Quad(GameData.VEHICLE_MAX_ENERGY, 20, 0x666666);
 			quad.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
 			quad.y = 10;
@@ -115,10 +130,14 @@ package com.mayhem.ui
 			_timerTextField.color = 0xffffff;
 			_timerTextField.hAlign = HAlign.RIGHT;
 			addChild(_timerTextField);
+			
+			_endSessionScreen = new EndSessionScreen();
+			addChild(_endSessionScreen);
+			_endSessionScreen.visible = false;
+			
 		}
 		
 		public function formatTime(milli:uint):String {
-			//var time:Number = milli / 1000;
 			var remainder:Number;
 			var hours:Number = (milli / 1000) / ( 60 * 60 );
 			var hFloor:Number = Math.floor(hours);
@@ -133,7 +152,7 @@ package com.mayhem.ui
 			remainder = seconds - sFloor;
 			seconds = sFloor;
 			var hString:String = hours < 10 ? hours.toString() : hours.toString();
-			var mString:String = minutes < 10 ? minutes.toString() : minutes.toString();
+			var mString:String = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
 			var sString:String = seconds < 10 ? "0" + seconds.toString() : seconds.toString();
 			if(milli < 0 || isNaN(milli)) {
 				return "00:00";

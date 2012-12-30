@@ -10,6 +10,8 @@ package com.mayhem.game
 	import away3d.materials.ColorMaterial;
 	import away3d.materials.MaterialBase;
 	import away3d.materials.methods.FilteredShadowMapMethod;
+	import away3d.materials.methods.FresnelEnvMapMethod;
+	import away3d.materials.methods.FresnelSpecularMethod;
 	import away3d.materials.methods.SoftShadowMapMethod;
 	import away3d.materials.TextureMaterial;
 	import away3d.primitives.CubeGeometry;
@@ -47,12 +49,15 @@ package com.mayhem.game
 		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
 		
 		private var _collisionTimer:Timer;		
+		private var _invisibilityTimer:Timer;		
 		
 		public var totalEnergy:int = GameData.VEHICLE_MAX_ENERGY;
 		
 		public var spawnPosition:Vector3D = new Vector3D();
 		
 		public var powerupRefill:uint = 0;
+		
+		public var isInvisible:Boolean = false;
 		
 		
 		public function MovingCube(id:String, isMainUser:Boolean) 
@@ -67,6 +72,9 @@ package com.mayhem.game
 			_collisionTimer = new Timer(200, 10);
 			_collisionTimer.addEventListener(TimerEvent.TIMER,onTimer);
 			_collisionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete);
+			
+			_invisibilityTimer = new Timer(GameData.INVISIBILITY_DURATION, 1);
+			_invisibilityTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onInvisibilityComplete);
 
 			mesh = ModelsManager.instance.allVehicleMeshes[0].clone() as Mesh;
 			mesh.material = getMaterial();
@@ -94,7 +102,22 @@ package com.mayhem.game
 			return mat;
 		}
 		
-		public function triggerPowerUp():void {
+		private function onInvisibilityComplete(event:TimerEvent):void {
+			TextureMaterial(mesh.material).alpha = 1;
+			isInvisible = false;
+		}
+		
+		
+		public function setInvisibilityState(alphaValue:Number):void {
+			TextureMaterial(mesh.material).alpha = alphaValue;
+			isInvisible = true;
+			//var fresnel:FresnelSpecularMethod = new FresnelSpecularMethod();
+			//TextureMaterial(mesh.material).specularMethod = fresnel;
+			//body.collisionFlags = AWPCollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK;
+			_invisibilityTimer.reset();
+			_invisibilityTimer.start();
+		}
+		public function setExplosionState():void {
 			ParticlesFactory.instance.getExplosionParticles(body.position.clone(), null);
 		}
 
@@ -117,6 +140,13 @@ package com.mayhem.game
 		
 		private function enableCollision():void {
 			hasCollided = false;
+		}
+		
+		public function removeAllUserInputs():void {
+			userInputs[GameManager.MOVE_LEFT_KEY] = false;
+			userInputs[GameManager.MOVE_RIGHT_KEY] = false;
+			userInputs[GameManager.MOVE_UP_KEY] = false;
+			userInputs[GameManager.MOVE_DOWN_KEY] = false;
 		}
 		
 		public function addUserInput(keyCode:uint):void {
