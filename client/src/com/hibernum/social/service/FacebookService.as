@@ -35,11 +35,12 @@ public class FacebookService {
 		ExternalInterface.addCallback('onFailure', onFailure);
 		ExternalInterface.addCallback('onJavaScriptError', onJavaScriptError);
 		trace("ExternalInterface.objectID",ExternalInterface.objectID)
-		ExternalInterface.call('FBBridge.setGameElement', ExternalInterface.objectID);
+		ExternalInterface.call('FBBridge.setGameElement', "game");
 	}
 
 	public static function init(pAppId:String, pAppName:String, success:Function, failure:Function = null):void {
 		registerCallback('onInit', success, failure);
+		trace("OK I'm here")
 		ExternalInterface.call('FBBridge.init', pAppId, pAppName, true);
 	}
 

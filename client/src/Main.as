@@ -17,6 +17,7 @@ package
 	import flash.display.StageQuality;
 	import com.hibernum.social.service.FacebookService;
 	import flash.system.Security;
+	import com.mayhem.game.ModelsManager;
 	
 	
 	/**
@@ -29,16 +30,10 @@ package
 		private var _connector:Connector;
 		private var _uiManager:UIManager;
 		private var _gameManager:GameManager;
-		private var _social:SocialModel;
-		
+		private var _social:SocialModel;		
 		private var _stage3DProxy:Stage3DProxy;
 		private var _stage3DManager:Stage3DManager;
-		
-		private var ticks:uint = 0;
-		private var last:uint = getTimer();
-		
-		private var letters:String = "abcdefghijklmnopqrstuvwxyz"
-		
+				
 		public function Main():void 
 		{
 			if (stage) init();
@@ -49,6 +44,11 @@ package
 		{
 			Security.allowDomain("*") ;
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+			ModelsManager.instance.loadAllModels(setup);
+			
+		}
+		
+		private function setup():void {
 			setStageProperties();
 			setStage3DProxy();
 		}
@@ -67,35 +67,21 @@ package
 			_stage3DProxy.color = 0x0;		
 		}
 		
-		private function onContextCreated(event : Stage3DEvent) : void {
-			_uiManager = new UIManager(stage);
+		private function onContextCreated(event : Stage3DEvent) : void {			
+			_social = new SocialModel(connectedToSocial, false);
+		}
+		
+		
+		private function connectedToSocial(socialUser:SocialUser):void {
+			_uiManager = new UIManager(stage,_stage3DProxy);
 			_gameManager = new GameManager(stage, _stage3DProxy);
-			//_social = new SocialModel(connectedToSocial);
-			var socialUser:SocialUser = new SocialUser();
-			socialUser.social_id = Math.round(Math.random() * 10000).toString();
-			socialUser.name = getRandomName();
-			trace("socialUser.name",socialUser.name);
-			_connector = new Connector(stage,socialUser);
+			_connector = new Connector(stage, socialUser);
 			_stage3DProxy.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
-		private function getRandomName():String {
-			var str:String = "";
-			var split:Array = letters.split("");
-			for (var i:uint = 0 ; i < 10 ; i++ )
-				str += split[Math.floor(Math.random() * split.length)];
-			return str;
-		}
-		
-		private function connectedToSocial(socialUser:SocialUser):void {
-			trace(socialUser.social_id);
-			_connector = new Connector(stage,socialUser);
-		}
-		
 		private function onEnterFrame(event : Event) : void {
-			_gameManager.renderPhysics();
-			_gameManager.renderer.render();
-			_uiManager.renderer.nextFrame();
+			_gameManager.render();
+			_uiManager.render();
 		}		
 	}
 	

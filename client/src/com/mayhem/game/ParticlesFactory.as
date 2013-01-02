@@ -17,9 +17,13 @@ package com.mayhem.game
 		private static var _instance:ParticlesFactory;
 		private static var _enableInstantiation:Boolean = false;		
 		
-		[Embed(source="/assets/particles.xml", mimeType="application/octet-stream")]
-		private var _particlesXML:Class;
-		private var _effectsFactory:EffectGroupFactoryS;
+		[Embed(source="/assets/collision.xml", mimeType="application/octet-stream")]
+		private var _collisionXML:Class;
+		[Embed(source="/assets/explosion.xml", mimeType="application/octet-stream")]
+		private var _explosionXML:Class;
+		
+		private var _explosionFactory:EffectGroupFactoryS;
+		private var _collisionFactory:EffectGroupFactoryS;
 		private var _scene:Scene3D;
 		private var _runningParticles:Dictionary = new Dictionary();
 		
@@ -32,10 +36,15 @@ package com.mayhem.game
 		
 		public function initialize(pScene:Scene3D):void {
 			_scene = pScene;
-			var parts:* = new _particlesXML();
+			var parts:* = new _collisionXML();
 			var xml:XML = new XML(parts);
-			_effectsFactory = new EffectGroupFactoryS();
-			_effectsFactory.importCode(xml);
+			_collisionFactory = new EffectGroupFactoryS();
+			_collisionFactory.importCode(xml);
+			
+			var parts2:* = new _explosionXML();
+			var xml2:XML = new XML(parts2);
+			_explosionFactory = new EffectGroupFactoryS();
+			_explosionFactory.importCode(xml2);
 		}
 		
 		public static function get instance():ParticlesFactory {
@@ -49,7 +58,7 @@ package com.mayhem.game
 		
 		public function checkRemoveParticles():void {
 			for each(var eGroup:EffectGroup in _runningParticles) {
-				if (eGroup.time >= _effectsFactory.effectDuration) {
+				if (eGroup.time >= _collisionFactory.effectDuration) {
 					if(eGroup.onComplete != null)eGroup.onComplete();
 					eGroup.parent.removeChild(eGroup);
 					delete _runningParticles[eGroup];
@@ -58,11 +67,32 @@ package com.mayhem.game
 			}
 		}		
 		
+		public function getExplosionParticles(position:Vector3D, completeCallback:Function = null):void {
+			if (position == null)
+				position = new Vector3D();
+				
+			var effect:EffectGroup = _explosionFactory.createNeedStuff() as EffectGroup;
+			effect.onComplete = completeCallback;
+			_runningParticles[effect] = effect;
+			effect.position = position;
+			_scene.addChild(effect);
+			effect.start();
+			//if (position == null)
+				//position = new Vector3D();
+//
+			//var effect:EffectGroup = _collisionFactory.createNeedStuff() as EffectGroup;
+			//effect.onComplete = completeCallback;
+			//_runningParticles[effect] = effect;
+			//effect.position = position;
+			//_scene.addChild(effect);
+			//effect.start();
+		}
+		
 		public function getSparksParticles(position:Vector3D, completeCallback:Function = null):void {
 			if (position == null)
 				position = new Vector3D();
 
-			var effect:EffectGroup = _effectsFactory.createNeedStuff() as EffectGroup;
+			var effect:EffectGroup = _collisionFactory.createNeedStuff() as EffectGroup;
 			effect.onComplete = completeCallback;
 			_runningParticles[effect] = effect;
 			effect.position = position;

@@ -1,6 +1,8 @@
 package com.mayhem.game 
 {
 	import away3d.containers.ObjectContainer3D;
+	import away3d.core.math.Quaternion;
+	import away3d.debug.Trident;
 	import away3d.entities.Mesh;
 	import away3d.materials.ColorMaterial;
 	import awayphysics.collision.dispatch.AWPCollisionObject;
@@ -8,9 +10,11 @@ package com.mayhem.game
 	import awayphysics.dynamics.AWPRigidBody;
 	import awayphysics.collision.shapes.AWPCylinderShape;
 	import awayphysics.events.AWPEvent;
+	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	import away3d.primitives.CylinderGeometry;
 	import caurina.transitions.Tweener;
+	import flash.utils.setTimeout;
 	/**
 	 * ...
 	 * @author availlant
@@ -41,9 +45,33 @@ package com.mayhem.game
 			var cubeCollider:MovingCube = event.collisionObject.skin.extra as MovingCube;
 			if (cubeCollider && (_lastCollided == null || _lastCollided != event.collisionObject)) {
 				var subs:Vector3D = cubeCollider.mesh.position.subtract(mesh.position);
-				subs.normalize();
-				subs.scaleBy(20);
-				cubeCollider.body.applyCentralImpulse(subs);
+				var t:Trident = new Trident()
+				
+				var a:Number = event.manifoldPoint.localPointA.z;
+				var b:Number = event.manifoldPoint.localPointA.x;
+				var rads:Number = Math.atan2(a, b);
+				t.rotationY = -(rads * 180 / Math.PI) + 90; 
+			
+				t.position = event.manifoldPoint.localPointA;
+				
+				mesh.addChild(t)
+				setTimeout(function():void {
+					mesh.removeChild(t);
+				},2000);
+				
+				var r:Number = t.rotationY;
+				if (r < 0)
+				r += 180
+				trace(r)
+				
+				//subs.normalize();
+				//subs.scaleBy(20);
+				//cubeCollider.velocityLenght += subs.length;
+				//cubeCollider.body.applyCentralImpulse(subs);
+				//cubeCollider.bumpingVelocity = cubeCollider.bumpingVelocity.add(subs);
+				//trace(subs)
+				//trace(cubeCollider.bumpingVelocity)
+				trace("//////////////////")
 				var particlesPosition:Vector3D = mesh.transform.transformVector(event.manifoldPoint.localPointA);
 				setBumpingAnimation(particlesPosition);
 				_lastCollided = event.collisionObject;

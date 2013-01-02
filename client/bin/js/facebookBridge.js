@@ -9,6 +9,8 @@ var FBBridge = {
 	},
 
 	onInit:function (response) {
+		console.log(response)
+		console.log(FBBridge.gameElement)
 		if(response.status == 'connected') {
 			FBBridge.gameElement.onInit(response.authResponse);
 		}
@@ -16,22 +18,27 @@ var FBBridge = {
 	},
 	init:function(app_id, app_name, fric_less_req) {
 		FB.Event.subscribe('auth.statusChange', FBBridge.onInit);
+		console.log("called init")
 		try {
 			FB.init({
 				appId:app_id,
-				status : true,
+				status : false,
 				hideFlashCallback : FBBridge.onFlashHide,
 				frictionlessRequests:fric_less_req
 			});
 			FB.getLoginStatus(function(response) {
-				if (response.status == 'unknown') {
+				console.log(response.status)
+				if (response.status == 'not_authorized' ||response.status == 'unknown') {
 					var params = location.search.substring(1);
-					// warning: be sure to end redirect_uri with a slash or you'll get a weird error from facebook
+					//console.log('//graph.facebook.com/oauth/authorize?client_id=' + app_id + '&redirect_uri=' + encodeURIComponent(location.protocol + '//apps.facebook.com/' + app_name + '/?' + params));
+					 //warning: be sure to end redirect_uri with a slash or you'll get a weird error from facebook
 					top.location = '//graph.facebook.com/oauth/authorize?client_id=' + app_id + '&redirect_uri=' + encodeURIComponent(location.protocol + '//apps.facebook.com/' + app_name + '/?' + params);
+					
 				}
 			});
 		}
 		catch(error) {
+			console.log("error init")
 			FBBridge.gameElement.onJavaScriptError(error);
 		}
 	},

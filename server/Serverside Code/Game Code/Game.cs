@@ -2,51 +2,36 @@
 using System.Collections.Generic;
 using System.Drawing;
 using PlayerIO.GameLibrary;
+using System.Text;
 
 namespace MyGame {
 
-    public struct Vector3
-    {
-        public double x, y, z;
-        public Vector3(double p1, double p2, double p3) 
-       {
-          x = p1;
-          y = p2;
-          z = p3;    
-       }
-    }
-
 	public class Player : BasePlayer {
 		public string Name;
-        //public Vector3 Position;
-        //public Vector3 Rotation;
-        //public Vector3 Velocity;
-
+        public int UserIndex;
+        public uint XP;
         public Byte[] RigidBodyDescription;
-
-
-        //public double positionX;
-        //public double positionY;
-        //public double positionZ;
-        //public double rotationX;
-        //public double rotationY;
-        //public double rotationZ;
-        //public double velocityX;
-        //public double velocityY;
-        //public double velocityZ;
 	}
 
 	[RoomType("OfficeMayhem")]
 	public class GameCode : Game<Player> {
 
         private Dictionary<string, Player> allUsers;
+        private Dictionary<string, Player> allAICubes;
+        private int maxPerRoom = 12;
+
 
 		// This method is called when an instance of your the game is created
 		public override void GameStarted() {
-            allUsers = new Dictionary<string,Player>();
-			// anything you write to the Console will show up in the 
-			// output window of the development server
-			Console.WriteLine("Game is started: " + RoomId);
+            allUsers = new Dictionary<string, Player>();
+            allAICubes = new Dictionary<string, Player>();
+            
+            for (int i = 0; i < maxPerRoom; i++)
+            {
+                allAICubes["ai_" + allAICubes.Count.ToString()] = GetAICube(i);
+            }
+
+            Console.WriteLine("Game is started: " + RoomId);
 
 			// This is how you setup a timer
             //AddTimer(delegate {
@@ -79,37 +64,46 @@ namespace MyGame {
                 return;
             }
 
-            //PlayerIO.BigDB.LoadOrCreate("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
-            //{
-            //    if (!userInfo.Contains("username"))
-            //    {
-            //        //Empty object, initialize it
-            //        userInfo.Set("username", player.JoinData["name"]);
-            //    }
-            //    userInfo.Save();
-            //});
+            PlayerIO.BigDB.LoadOrCreate("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
+            {
+                if (!userInfo.Contains("username"))
+                {
+                    //Empty object, initialize it
+                    userInfo.Set("username", player.JoinData["name"]);
+                    userInfo.Set("xp", 0);
+                    userInfo.Save();
+                }else{
+                    player.XP = userInfo.GetUInt("xp");
+                }
 
-			// this is how you send a player a message
-            Console.WriteLine("userId: " + player.ConnectUserId);
+                Console.WriteLine("userId: " + player.ConnectUserId);
+                player.UserIndex = allUsers.Count;
 
-            allUsers.Add(player.ConnectUserId, player);
-
-            //Random rand = new Random();
-            //player.Position = new Vector3(1250 - (rand.NextDouble() * 2500), 50.0f, 1250 - (rand.NextDouble() * 2500));
-            //player.Rotation = new Vector3(0.0f, 0.0f, 0.0f);
-            //player.Velocity = new Vector3(0.0f, 0.0f, 0.0f);
-
-            Broadcast("UserJoined", player.ConnectUserId);
+                allUsers.Add(player.ConnectUserId, player);
+                allAICubes.Remove("ai_" + player.UserIndex.ToString());
+                player.PayVault.Refresh(delegate()
+                {
+                    Broadcast("UserJoined", player.ConnectUserId, player.UserIndex, player.XP, player.PayVault.Coins);
+                });
+            });    
+            
 		}
 
-		// This method is called when a player leaves the game
+        private Player GetAICube(int index)
+        {
+            Player p = new Player();
+            p.Name = "ai_" + index.ToString();
+            p.UserIndex = index;
+            return p;
+        }
+
 		public override void UserLeft(Player player) {
             allUsers.Remove(player.ConnectUserId);
+            allAICubes.Add("ai_" + player.UserIndex.ToString(), GetAICube(player.UserIndex));
             Console.WriteLine("userId left: " + player.ConnectUserId);
-            Broadcast("UserLeft", player.ConnectUserId);
+            Broadcast("UserLeft", player.ConnectUserId, player.UserIndex);
 		}
 
-		// This method is called when a player sends a message into the server code
 		public override void GotMessage(Player player, Message message) {
             switch(message.Type) {
                 case "GetRoomUsers":
@@ -119,7 +113,7 @@ namespace MyGame {
                         if (plyr.Value.ConnectUserId != player.ConnectUserId)
                         {
                             msg.Add(plyr.Value.ConnectUserId);
-                            msg.Add(plyr.Value.RigidBodyDescription); 
+                            msg.Add(plyr.Value.RigidBodyDescription);
                         }
                     }
                     player.Send(msg);
@@ -127,10 +121,13 @@ namespace MyGame {
                 case "PlayerStoppedMoving":
                     Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
                     break;
+                case "AIUpdateState":
+                    Byte[] AIByteArray = message.GetByteArray(0);
+                    Broadcast("AIHasStateUpdate", AIByteArray);
+                    break;
                 case "PlayerUpdateState":                   
                     Byte[] byteArray = message.GetByteArray(0);
                     player.RigidBodyDescription = byteArray;
-                    Console.WriteLine("user has moved");
                     Broadcast("PlayerHasStateUpdate", player.ConnectUserId, byteArray);
                     break;
                 case "PlayerIsMoving":
@@ -140,8 +137,86 @@ namespace MyGame {
                     Byte[] collisionByteArray = message.GetByteArray(0);
                     Broadcast("PlayerHasCollided", collisionByteArray);
                     break;
+                case "PowerUpTrigger":
+                    Console.WriteLine("PowerUpTrigger");
+                    Byte[] pUpByteArray = message.GetByteArray(0);
+                    Broadcast("PowerUpTriggered", pUpByteArray);
+                    break;
+                case "UserSessionExpire":
+                    Byte[] statsBytes = message.GetByteArray(0);
+                    int uidLength = statsBytes[1];
+                    int readStart = 2;
+                    int offset = 4;
+                    string uid = Encoding.UTF8.GetString(statsBytes, readStart, uidLength);
+                    Console.WriteLine((readStart + uidLength + 1).ToString());
+                    int index = readStart + uidLength;
+
+                    int CurrentKillsReceived = byteArrayToInt(statsBytes, index);
+                    index += offset;
+                    int CurrentKillsInflicted = byteArrayToInt(statsBytes, index);
+                    index += offset;
+                    int CurrentHitsReceived = byteArrayToInt(statsBytes, index);
+                    index += offset;
+                    int CurrentHitsInflicted = byteArrayToInt(statsBytes, index);
+                    index += offset;
+                    int CurrentFelt = byteArrayToInt(statsBytes, index);
+                    index += offset;
+                    int CurrentMaxSpeed = byteArrayToInt(statsBytes, index);
+
+                    PlayerIO.BigDB.LoadOrCreate("UserStats", uid, delegate(DatabaseObject statsInfo)
+                    {
+                        object obj = new object();
+                        if (statsInfo.TryGetValue("AllTimeKillsReceived", out obj))
+                        {
+                            //Empty object, initialize it
+                            int AllTimeKillsReceived = statsInfo.GetInt("AllTimeKillsReceived");
+                            statsInfo.Set("AllTimeKillsReceived", AllTimeKillsReceived + CurrentKillsReceived);
+                            int AllTimeKillsInflicted = statsInfo.GetInt("AllTimeKillsInflicted");
+                            statsInfo.Set("AllTimeKillsInflicted", AllTimeKillsInflicted + CurrentKillsInflicted);
+                            int AllTimeHitsReceived = statsInfo.GetInt("AllTimeHitsReceived");
+                            statsInfo.Set("AllTimeHitsReceived", AllTimeHitsReceived + CurrentHitsReceived);
+                            int AllTimeHitsInflicted = statsInfo.GetInt("AllTimeHitsInflicted");
+                            statsInfo.Set("AllTimeHitsInflicted", AllTimeHitsInflicted + CurrentHitsInflicted);
+                            int AllTimeFelt = statsInfo.GetInt("AllTimeFelt");
+                            statsInfo.Set("AllTimeFelt", AllTimeFelt + CurrentFelt);
+                            int AllTimeMaxSpeed = statsInfo.GetInt("AllTimeMaxSpeed");
+                            statsInfo.Set("AllTimeMaxSpeed", Math.Max(AllTimeMaxSpeed, CurrentMaxSpeed));
+                            int AllTimeSessionsPlayed = statsInfo.GetInt("AllTimeSessionsPlayed");
+                            statsInfo.Set("AllTimeSessionsPlayed", AllTimeSessionsPlayed + 1);
+                        }
+                        else
+                        {
+                            statsInfo.Set("AllTimeKillsReceived", CurrentKillsReceived);
+                            statsInfo.Set("AllTimeKillsInflicted", CurrentKillsInflicted);
+                            statsInfo.Set("AllTimeHitsReceived", CurrentHitsReceived);
+                            statsInfo.Set("AllTimeHitsInflicted", CurrentHitsInflicted);
+                            statsInfo.Set("AllTimeFelt", CurrentFelt);
+                            statsInfo.Set("AllTimeMaxSpeed", CurrentMaxSpeed);
+                            statsInfo.Set("AllTimeSessionsPlayed", 1);
+                        }
+                        player.PayVault.Credit(100, "EndSession", delegate()
+                        {
+                            PlayerIO.BigDB.Load("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo){
+                                player.XP += 5;
+                                userInfo.Set("xp", player.XP);
+                                userInfo.Save();
+                                statsInfo.Save();
+                                Broadcast("UserSessionExpired", uid, player.PayVault.Coins, player.XP);
+                            });                            
+                        });                        
+                    });                   
+                    break;
+                case "UserSessionRestart":                    
+                    string user_id_restart = message.GetString(0);
+                    int spawnIndex_restart = message.GetInt(1);
+                    Broadcast("UserSessionRestarted", user_id_restart, spawnIndex_restart);
+                    break;
 			}
 		}
+
+        int byteArrayToInt(byte[] b, int index) {
+            return (b[index] << 24) + ((b[index + 1] & 0xFF) << 16) + ((b[index + 2] & 0xFF) << 8) + (b[index + 3] & 0xFF); 
+        }
 
         System.Drawing.Point debugPoint;
 
