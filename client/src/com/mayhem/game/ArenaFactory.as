@@ -45,6 +45,7 @@ package com.mayhem.game
 		private var _physicsWorld:AWPDynamicsWorld;
 		private var _mainContainer:ObjectContainer3D;
 		public var allSpawnPoints:Vector.<Mesh> = new Vector.<Mesh>(Connector.MAX_USER_PER_ROOM);
+		public var mainBody:AWPRigidBody;
 		
 		public function ArenaFactory() 
 		{
@@ -94,7 +95,6 @@ package com.mayhem.game
 		public function getDefaultArena():ObjectContainer3D {
 			_mainContainer = new ObjectContainer3D();
 			for each(var mesh:Mesh in ModelsManager.instance.allArenaMeshes) {
-				trace(mesh.name)
 				var prefix:String = mesh.name.split("_")[0];
 				if (prefix == "start") {
 					var pos:int = mesh.name.split("_")[1];
@@ -109,13 +109,17 @@ package com.mayhem.game
 					ColorMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
 					var shape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(mesh.geometry);
 					var body:AWPRigidBody = new AWPRigidBody(shape, mesh);
+					
 					_physicsWorld.addRigidBody(body);
 					_mainContainer.addChild(mesh);
 					if (prefix == "refill") {
 						body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
 						body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
+					}else {
+						mainBody = body;
+						mainBody.friction = GameData.ARENA_FRICTION;
+						mainBody.restitution = GameData.ARENA_RESTITUTION;
 					}
-					
 				}
 			}
 			

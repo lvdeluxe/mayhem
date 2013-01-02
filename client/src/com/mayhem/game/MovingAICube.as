@@ -2,6 +2,7 @@ package com.mayhem.game
 {
 	import away3d.materials.MaterialBase;
 	import away3d.materials.TextureMaterial;
+	import away3d.textures.BitmapCubeTexture;
 	import away3d.textures.BitmapTexture;
 	import flash.geom.Vector3D;
 	
@@ -12,9 +13,9 @@ package com.mayhem.game
 	public class MovingAICube extends MovingCube
 	{
 		
-		public function MovingAICube(id:String, isMainUser:Boolean) 
+		public function MovingAICube(id:String, isMainUser:Boolean, cubeMap:BitmapCubeTexture) 
 		{
-			super(id, isMainUser);
+			super(id, isMainUser,cubeMap);
 		}
 	
 		

@@ -64,6 +64,7 @@ package feathers.themes
 	import feathers.text.BitmapFontTextFormat;
 	import feathers.textures.Scale3Textures;
 	import feathers.textures.Scale9Textures;
+	import flash.text.TextFormatAlign;
 
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
@@ -109,7 +110,7 @@ package feathers.themes
 		{
 			return new BitmapFontTextRenderer();
 		}
-
+		
 		protected static function textEditorFactory():StageTextTextEditor
 		{
 			return new StageTextTextEditor();
@@ -151,7 +152,7 @@ package feathers.themes
 		protected var atlas:TextureAtlas;
 		protected var atlasBitmapData:BitmapData;
 
-		protected var bitmapFont:BitmapFont;
+		public var bitmapFont:BitmapFont;
 
 		protected var buttonUpSkinTextures:Scale9Textures;
 		protected var buttonDownSkinTextures:Scale9Textures;
@@ -409,7 +410,7 @@ package feathers.themes
 
 		protected function labelInitializer(label:Label):void
 		{
-			label.textRendererProperties.textFormat = new BitmapFontTextFormat(bitmapFont, this.fontSize, PRIMARY_TEXT_COLOR);
+			label.textRendererProperties.textFormat = new BitmapFontTextFormat(bitmapFont, 24, 0xffffff,TextFormatAlign.CENTER);
 		}
 
 		protected function scrollTextInitializer(text:ScrollText):void

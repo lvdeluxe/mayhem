@@ -6,19 +6,42 @@ package com.hibernum.social.model
 	 */
 	
 	import com.hibernum.social.service.FacebookService;
+	import flash.display.Stage;
+	import playerio.Client;
+	import playerio.PlayerIO;
 	 
 	public class SocialModel 
 	{
 		
 		private var _token:Token;
 		public var mainUser:SocialUser;
-		private var _callbackUserLoggedIn:Function;
+		private var _callbackUserLoggedIn:Function;		
 		
-		public function SocialModel(onUserLogged:Function) 
+		private var letters:String = "abcdefghijklmnopqrstuvwxyz"
+		
+		
+		public function SocialModel(onUserLogged:Function, standalone:Boolean) 
 		{
-			_callbackUserLoggedIn = onUserLogged;
-			FacebookService.initialize();
-			FacebookService.init("121997937950672", "officemayhem", onSuccess, onFailure);
+			if (standalone) {
+				var socialUser:SocialUser = new SocialUser();
+				socialUser.social_id = "1234"//Math.round(Math.random() * 10000).toString();
+				socialUser.name = getRandomName();
+				onUserLogged(socialUser);
+			}else{
+				_callbackUserLoggedIn = onUserLogged;
+				FacebookService.initialize();
+				FacebookService.init("483222041718845", "cmayhem", onSuccess, onFailure);
+			}
+		}
+		
+		
+		
+		private function getRandomName():String {
+			var str:String = "";
+			var split:Array = letters.split("");
+			for (var i:uint = 0 ; i < 10 ; i++ )
+				str += split[Math.floor(Math.random() * split.length)];
+			return str;
 		}
 		
 		private function onFailure(o:Object):void {

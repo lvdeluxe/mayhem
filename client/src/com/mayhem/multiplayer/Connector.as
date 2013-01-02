@@ -10,6 +10,7 @@ package com.mayhem.multiplayer
 	import com.hibernum.social.model.SocialUser;
 	import com.mayhem.game.ArenaFactory;
 	import com.mayhem.game.CollisionManifold;
+	import com.mayhem.game.GameStats;
 	import com.mayhem.game.LightRigidBody;
 	import com.mayhem.game.MovingCube;
 	import com.mayhem.game.powerups.ExplosionData;
@@ -51,6 +52,7 @@ package com.mayhem.multiplayer
 			registerClassAlias("Vector", Vector);
 			registerClassAlias("PowerUpMessage", PowerUpMessage);
 			registerClassAlias("ExplosionData", ExplosionData);
+			registerClassAlias("GameStats", GameStats);
 			
 			PlayerIO.connect(
 				pStage,								//Referance to stage
@@ -66,8 +68,8 @@ package com.mayhem.multiplayer
 		private function handleConnect(client:Client):void{
 			trace("Sucessfully connected to player.io");
 			_client = client;
-			//uncomment this line for live server 
-			_client.multiplayer.developmentServer = "localhost:8184";
+			//uncomment this line for local server 
+			//_client.multiplayer.developmentServer = "localhost:8184";
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			setSignals();
 		}
@@ -91,10 +93,17 @@ package com.mayhem.multiplayer
 			_mainConnection.sendMessage(mess);
 		}
 		
-		private function onSessionPause(cube:MovingCube):void {
+		private function onSessionPause(gameStats:GameStats):void {
 			var mess:Message = _mainConnection.createMessage("UserSessionExpire");
-			mess.add(cube.name);
-			mess.add(ArenaFactory.instance.getSpawnIndexByPosition(cube.spawnPosition));
+			var statsBytes:ByteArray = new ByteArray();
+			statsBytes.writeUTF(gameStats.uid);
+			statsBytes.writeInt(gameStats.current_num_kills_received);
+			statsBytes.writeInt(gameStats.current_num_kills_inflicted);
+			statsBytes.writeInt(gameStats.current_num_hits_received);
+			statsBytes.writeInt(gameStats.current_num_hits_inflicted);
+			statsBytes.writeInt(gameStats.current_num_felt);
+			statsBytes.writeInt(gameStats.current_max_speed);
+			mess.add(statsBytes);
 			_mainConnection.sendMessage(mess);	
 		}
 		
@@ -192,17 +201,21 @@ package com.mayhem.multiplayer
 			}
 		}
 		
-		private function UserJoinedHandler(m:Message, userid:String, userIndex:int):void {
-			_allUsers[userid] = new GameUserVO(userid);
+		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int):void {
+			_allUsers[userid] = new GameUserVO(userid);			
 			var isMain:Boolean;
 			if (userid == "user_"+_socialUser.social_id){
 				trace("You are the main user", userid);
-				isMain = true
+				isMain = true;
 			}else{
 				trace("Player with the userid", userid, "just joined the game");
 				isMain = false;
 			}
-			MultiplayerSignals.USER_JOINED.dispatch( { uid:userid, user_index:userIndex, isMainUser:isMain } );
+			_allUsers[userid].igc = igc;
+			_allUsers[userid].isMainUser = isMain;
+			_allUsers[userid].spawnIndex = userIndex;
+			_allUsers[userid].xp = xp;
+			MultiplayerSignals.USER_JOINED.dispatch( _allUsers[userid] );
 			if (isMain)
 				_mainConnection.send("GetRoomUsers");
 		}
@@ -225,12 +238,11 @@ package com.mayhem.multiplayer
 		}
 		
 		private function userLeftHandler(m:Message, userid:String, userIndex:int):void{
-			trace("Player with the userid", userid, "just left the room");
+			trace("Player with the userid ", userid, " just left the room");
 			MultiplayerSignals.USER_REMOVED.dispatch(userid,userIndex);
 		}
 		
 		private function powerUpTriggered(m:Message, byteArray:ByteArray):void {
-			trace("message received")
 			var pupMessage:PowerUpMessage = byteArray.readObject();
 			MultiplayerSignals.POWERUP_TRIGGERED.dispatch(pupMessage);
 		}
@@ -240,12 +252,20 @@ package com.mayhem.multiplayer
 			MultiplayerSignals.USER_HAS_COLLIDED.dispatch(manifold);
 		}
 		
-		private function userSessionExpired(m:Message, uid:String, spawnIndex:int):void {
-			MultiplayerSignals.SESSION_PAUSED.dispatch(uid,spawnIndex);
+		private function userSessionExpired(m:Message, uid:String, coins:int, xp:uint):void {
+			var user:GameUserVO = _allUsers[uid];
+			user.igc = coins;
+			user.xp = xp;
+			_client.bigDB.load("UserStats", uid, onStatsComplete);
+			UISignals.UPDATE_USER_INFO.dispatch(user.igc, user.xp);
 		}
 		
-		private function userSessionRestarted(m:Message, uid:String, spawnIndex:int):void {
-			MultiplayerSignals.SESSION_RESTARTED.dispatch(uid,spawnIndex);
+		private function onStatsComplete(dbObject:DatabaseObject):void {
+			MultiplayerSignals.SESSION_PAUSED.dispatch(dbObject);
+		}
+		
+		private function userSessionRestarted(m:Message, uid:String):void {
+			MultiplayerSignals.SESSION_RESTARTED.dispatch(uid);
 		}
 		
 		private function handleJoin(connection:Connection):void {

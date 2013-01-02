@@ -15,6 +15,7 @@ package com.mayhem.game
 	import away3d.materials.methods.SoftShadowMapMethod;
 	import away3d.materials.TextureMaterial;
 	import away3d.primitives.CubeGeometry;
+	import away3d.textures.BitmapCubeTexture;
 	import away3d.textures.BitmapTexture;
 	import away3d.textures.Texture2DBase;
 	import awayphysics.collision.shapes.AWPBoxShape;
@@ -41,28 +42,24 @@ package com.mayhem.game
 		public var mesh:Mesh
 		public var userInputs:Dictionary;
 		public var name:String;			
-		public var currentVelocity:Vector3D = new Vector3D();
-		public var velocityBeforeCollision:Vector3D = new Vector3D();
 		public var hasCollided:Boolean = false;
 		public var hasFelt:Boolean = false;
-		
 		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
-		
-		private var _collisionTimer:Timer;		
-		private var _invisibilityTimer:Timer;		
-		
 		public var totalEnergy:int = GameData.VEHICLE_MAX_ENERGY;
-		
 		public var spawnPosition:Vector3D = new Vector3D();
-		
 		public var powerupRefill:uint = 0;
-		
 		public var isInvisible:Boolean = false;
 		
+		private var _collisionTimer:Timer;		
+		private var _invisibilityTimer:Timer;
 		
-		public function MovingCube(id:String, isMainUser:Boolean) 
+		private var _cubeMap:BitmapCubeTexture;
+		
+		
+		public function MovingCube(id:String, isMainUser:Boolean, cubeMap:BitmapCubeTexture) 
 		{
 			name = id;
+			_cubeMap = cubeMap;
 			userInputs = new Dictionary();
 			userInputs[GameManager.MOVE_DOWN_KEY] = false;
 			userInputs[GameManager.MOVE_LEFT_KEY] = false;
@@ -79,8 +76,7 @@ package com.mayhem.game
 			mesh = ModelsManager.instance.allVehicleMeshes[0].clone() as Mesh;
 			mesh.material = getMaterial();
 			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;
-			//var 
-			TextureMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
+
 			mesh.extra = this;
 			
 			var boxShape : AWPBoxShape = new AWPBoxShape(150, 100, 300);
@@ -104,6 +100,7 @@ package com.mayhem.game
 		
 		private function onInvisibilityComplete(event:TimerEvent):void {
 			TextureMaterial(mesh.material).alpha = 1;
+			mesh.castsShadows = true;
 			isInvisible = false;
 		}
 		
@@ -111,6 +108,7 @@ package com.mayhem.game
 		public function setInvisibilityState(alphaValue:Number):void {
 			TextureMaterial(mesh.material).alpha = alphaValue;
 			isInvisible = true;
+			mesh.castsShadows = false;
 			//var fresnel:FresnelSpecularMethod = new FresnelSpecularMethod();
 			//TextureMaterial(mesh.material).specularMethod = fresnel;
 			//body.collisionFlags = AWPCollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK;

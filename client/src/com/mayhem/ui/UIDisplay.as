@@ -1,6 +1,7 @@
 package com.mayhem.ui 
 {
 	import com.mayhem.game.GameData;
+	import com.mayhem.game.GameStats;
 	import com.mayhem.signals.GameSignals;
 	import com.mayhem.signals.MultiplayerSignals;
 	import com.mayhem.signals.UISignals;
@@ -25,8 +26,11 @@ package com.mayhem.ui
 	{
 		private var _healthBar:Quad;
 		private var _powerUpBar:Quad;
+		private var _xpBar:Quad;
+		private var _levelTextField:TextField;
 		private var _statusTextField:TextField;
 		private var _timerTextField:TextField;
+		private var _igcTextField:TextField;
 		private  var _totalTimeString:String;
 		private var _endSessionScreen:EndSessionScreen;
 		
@@ -38,25 +42,34 @@ package com.mayhem.ui
 			UISignals.OWNER_RESPAWNED.add(clearTextFields);
 			UISignals.OWNER_POWERUP_FILL.add(updatePowerMeter);
 			UISignals.UPDATE_GAME_TIMER.add(updateGameTimer);
-			GameSignals.SESSION_PAUSE.add(stopGameTimer);
-			MultiplayerSignals.SESSION_PAUSED.add(showGameSessionStats);
+			UISignals.SHOW_STATS.add(showGameSessionStats);
+			UISignals.UPDATE_USER_INFO.add(updateUserInfo);
 			MultiplayerSignals.SESSION_RESTARTED.add(removeEndSession);
-			
-			_totalTimeString = formatTime(GameData.GAME_SESSION_DURATION)
 			createUI();			
 		}
 		
-		private function removeEndSession(vehicleName:String, spawnIndex:int):void {
+		private function updateUserInfo(igc:uint, xp:int):void {
+			_igcTextField.text = "Coins:" + igc.toString();
+			_levelTextField.text = "Level " + (GameData.getLevelForXP(xp) + 1).toString();
+			_xpBar.scaleX = GameData.getFactorForXP(xp); 
+			//trace("getLevelForXP", 0, GameData.getLevelForXP(0))
+			//trace("getLevelForXP", 8, GameData.getLevelForXP(8))
+			//trace("getLevelForXP", 201, GameData.getLevelForXP(201))
+			//trace("getLevelForXP", 3000, GameData.getLevelForXP(3000))
+			//trace("getLevelForXP", 17859, GameData.getLevelForXP(17859))
+			//trace("getLevelForXP", 100000, GameData.getLevelForXP(100000))
+		}
+		
+		private function removeEndSession(vehicleName:String):void {
 			_endSessionScreen.visible = false;
 		}
 		
-		private function showGameSessionStats(vehicleName:String, spawnIndex:int):void {
-			_endSessionScreen.visible = true;
-		}
-		
-		private function stopGameTimer(cube:MovingCube):void {
+		private function showGameSessionStats(gameStats:GameStats):void {
+			_endSessionScreen.displayStats(gameStats);
+			_endSessionScreen.visible = true;			
 			_timerTextField.text = _totalTimeString + "/" + _totalTimeString;
 		}
+	
 		private function updateGameTimer(gameTime:uint):void {
 			_timerTextField.text = formatTime(gameTime) + "/" + _totalTimeString;
 		}
@@ -84,6 +97,8 @@ package com.mayhem.ui
 		}
 		
 		private function createUI():void {
+			_totalTimeString = formatTime(GameData.GAME_SESSION_DURATION)
+			
 			_statusTextField = new TextField(800, 600, "---", "Verdana", 48);
 			_statusTextField.color = 0x151515;
 			addChild(_statusTextField);	
@@ -94,42 +109,68 @@ package com.mayhem.ui
 			quad.y = 10;
 			addChild(quad);
 			
+			_xpBar = new Quad(GameData.VEHICLE_MAX_ENERGY, 20, 0xcc0000);
+			_xpBar.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
+			_xpBar.y = 10;
+			_xpBar.scaleX = 0;
+			addChild(_xpBar);			
+			
+			_levelTextField = new TextField(200, 24, "LEVEL");
+			_levelTextField.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
+			_levelTextField.y = 7;
+			_levelTextField.color = 0xffffff;
+			_levelTextField.hAlign = HAlign.LEFT;
+			addChild(_levelTextField);
+			
+			
+			var quad1:Quad = new Quad(GameData.VEHICLE_MAX_ENERGY, 20, 0x666666);
+			quad1.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
+			quad1.y = 35;
+			addChild(quad1);
+			
 			_healthBar = new Quad(GameData.VEHICLE_MAX_ENERGY, 20, 0xcc0000);
 			_healthBar.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
-			_healthBar.y = 10;
+			_healthBar.y = 35;
 			addChild(_healthBar);
 			
-			var textField:TextField = new TextField(200, 24, "Energy");
-			textField.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
-			textField.y = 7;
-			textField.color = 0xffffff;
-			textField.hAlign = HAlign.LEFT;
-			addChild(textField);
+			var textField1:TextField = new TextField(200, 24, "Energy");
+			textField1.x = Starling.current.nativeStage.width - (GameData.VEHICLE_MAX_ENERGY + 10);
+			textField1.y = 32;
+			textField1.color = 0xffffff;
+			textField1.hAlign = HAlign.LEFT;
+			addChild(textField1);
 			
 			var quad2:Quad = new Quad(150, 20, 0x666666);
 			quad2.x = _healthBar.x;
-			quad2.y = 35;
+			quad2.y = 60;
 			addChild(quad2);
 			
 			_powerUpBar = new Quad(150, 20, 0xcc0000);
 			_powerUpBar.x = _healthBar.x;
-			_powerUpBar.y = 35;
+			_powerUpBar.y = 60;
 			addChild(_powerUpBar);
 			_powerUpBar.scaleX = 0;
 			
 			var textField2:TextField = new TextField(200, 24, "PowerUp Meter");
-			textField2.x = textField.x;
-			textField2.y = 32;
+			textField2.x = textField1.x;
+			textField2.y = 57;
 			textField2.color = 0xffffff;
 			textField2.hAlign = HAlign.LEFT;
 			addChild(textField2);
 			
 			_timerTextField = new TextField(150, 24, "Time");
-			_timerTextField.x = textField.x;
-			_timerTextField.y = 55;
+			_timerTextField.x = textField1.x;
+			_timerTextField.y = 80;
 			_timerTextField.color = 0xffffff;
 			_timerTextField.hAlign = HAlign.RIGHT;
 			addChild(_timerTextField);
+			
+			_igcTextField = new TextField(150, 24, "Coins");
+			_igcTextField.x = textField1.x;
+			_igcTextField.y = _timerTextField.y + 18;
+			_igcTextField.color = 0xffffff;
+			_igcTextField.hAlign = HAlign.RIGHT;
+			addChild(_igcTextField);
 			
 			_endSessionScreen = new EndSessionScreen();
 			addChild(_endSessionScreen);

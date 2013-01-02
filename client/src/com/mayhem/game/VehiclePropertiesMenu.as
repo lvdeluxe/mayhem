@@ -79,7 +79,27 @@ package com.mayhem.game
 			camRotateX.maximum = Math.PI / 2;
 			camRotateX.value = GameData.CAMERA_ROTATION_X;
 			
+			var arenaFriction:HUISlider = new HUISlider(_container, 10, 142, 'Arena Friction', onArenaFriction);
+			arenaFriction.minimum = 0;
+			arenaFriction.maximum = 1;
+			arenaFriction.value = GameData.ARENA_FRICTION;
+			
+			var arenaRestitution:HUISlider = new HUISlider(_container, 10, 154, 'Arena Restitution', onArenaRestitution);
+			arenaRestitution.minimum = 0;
+			arenaRestitution.maximum = 10;
+			arenaRestitution.value = GameData.ARENA_RESTITUTION;
+			
 			stage.addChild(_container);	
+		}
+		
+		private function onArenaFriction(e:Event):void {
+			var slider:HUISlider = e.currentTarget as HUISlider;
+			ArenaFactory.instance.mainBody.friction = slider.value;
+		}
+		
+		private function onArenaRestitution(e:Event):void {
+			var slider:HUISlider = e.currentTarget as HUISlider;
+			ArenaFactory.instance.mainBody.restitution = slider.value;
 		}
 		
 		private function onCamRotateX(e:Event):void {

@@ -30,11 +30,40 @@ package com.mayhem.game
 		public static const POWERUP_INVISIBILITY:int = 1;
 		public static const INVISIBILITY_DURATION:Number = 10000;
 		
+		public static var ARENA_FRICTION:Number = 0.5;
+		public static var ARENA_RESTITUTION:Number = 0;
+		
+		public static const XP_FOR_LEVELS:Array = 	[0, 10, 50, 200, 500, 900, 1500, 2800, 4000, 8000, 15000, 40000, 100000];
+		//public static const LEVES:Array = 			[1,  2,  3,   4,   5,   6,    7,    8,    9,   10,    11,    12,     13];
 		
 		
 		public function GameData() 
 		{
 			
+		}
+		
+		public static function getLevelForXP(xp:uint):uint {
+			var level:uint = 0;
+			for (var i:uint = 0 ; i < XP_FOR_LEVELS.length - 1; i++ ) {
+				var before:uint = XP_FOR_LEVELS[i];
+				var after:uint = XP_FOR_LEVELS[i + 1];
+				if (xp >= before && xp < after)
+					return i;
+			}
+			return level;
+		}
+		
+		public static function getFactorForXP(xp:uint):Number {
+			var scale:Number = 0;
+			for (var i:uint = 0 ; i < XP_FOR_LEVELS.length - 1; i++ ) {
+				var before:uint = XP_FOR_LEVELS[i];
+				var after:uint = XP_FOR_LEVELS[i + 1];
+				if (xp >= before && xp < after) {
+					var divider:Number = after - before;
+					return (xp - before) / divider;
+				}
+			}
+			return scale;
 		}
 		
 		public static function getDamageByExplosionImpulse(impulse:Vector3D):void {
