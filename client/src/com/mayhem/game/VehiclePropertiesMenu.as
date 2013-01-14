@@ -14,10 +14,10 @@ package com.mayhem.game
 	{
 		
 		private var _visible:Boolean = true;
-		private var _gManager:GameManager;
+		private var _gManager:GameController;
 		private var _container:Sprite;
 		
-		public function VehiclePropertiesMenu(stage:Stage, gManager:GameManager, pt:Point) 
+		public function VehiclePropertiesMenu(stage:Stage, gManager:GameController, pt:Point) 
 		{
 			_gManager = gManager;
 			_container = new Sprite();
@@ -31,7 +31,7 @@ package com.mayhem.game
 			
 			var sliderGravity:HUISlider = new HUISlider(_container, 10, 22, 'gravity', onSlideGravity);
 			sliderGravity.minimum = 0;
-			sliderGravity.maximum = -100;
+			sliderGravity.maximum = -500;
 			sliderGravity.value = GameData.VEHICLE_GRAVITY;
 			
 			var sliderRestitution:HUISlider = new HUISlider(_container, 10, 34, 'restitution', onSlideRestitution);
@@ -147,7 +147,7 @@ package com.mayhem.game
 		}
 		private function onSlideLinear(e:Event):void {
 			var slider:HUISlider = e.currentTarget as HUISlider;
-			_gManager.getOwnerVehicle().body.linearFactor = new Vector3D(slider.value, 1, slider.value);
+			_gManager.getOwnerVehicle().body.linearFactor = new Vector3D(1, slider.value, 1);
 		}
 		
 		

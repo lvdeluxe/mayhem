@@ -1,0 +1,10 @@
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\Test Server.exe
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\Test Server.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\OfficeMayhemServer.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\Player.IO Development Server.exe
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\Player.IO GameLibrary.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\OfficeMayhemServer.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\bin\Release\Player.IO GameLibrary.xml
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\obj\Release\ResolveAssemblyReference.cache
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\obj\Release\Test Server.exe
+C:\deluxe\office_mayhem\server\Serverside Code\Player.IO Test Server Project\obj\Release\Test Server.pdb

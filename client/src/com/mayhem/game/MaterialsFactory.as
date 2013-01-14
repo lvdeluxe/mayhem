@@ -25,9 +25,6 @@ package com.mayhem.game
 		public static const OTHER_CUBE_MATERIAL:String = "otherCubeMaterial";
 		public static const SHADOW_CUBE_MATERIAL:String = "shadowCubeMaterial";
 		
-		[Embed(source = "/assets/shadow.png")]
-		private static var ShadowClass:Class;
-		
 		private static var _allMaterials:Dictionary = new Dictionary();		
 		public static var mainLightPicker:StaticLightPicker;
 		
@@ -65,22 +62,10 @@ package com.mayhem.game
 				case OTHER_CUBE_MATERIAL:
 					mat = getOtherCubeMaterial();
 					break;
-				case SHADOW_CUBE_MATERIAL:
-					mat = getShadowMaterial();
-					break;
 				case AI_CUBE_MATERIAL:
 					mat = getAICubeMaterial();
 					break;
 			}
-			return mat;
-		}
-		
-		private static function getShadowMaterial():MaterialBase {
-			var shadow:Bitmap = new ShadowClass();
-			var texture:BitmapTexture = new BitmapTexture(shadow.bitmapData);
-			var mat:TextureMaterial = new TextureMaterial(texture);
-			mat.alphaBlending = true;
-			mat.lightPicker = mainLightPicker
 			return mat;
 		}
 		

@@ -9,7 +9,7 @@ namespace MyGame {
 	public class Player : BasePlayer {
 		public string Name;
         public int UserIndex;
-        public uint XP;
+        public int XP;
         public Byte[] RigidBodyDescription;
 	}
 
@@ -71,10 +71,13 @@ namespace MyGame {
                     //Empty object, initialize it
                     userInfo.Set("username", player.JoinData["name"]);
                     userInfo.Set("xp", 0);
-                    userInfo.Save();
+                    
                 }else{
-                    player.XP = userInfo.GetUInt("xp");
+                    player.XP = userInfo.GetInt("xp");
                 }
+                userInfo.Set("vehicleId", player.JoinData["vehicleId"]);
+                userInfo.Set("texureId", player.JoinData["texureId"]);
+                userInfo.Save();
 
                 Console.WriteLine("userId: " + player.ConnectUserId);
                 player.UserIndex = allUsers.Count;

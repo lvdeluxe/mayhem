@@ -3,7 +3,7 @@ package
 	import away3d.core.managers.Stage3DManager;
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.debug.AwayStats;
-	import com.mayhem.game.GameManager;
+	import com.mayhem.game.ThreeDeeController;
 	import com.mayhem.multiplayer.Connector;
 	import com.hibernum.social.model.SocialModel;
 	import com.hibernum.social.model.SocialUser;
@@ -29,7 +29,7 @@ package
 		
 		private var _connector:Connector;
 		private var _uiManager:UIManager;
-		private var _gameManager:GameManager;
+		private var _3dController:ThreeDeeController;
 		private var _social:SocialModel;		
 		private var _stage3DProxy:Stage3DProxy;
 		private var _stage3DManager:Stage3DManager;
@@ -67,20 +67,21 @@ package
 			_stage3DProxy.color = 0x0;		
 		}
 		
-		private function onContextCreated(event : Stage3DEvent) : void {			
+		private function onContextCreated(event : Stage3DEvent) : void {	
+			_stage3DProxy.removeEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
 			_social = new SocialModel(connectedToSocial, false);
 		}
 		
 		
 		private function connectedToSocial(socialUser:SocialUser):void {
 			_uiManager = new UIManager(stage,_stage3DProxy);
-			_gameManager = new GameManager(stage, _stage3DProxy);
+			_3dController = new ThreeDeeController(stage, _stage3DProxy);
 			_connector = new Connector(stage, socialUser);
 			_stage3DProxy.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		private function onEnterFrame(event : Event) : void {
-			_gameManager.render();
+			_3dController.render();
 			_uiManager.render();
 		}		
 	}

@@ -82,10 +82,10 @@ package feathers.themes
 
 	public class AzureMobileTheme extends DisplayListWatcher
 	{
-		[Embed(source="/assets/images/azure.png")]
+		[Embed(source="/assets/ui/azure/azure.png")]
 		protected static const ATLAS_IMAGE:Class;
 
-		[Embed(source="/assets/images/azure.xml",mimeType="application/octet-stream")]
+		[Embed(source="/assets/ui/azure/azure.xml",mimeType="application/octet-stream")]
 		protected static const ATLAS_XML:Class;
 
 		[Embed(source="/assets/fonts/lato30.fnt",mimeType="application/octet-stream")]

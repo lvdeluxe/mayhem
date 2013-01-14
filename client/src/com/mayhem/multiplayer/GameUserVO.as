@@ -12,6 +12,8 @@ package com.mayhem.multiplayer
 		public var igc:uint;
 		public var xp:uint;
 		public var isMainUser:Boolean;
+		public var vehicleId:uint;
+		public var textureId:uint;
 		
 		public function GameUserVO(pId:String) 
 		{

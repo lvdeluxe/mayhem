@@ -23,6 +23,7 @@ package com.mayhem.game
 	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.dynamics.AWPRigidBody;
 	import awayphysics.dynamics.vehicle.AWPVehicleTuning;
+	import awayphysics.events.AWPEvent;
 	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
@@ -55,16 +56,18 @@ package com.mayhem.game
 		
 		private var _cubeMap:BitmapCubeTexture;
 		
+		public var isInContactWithGound:Boolean = false;
+		
 		
 		public function MovingCube(id:String, isMainUser:Boolean, cubeMap:BitmapCubeTexture) 
 		{
 			name = id;
 			_cubeMap = cubeMap;
 			userInputs = new Dictionary();
-			userInputs[GameManager.MOVE_DOWN_KEY] = false;
-			userInputs[GameManager.MOVE_LEFT_KEY] = false;
-			userInputs[GameManager.MOVE_RIGHT_KEY] = false;
-			userInputs[GameManager.MOVE_UP_KEY] = false;
+			userInputs[GameController.MOVE_DOWN_KEY] = false;
+			userInputs[GameController.MOVE_LEFT_KEY] = false;
+			userInputs[GameController.MOVE_RIGHT_KEY] = false;
+			userInputs[GameController.MOVE_UP_KEY] = false;
 			
 			_collisionTimer = new Timer(200, 10);
 			_collisionTimer.addEventListener(TimerEvent.TIMER,onTimer);
@@ -75,23 +78,30 @@ package com.mayhem.game
 
 			mesh = ModelsManager.instance.allVehicleMeshes[0].clone() as Mesh;
 			mesh.material = getMaterial();
-			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;
+			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;		
 
 			mesh.extra = this;
 			
-			var boxShape : AWPBoxShape = new AWPBoxShape(150, 100, 300);
-			body = new AWPRigidBody(boxShape, mesh, 1);
+			var boxShape : AWPBoxShape = new AWPBoxShape(450, 200, 600);
+			body = new AWPRigidBody(boxShape, mesh, GameData.VEHICLE_MASS);
+			body.addRay(new Vector3D(), new Vector3D(0,-150,0));
 			var trident:Trident = new Trident(150);
 			mesh.addChild(trident)
 			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
-			body.friction = 0.1;
-			body.restitution = 0.1
+			body.friction = GameData.VEHICLE_FRICTION;
+			body.restitution = GameData.VEHICLE_RESTITUTION;
 			body.ccdSweptSphereRadius = 0.5;
 			body.ccdMotionThreshold = 1;
-			body.angularFactor = new Vector3D(0.25, 1, 0.25);
+			body.linearFactor = new Vector3D(1,GameData.VEHICLE_LIN_FACTOR,1);
+			body.angularFactor = new Vector3D(GameData.VEHICLE_ANG_FACTOR, 1, GameData.VEHICLE_ANG_FACTOR);
+			body.addEventListener(AWPEvent.RAY_CAST, testRayCast);
 			
 		}
 		
+		private function testRayCast(event:AWPEvent):void {
+			isInContactWithGound = true;
+		}
+		//
 		public function getMaterial():TextureMaterial {
 			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getRandomVehicleTexture());
 			var mat:TextureMaterial = new TextureMaterial(bmp);
@@ -109,9 +119,6 @@ package com.mayhem.game
 			TextureMaterial(mesh.material).alpha = alphaValue;
 			isInvisible = true;
 			mesh.castsShadows = false;
-			//var fresnel:FresnelSpecularMethod = new FresnelSpecularMethod();
-			//TextureMaterial(mesh.material).specularMethod = fresnel;
-			//body.collisionFlags = AWPCollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK;
 			_invisibilityTimer.reset();
 			_invisibilityTimer.start();
 		}
@@ -141,51 +148,53 @@ package com.mayhem.game
 		}
 		
 		public function removeAllUserInputs():void {
-			userInputs[GameManager.MOVE_LEFT_KEY] = false;
-			userInputs[GameManager.MOVE_RIGHT_KEY] = false;
-			userInputs[GameManager.MOVE_UP_KEY] = false;
-			userInputs[GameManager.MOVE_DOWN_KEY] = false;
+			userInputs[GameController.MOVE_LEFT_KEY] = false;
+			userInputs[GameController.MOVE_RIGHT_KEY] = false;
+			userInputs[GameController.MOVE_UP_KEY] = false;
+			userInputs[GameController.MOVE_DOWN_KEY] = false;
 		}
 		
 		public function addUserInput(keyCode:uint):void {
-			switch(keyCode) {
-				case Keyboard.A:
-				case Keyboard.LEFT:
-					userInputs[GameManager.MOVE_LEFT_KEY] = true;
-					break;
-				case Keyboard.D:
-				case Keyboard.RIGHT:
-					userInputs[GameManager.MOVE_RIGHT_KEY] = true;
-					break;
-				case Keyboard.W:
-				case Keyboard.UP:
-					userInputs[GameManager.MOVE_UP_KEY] = true;
-					break;
-				case Keyboard.S:
-				case Keyboard.DOWN:
-					userInputs[GameManager.MOVE_DOWN_KEY] = true;
-					break;
+			if(isInContactWithGound){
+				switch(keyCode) {
+					case Keyboard.A:
+					case Keyboard.LEFT:
+						userInputs[GameController.MOVE_LEFT_KEY] = true;
+						break;
+					case Keyboard.D:
+					case Keyboard.RIGHT:
+						userInputs[GameController.MOVE_RIGHT_KEY] = true;
+						break;
+					case Keyboard.W:
+					case Keyboard.UP:
+						userInputs[GameController.MOVE_UP_KEY] = true;
+						break;
+					case Keyboard.S:
+					case Keyboard.DOWN:
+						userInputs[GameController.MOVE_DOWN_KEY] = true;
+						break;
+				}
 			}
 		}
 		public function removeUserInput(keyCode:uint):void {
 			switch(keyCode) {
 				case Keyboard.A:
 				case Keyboard.LEFT:
-					userInputs[GameManager.MOVE_LEFT_KEY] = false;
+					userInputs[GameController.MOVE_LEFT_KEY] = false;
 					break;
 				case Keyboard.D:
 				case Keyboard.RIGHT:
-					userInputs[GameManager.MOVE_RIGHT_KEY] = false;
+					userInputs[GameController.MOVE_RIGHT_KEY] = false;
 					break;
 				case Keyboard.W:
 				case Keyboard.UP:
-					userInputs[GameManager.MOVE_UP_KEY] = false;
+					userInputs[GameController.MOVE_UP_KEY] = false;
 					break;
 				case Keyboard.S:
 				case Keyboard.DOWN:
-					userInputs[GameManager.MOVE_DOWN_KEY] = false;
+					userInputs[GameController.MOVE_DOWN_KEY] = false;
 					break;
 			}
-		}		
+		}
 	}
 }

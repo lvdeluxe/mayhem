@@ -24,12 +24,11 @@ package com.mayhem.ui
 		
 		public function UIManager(pStage:Stage, proxy:Stage3DProxy) 
 		{
-			Starling.multitouchEnabled = true;
+			Starling.multitouchEnabled = false;
 			_starling = new Starling( UIDisplay, pStage, proxy.viewPort, proxy.stage3D);	
-			_starling.start();
 			_starling.shareContext = true;
-			pStage.quality = StageQuality.LOW;
-			
+			_starling.start();
+			pStage.quality = StageQuality.LOW;			
 		}
 	
 		

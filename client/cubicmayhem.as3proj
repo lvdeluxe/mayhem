@@ -6,10 +6,10 @@
     <movie input="" />
     <movie path="bin\cubicmayhem.swf" />
     <movie fps="60" />
-    <movie width="800" />
-    <movie height="600" />
+    <movie width="1500" />
+    <movie height="768" />
     <movie version="11" />
-    <movie minorVersion="4" />
+    <movie minorVersion="5" />
     <movie platform="Flash Player" />
     <movie background="#FFFFFF" />
     <movie preferredSDK="Flex 4.6.0, AIR 3.4;4.6.0, 3.4;" />
@@ -86,7 +86,7 @@
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
-    <option testMovie="ExternalPlayer" />
+    <option testMovie="Default" />
   </options>
   <!-- Plugin storage -->
   <storage />

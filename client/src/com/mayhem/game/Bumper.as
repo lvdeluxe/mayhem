@@ -6,6 +6,7 @@ package com.mayhem.game
 	import away3d.entities.Mesh;
 	import away3d.materials.ColorMaterial;
 	import awayphysics.collision.dispatch.AWPCollisionObject;
+	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.dynamics.AWPDynamicsWorld;
 	import awayphysics.dynamics.AWPRigidBody;
 	import awayphysics.collision.shapes.AWPCylinderShape;
@@ -28,54 +29,33 @@ package com.mayhem.game
 		public var name:String;
 		private var _lastCollided:AWPCollisionObject;
 		
-		public function Bumper(pos:Vector3D, pName:String) 
+		public function Bumper(pMesh:Mesh) 
 		{
-			name = pName;
-			mesh = new Mesh(new CylinderGeometry(_radius, _radius, _radius), MaterialsFactory.getMaterialById(MaterialsFactory.BUMPER_MATERIAL));
+			name = pMesh.name;
+			mesh = pMesh;
 			mesh.extra = this;
-			var shape : AWPCylinderShape = new AWPCylinderShape(_radius,_radius);
-			body = new AWPRigidBody(shape,mesh, 0);
-			body.x = pos.x;			
-			body.y = _radius / 2;
-			body.z = pos.z;
+			var height:Number = (pMesh.bounds.max.y - pMesh.bounds.min.y);
+			var radius:Number = (pMesh.bounds.max.z - pMesh.bounds.min.z) / 2
+			var shape : AWPCylinderShape = new AWPCylinderShape(radius,height);
+			body = new AWPRigidBody(shape, mesh, 0);
+			body.position = pMesh.position;
 			body.addEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
 		}
 		
 		private function collisionDetectionHandler(event:AWPEvent):void {
-			var cubeCollider:MovingCube = event.collisionObject.skin.extra as MovingCube;
-			if (cubeCollider && (_lastCollided == null || _lastCollided != event.collisionObject)) {
-				var subs:Vector3D = cubeCollider.mesh.position.subtract(mesh.position);
-				var t:Trident = new Trident()
-				
-				var a:Number = event.manifoldPoint.localPointA.z;
-				var b:Number = event.manifoldPoint.localPointA.x;
-				var rads:Number = Math.atan2(a, b);
-				t.rotationY = -(rads * 180 / Math.PI) + 90; 
-			
-				t.position = event.manifoldPoint.localPointA;
-				
-				mesh.addChild(t)
-				setTimeout(function():void {
-					mesh.removeChild(t);
-				},2000);
-				
-				var r:Number = t.rotationY;
-				if (r < 0)
-				r += 180
-				trace(r)
-				
-				//subs.normalize();
-				//subs.scaleBy(20);
-				//cubeCollider.velocityLenght += subs.length;
-				//cubeCollider.body.applyCentralImpulse(subs);
-				//cubeCollider.bumpingVelocity = cubeCollider.bumpingVelocity.add(subs);
-				//trace(subs)
-				//trace(cubeCollider.bumpingVelocity)
-				trace("//////////////////")
-				var particlesPosition:Vector3D = mesh.transform.transformVector(event.manifoldPoint.localPointA);
-				setBumpingAnimation(particlesPosition);
-				_lastCollided = event.collisionObject;
-				
+			if(event.collisionObject.skin){
+				var cubeCollider:MovingCube = event.collisionObject.skin.extra as MovingCube;
+				if (cubeCollider && (_lastCollided == null || _lastCollided != event.collisionObject)) {
+					var subs:Vector3D = body.position.subtract(cubeCollider.body.position);
+					subs.negate();
+					subs.normalize();
+					subs.y = 0;
+					subs.scaleBy(GameData.BUMPER_FORCE);
+					cubeCollider.body.applyCentralImpulse(subs);
+					var particlesPosition:Vector3D = mesh.transform.transformVector(event.manifoldPoint.localPointA);
+					setBumpingAnimation(particlesPosition);
+					_lastCollided = event.collisionObject;				
+				}
 			}
 		}
 		

@@ -36,6 +36,8 @@ package com.mayhem.multiplayer
 		private var _client:Client;
 		private var _socialUser:SocialUser;
 		private var _mainConnection:Connection;
+		private var _vehicle_id:uint;
+		private var _texture_id:uint;
 		
 		public static const MAX_USER_PER_ROOM:uint = 12;
 		
@@ -57,7 +59,7 @@ package com.mayhem.multiplayer
 			PlayerIO.connect(
 				pStage,								//Referance to stage
 				"office-mayhem-g9omnsmpskqoxaolbzotca",		//Game id (Get your own at playerio.com)
-				"public",							//Connection id, default is public
+				"testconnection",							//Connection id, default is public
 				"user_"+user.social_id.toString(),	//Username
 				"",									//User auth. Can be left blank if authentication is disabled on connection
 				null,								//Current PartnerPay partner.
@@ -68,10 +70,53 @@ package com.mayhem.multiplayer
 		private function handleConnect(client:Client):void{
 			trace("Sucessfully connected to player.io");
 			_client = client;
+			
+			//MultiplayerSignals.CONNECTED.dispatch();
 			//uncomment this line for local server 
+			GameSignals.SESSION_START.add(onGameStart);
 			//_client.multiplayer.developmentServer = "localhost:8184";
+			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError)
+			//_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
+			//setSignals();
+		}
+		
+		private function onGameStart(vId:uint, tId:uint):void {
+			trace("Game starts", vId, tId);
+			_vehicle_id = vId;
+			_texture_id = tId;
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			setSignals();
+		}
+		
+		private function onUserDataLoaded(dbObject:DatabaseObject):void {
+			if (dbObject == null) {
+				_client.payVault.credit(100, "startGame", onFirstTimeCredit, handleError);
+				
+			}else {
+				onUserCreated(dbObject);
+			}
+		}
+		
+		private function onFirstTimeCredit():void {
+			_client.bigDB.createObject("PlayerObjects", _client.connectUserId, { username:_socialUser.name, xp:0, vehicleId:0, textureId:0 }, onUserCreated, handleError);
+		}
+		
+		private function onUserCreated(dbObject:DatabaseObject):void {
+			for (var prop:String in dbObject)
+			trace(prop + " ==> " + dbObject[prop])
+			var user:GameUserVO = new GameUserVO(_client.connectUserId);
+			user.xp = dbObject.xp;
+			user.name = dbObject.username;
+			user.vehicleId = dbObject.vehicleId;
+			user.textureId = dbObject.textureId;
+			_allUsers[_client.connectUserId] = user;	
+			_client.payVault.refresh(onPayVaultLoaded, handleError);			
+		}
+		
+		private function onPayVaultLoaded():void {
+			trace(_client.payVault.coins)
+			_allUsers[_client.connectUserId].igc = _client.payVault.coins;
+			MultiplayerSignals.USER_LOADED.dispatch(_allUsers[_client.connectUserId]);
 		}
 		
 		
@@ -171,7 +216,7 @@ package com.mayhem.multiplayer
 			if (rooms.length > 0 && roomsComplete < numRooms) {
 				for each(room in rooms) {
 					if (!room.data.isFull) {
-						_client.multiplayer.joinRoom(room.id, { name:_socialUser.name }, handleJoin, handleError);
+						_client.multiplayer.joinRoom(room.id, { name:_socialUser.name , texureId:_texture_id, vehicleId:_vehicle_id}, handleJoin, handleError);
 						return;
 					}
 				}
@@ -182,7 +227,7 @@ package com.mayhem.multiplayer
 					"OfficeMayhem",						//The game type started on the server
 					true,								//Should the room be visible in the lobby?
 					{},									//Room data. This data is returned to lobby list. Variabels can be modifed on the server
-					{name:_socialUser.name},			//User join data
+					{name:_socialUser.name, texureId:_texture_id, vehicleId:_vehicle_id},			//User join data
 					handleJoin,							//Function executed on successful joining of the room
 					handleError							//Function executed if we got a join error
 				);
@@ -206,6 +251,7 @@ package com.mayhem.multiplayer
 			var isMain:Boolean;
 			if (userid == "user_"+_socialUser.social_id){
 				trace("You are the main user", userid);
+				GameSignals.REMOVE_MENU.dispatch();
 				isMain = true;
 			}else{
 				trace("Player with the userid", userid, "just joined the game");

@@ -1,0 +1,7 @@
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\bin\Release\OfficeMayhemServer.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\bin\Release\OfficeMayhemServer.pdb
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\bin\Release\Player.IO GameLibrary.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\bin\Release\Player.IO GameLibrary.xml
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\obj\Release\ResolveAssemblyReference.cache
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\obj\Release\OfficeMayhemServer.dll
+C:\deluxe\office_mayhem\server\Serverside Code\Game Code\obj\Release\OfficeMayhemServer.pdb

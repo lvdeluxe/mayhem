@@ -29,7 +29,7 @@ package com.mayhem.ui
 		private var _background:Quad;
 		private var _stopButton:Button;
 		private var _playButton:Button;
-		private var _theme:AzureMobileTheme;
+		
 		private var _buttonGroup:ButtonGroup;
 		private var _statsTextField:Label;
 		private var _alltimeTextField:Label;
@@ -39,7 +39,7 @@ package com.mayhem.ui
 		
 		public function EndSessionScreen() 
 		{
-			_theme = new AzureMobileTheme(this, false);
+			
 			_background = new Quad(Starling.current.nativeStage.width, Starling.current.nativeStage.height, 0x000000);
 			_background.alpha = 0.75;
 			addChild(_background);
@@ -101,7 +101,6 @@ package com.mayhem.ui
 			_alltimeTextField.validate();
 			var tf:BitmapFontTextFormat = _alltimeTextField.textRendererProperties.textFormat;
 			_alltimeTextField.textRendererProperties.textFormat = null;
-			//tf.color = 0x00ccff
 			tf.align = TextFormatAlign.LEFT;
 			_alltimeTextField.textRendererProperties.textFormat = tf;
 			_alltimeTextField.height = _toggle.height

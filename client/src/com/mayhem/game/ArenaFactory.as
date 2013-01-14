@@ -37,9 +37,6 @@ package com.mayhem.game
 		
 		public static const FALL_FROM_ARENA:String = "fallFromArena";
 		
-		[Embed(source = "/assets/Arena1.awd", mimeType = "application/octet-stream")]
-		private var ArenaClass:Class;
-		
 		private static var _instance:ArenaFactory;
 		private static var _enableInstantiation:Boolean = false;
 		private var _physicsWorld:AWPDynamicsWorld;
@@ -88,38 +85,77 @@ package com.mayhem.game
 		public function getSpawnPoint(index:int):Vector3D {
 			var pos:Vector3D = allSpawnPoints[index].position.clone();
 			allSpawnPoints[index].extra.occupied = true;
-			pos.y += 50;
+			pos.y += 100;
 			return pos;
+		}
+		
+		
+		private function meshSpawnPointIndex(meshName:String):int {
+			for (var i:uint = 0 ; i < 12 ; i++ ) {
+				var mappingName:String = MeshMapping["SPAWN_POINT_" + i.toString()];
+				if (mappingName == meshName)
+					return i;	
+			}
+			return -1;
+		}
+		
+		
+		private function meshIsBumper(meshName:String):Boolean {
+			for (var i:uint = 0 ; i < MeshMapping.ALL_BUMPERS.length ; i++ ) {
+				if(MeshMapping.ALL_BUMPERS[i] == meshName)
+					return true;	
+			}
+			return false;
+		}
+		private function meshIsDoor(meshName:String):Boolean {
+			for (var i:uint = 0 ; i < 12 ; i++ ) {
+				var mappingName:String = MeshMapping["DOOR_" + i.toString()];
+				if (mappingName == meshName)
+					return true;	
+			}
+			return false;
 		}
 		
 		public function getDefaultArena():ObjectContainer3D {
 			_mainContainer = new ObjectContainer3D();
+			var body:AWPRigidBody
 			for each(var mesh:Mesh in ModelsManager.instance.allArenaMeshes) {
 				var prefix:String = mesh.name.split("_")[0];
-				if (prefix == "start") {
-					var pos:int = mesh.name.split("_")[1];
+				var index:int = meshSpawnPointIndex(mesh.name);
+				if (index >= 0) {
+					//var pos:int = mesh.name.split("_")[1];
+					mesh.name = "start_" + index.toString();
 					mesh.extra = new Object();
 					mesh.extra.occupied = false;
-					if(pos < allSpawnPoints.length	)
-						allSpawnPoints[pos] = mesh;
+					if(index < allSpawnPoints.length	)
+						allSpawnPoints[index] = mesh;
 					
-				}else {
+				}else if(!meshIsDoor(mesh.name)){
 					mesh.material.bothSides = true;
 					mesh.material.lightPicker = MaterialsFactory.mainLightPicker;
 					ColorMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
-					var shape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(mesh.geometry);
-					var body:AWPRigidBody = new AWPRigidBody(shape, mesh);
 					
+					if (meshIsBumper(mesh.name)) {
+						var b:Bumper = new Bumper(mesh);
+						body = b.body;
+					}else{
+						var shape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(mesh.geometry);
+						body = new AWPRigidBody(shape, mesh);
+						body.friction = 1
+						body.position = mesh.position;
+						
+						if (prefix == "refill") {
+							body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+							body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
+							body.y -= 100;
+						}else {
+							mainBody = body;
+							body.friction = GameData.ARENA_FRICTION;
+							body.restitution = GameData.ARENA_RESTITUTION;
+						}
+					}
 					_physicsWorld.addRigidBody(body);
 					_mainContainer.addChild(mesh);
-					if (prefix == "refill") {
-						body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
-						body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
-					}else {
-						mainBody = body;
-						mainBody.friction = GameData.ARENA_FRICTION;
-						mainBody.restitution = GameData.ARENA_RESTITUTION;
-					}
 				}
 			}
 			

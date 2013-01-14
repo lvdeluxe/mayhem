@@ -7,12 +7,14 @@
 			height: 100%;
 			margin: 0;
 			padding: 0;
+			overflow:hidden;
 		}
 
 		#game {
 			/* see http://flassari.is/2012/02/external-interface-error-object-expected*/
 			visibility: visible !important;
 			position: absolute;
+			overflow:hidden;
 		}
 
 	</style>
@@ -40,7 +42,7 @@
 	<div id="fb-root"></div>
 	<div class="center-wrapper">
 		<div id="game">
-			{% swf src='cubicmayhem.swf' width=1024 height=768 version='11.4.0' wmode='direct' allowScriptAccess='always' id='game' name='game' otherParam %}
+			{% swf src='preloader.swf' width='100%' height=800 version='11.4.0' wmode='direct' allowScriptAccess='always' id='game' name='game' otherParam %}
 		</div>
 	</div>
 </div>

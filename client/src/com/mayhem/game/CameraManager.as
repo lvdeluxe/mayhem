@@ -29,6 +29,15 @@ package com.mayhem.game
 		
 		public function initialize(pCam:Camera3D):void {
 			_camera = pCam;
+			_camera.lens.far = 10000
+		}
+		
+		public function setCameraPosition(position:Vector3D):void {
+			var pos:Vector3D = position.clone();
+			pos.z -= 1500;
+			pos.y += 500;
+			_camera.position = pos;
+			_camera.lookAt(position);
 		}
 		
 		public static function get instance():CameraManager {

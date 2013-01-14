@@ -1,5 +1,9 @@
 package  
 {
+	
+	import away3d.core.managers.Stage3DManager;
+	import away3d.core.managers.Stage3DProxy;
+	import away3d.events.Stage3DEvent;
 	import away3d.containers.View3D;
 	import away3d.debug.Trident;
 	import away3d.entities.Mesh;
@@ -35,6 +39,9 @@ package
 		private var rightPressed:Boolean = false;
 		private var leftPressed:Boolean = false;
 		
+		private var _stage3DProxy:Stage3DProxy;
+		private var _stage3DManager:Stage3DManager;
+		
 		public function Test() 
 		{
 			if (stage) init();
@@ -44,18 +51,30 @@ package
 		private function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+			_stage3DManager = Stage3DManager.getInstance(stage);
+			//_stage3DManager.
+			_stage3DProxy = Stage3DManager.getInstance(stage).getFreeStage3DProxy();
+			_stage3DProxy.addEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
+			_stage3DProxy.antiAlias = 0;
+			_stage3DProxy.color = 0x0;		
+		}
+		
+		private function onContextCreated(event : Stage3DEvent) : void {	
+			_stage3DProxy.removeEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
 			setScene();
 			setLights();
 			setPhysics();
 			setControls();
 			setObjects();
-			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			_stage3DProxy.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		private function setScene():void {
 			_view3D = new View3D();
+			_view3D.stage3DProxy = _stage3DProxy;
+			_view3D.shareContext = true;
 			stage.addChild(_view3D);
-			//_view3D.stage3DProxy = pProxy;
+			
 			//_view3D.shareContext = true;
 
 			_view3D.camera.y = 2000
@@ -105,16 +124,20 @@ package
 			var carShape : AWPBoxShape = new AWPBoxShape(100, 100, 100);
 			
 			_cube = new AWPRigidBody(carShape, mesh, 1);
-			_cube.gravity = new Vector3D(0,-1,0);
-			_cube.friction = 1;
+			_cube.gravity = new Vector3D(0,-10,0);
+			_cube.friction = 10;
 			_cube.restitution = 0.1
 			_cube.ccdSweptSphereRadius = 0.5;
 			_cube.ccdMotionThreshold = 1;
 			
 			_cube.anisotropicFriction = new Vector3D()
 			
+			_cube.linearDamping = 0.99
 			_cube.angularDamping = 0.99
-			_cube.angularFactor= new Vector3D(0.25,1,0.25);
+			//_cube.friction = 10000;
+			trace(_cube.angularFactor)
+			trace(_cube.linearFactor)
+			//_cube.angularFactor= new Vector3D(0.25,1,0.25);
 			_cube.position = new Vector3D(0, 50, 0);
 			
 			_view3D.scene.addChild(mesh);
@@ -127,6 +150,7 @@ package
 			
 			var groundShape : AWPStaticPlaneShape = new AWPStaticPlaneShape(new Vector3D(0, 1, 0));
 			var groundRigidbody : AWPRigidBody = new AWPRigidBody(groundShape, floorMesh, 0);
+			groundRigidbody.friction = 10000
 			_physicsWorld.addRigidBody(groundRigidbody);
 			
 			
@@ -167,32 +191,36 @@ package
 		}
 		
 		private function onEnterFrame(event:Event):void {
+			
+			//_stage3DProxy.clear();
 			if (_cube) {
 				var f:Vector3D = _cube.front;
 				if (upPressed) {
-					_cube.linearDamping = 0
-					f.scaleBy(20);
+					//_cube.linearDamping = 0
+					f.scaleBy(200);
 					_cube.applyCentralForce(f);
 				}else if (downPressed) {
-					_cube.linearDamping = 0
-					f.scaleBy(-20);
+					//_cube.linearDamping = 0
+					f.scaleBy(-200);
 					_cube.applyCentralForce(f);
 				}else {
-					_cube.linearDamping = 0.98
+					//_cube.linearDamping = 0.98
 				}
 				
 				var totalForce:Number = _cube.linearVelocity.clone().normalize();
 				
 				if (leftPressed) {
-					_cube.angularVelocity = new Vector3D(0,-1 * (totalForce / 2),0);
+					_cube.angularVelocity = new Vector3D(0,-1 * (totalForce / 5),0);
 				}else if (rightPressed) {
-					_cube.angularVelocity = new Vector3D(0,1 * (totalForce / 2),0);
+					_cube.angularVelocity = new Vector3D(0,1 * (totalForce / 5),0);
 				}else {
 					_cube.angularVelocity = new Vector3D(0,0,0);
 				}
 			}
+			trace(_cube.friction)
 			_physicsWorld.step(1 / 60, 1, 1 / 60);
 			_view3D.render();
+			//_stage3DProxy.present();
 			
 		}
 		

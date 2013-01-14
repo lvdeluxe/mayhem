@@ -17,9 +17,9 @@ package com.mayhem.game
 		private static var _instance:ParticlesFactory;
 		private static var _enableInstantiation:Boolean = false;		
 		
-		[Embed(source="/assets/collision.xml", mimeType="application/octet-stream")]
+		[Embed(source="/assets/particles/collision.xml", mimeType="application/octet-stream")]
 		private var _collisionXML:Class;
-		[Embed(source="/assets/explosion.xml", mimeType="application/octet-stream")]
+		[Embed(source="/assets/particles/explosion.xml", mimeType="application/octet-stream")]
 		private var _explosionXML:Class;
 		
 		private var _explosionFactory:EffectGroupFactoryS;
