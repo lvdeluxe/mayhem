@@ -10,6 +10,8 @@ namespace MyGame {
 		public string Name;
         public int UserIndex;
         public int XP;
+        public uint VehicleId;
+        public uint TextureId;
         public Byte[] RigidBodyDescription;
 	}
 
@@ -64,29 +66,32 @@ namespace MyGame {
                 return;
             }
 
-            PlayerIO.BigDB.LoadOrCreate("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
+            PlayerIO.BigDB.Load("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
             {
-                if (!userInfo.Contains("username"))
-                {
-                    //Empty object, initialize it
-                    userInfo.Set("username", player.JoinData["name"]);
-                    userInfo.Set("xp", 0);
+                //if (!userInfo.Contains("username"))
+                //{
+                //    //Empty object, initialize it
+                //    userInfo.Set("username", player.JoinData["name"]);
+                //    userInfo.Set("xp", 0);
                     
-                }else{
-                    player.XP = userInfo.GetInt("xp");
-                }
+                //}else{
+                //    player.XP = userInfo.GetInt("xp");
+                //}
                 userInfo.Set("vehicleId", player.JoinData["vehicleId"]);
-                userInfo.Set("texureId", player.JoinData["texureId"]);
+                userInfo.Set("textureId", player.JoinData["textureId"]);
                 userInfo.Save();
 
                 Console.WriteLine("userId: " + player.ConnectUserId);
                 player.UserIndex = allUsers.Count;
-
+                player.TextureId = Convert.ToUInt32(player.JoinData["textureId"]);
+                player.VehicleId = Convert.ToUInt32(player.JoinData["vehicleId"]);
+                Console.WriteLine(player.TextureId); ;
+                Console.WriteLine(player.JoinData["textureId"]); ;
                 allUsers.Add(player.ConnectUserId, player);
                 allAICubes.Remove("ai_" + player.UserIndex.ToString());
                 player.PayVault.Refresh(delegate()
                 {
-                    Broadcast("UserJoined", player.ConnectUserId, player.UserIndex, player.XP, player.PayVault.Coins);
+                    Broadcast("UserJoined", player.ConnectUserId, player.UserIndex, player.XP, player.PayVault.Coins, player.VehicleId, player.TextureId);
                 });
             });    
             
@@ -116,6 +121,9 @@ namespace MyGame {
                         if (plyr.Value.ConnectUserId != player.ConnectUserId)
                         {
                             msg.Add(plyr.Value.ConnectUserId);
+                            msg.Add(plyr.Value.VehicleId);
+                            msg.Add(plyr.Value.TextureId);
+                            Console.WriteLine(plyr.Value.TextureId);
                             msg.Add(plyr.Value.RigidBodyDescription);
                         }
                     }

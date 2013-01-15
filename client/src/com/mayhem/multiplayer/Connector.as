@@ -102,8 +102,6 @@ package com.mayhem.multiplayer
 		}
 		
 		private function onUserCreated(dbObject:DatabaseObject):void {
-			for (var prop:String in dbObject)
-			trace(prop + " ==> " + dbObject[prop])
 			var user:GameUserVO = new GameUserVO(_client.connectUserId);
 			user.xp = dbObject.xp;
 			user.name = dbObject.username;
@@ -216,7 +214,7 @@ package com.mayhem.multiplayer
 			if (rooms.length > 0 && roomsComplete < numRooms) {
 				for each(room in rooms) {
 					if (!room.data.isFull) {
-						_client.multiplayer.joinRoom(room.id, { name:_socialUser.name , texureId:_texture_id, vehicleId:_vehicle_id}, handleJoin, handleError);
+						_client.multiplayer.joinRoom(room.id, { name:_socialUser.name , textureId:_texture_id, vehicleId:_vehicle_id}, handleJoin, handleError);
 						return;
 					}
 				}
@@ -227,7 +225,7 @@ package com.mayhem.multiplayer
 					"OfficeMayhem",						//The game type started on the server
 					true,								//Should the room be visible in the lobby?
 					{},									//Room data. This data is returned to lobby list. Variabels can be modifed on the server
-					{name:_socialUser.name, texureId:_texture_id, vehicleId:_vehicle_id},			//User join data
+					{name:_socialUser.name, textureId:_texture_id, vehicleId:_vehicle_id},			//User join data
 					handleJoin,							//Function executed on successful joining of the room
 					handleError							//Function executed if we got a join error
 				);
@@ -235,18 +233,22 @@ package com.mayhem.multiplayer
 		}
 		
 		private function setRoomUsersHandler(m:Message):void {
+			var numParams:uint = 4;
 			for (var i:uint = 0; i < m.length; i++ ) {
-				if (i % 2 == 1) {
-					trace(i)
+				if (i % numParams == numParams-1) {
 					var byteArray:ByteArray = m.getByteArray(i);
 					var lightBody:LightRigidBody = byteArray.readObject();
-					trace("SetRoomUsers",lightBody)
-					MultiplayerSignals.USERS_IN_ROOM.dispatch( { uid:m.getString( i - 1), isMainUser:false, rigidBody:lightBody} );
+					trace("SetRoomUsers", lightBody)
+					var user:GameUserVO = new GameUserVO(m.getString( i - 3));
+					user.vehicleId = m.getUInt(i - 2);
+					user.textureId = m.getUInt(i - 1);
+					user.isMainUser = false;
+					MultiplayerSignals.USERS_IN_ROOM.dispatch( { user:user, rigidBody:lightBody} );
 				}
 			}
 		}
 		
-		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int):void {
+		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int, vehicleId:uint, textureId:uint):void {
 			_allUsers[userid] = new GameUserVO(userid);			
 			var isMain:Boolean;
 			if (userid == "user_"+_socialUser.social_id){
@@ -261,6 +263,8 @@ package com.mayhem.multiplayer
 			_allUsers[userid].isMainUser = isMain;
 			_allUsers[userid].spawnIndex = userIndex;
 			_allUsers[userid].xp = xp;
+			_allUsers[userid].vehicleId = vehicleId;
+			_allUsers[userid].textureId = textureId;
 			MultiplayerSignals.USER_JOINED.dispatch( _allUsers[userid] );
 			if (isMain)
 				_mainConnection.send("GetRoomUsers");

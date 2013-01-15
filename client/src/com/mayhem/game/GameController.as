@@ -198,7 +198,8 @@ package com.mayhem.game
 		}
 		
 		public function createAICube(index:int):MovingAICube {
-			var movingCube:MovingAICube = new MovingAICube("ai_"+(index.toString()), false, _cubemap);
+			var aiUser:GameUserVO = new GameUserVO("ai_" + (index.toString()));
+			var movingCube:MovingAICube = new MovingAICube(aiUser);
 			if (_AIMaster)
 				movingCube.body.addEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
 			movingCube.spawnPosition = ArenaFactory.instance.getSpawnPoint(index);
@@ -684,21 +685,19 @@ package com.mayhem.game
 			}			
 		}
 		
-		
-		
-		private function createMovingCube(name:String, isOwner:Boolean, spawnPointIndex:int, lightRigidBody:LightRigidBody = null):MovingCube {
-			var movingCube:MovingCube = new MovingCube(name, isOwner, _cubemap);			
+		private function createMovingCube(user:GameUserVO, lightRigidBody:LightRigidBody = null):MovingCube {
+			var movingCube:MovingCube = new MovingCube(user);			
 			_view3D.scene.addChild(movingCube.mesh);
 			_physicsWorld.addRigidBody(movingCube.body);			
 			trace("created", movingCube.name);
-			if (isOwner) {
+			if (user.isMainUser) {
 				
 				_totalGameTime = 0;
-				if (spawnPointIndex == 0)
+				if (user.spawnIndex == 0)
 					_AIMaster = true;
 				_ownerCube = movingCube;
 				_stats = new GameStats(_ownerCube.name);
-				_ownerCube.spawnPosition = ArenaFactory.instance.getSpawnPoint(spawnPointIndex);
+				_ownerCube.spawnPosition = ArenaFactory.instance.getSpawnPoint(user.spawnIndex);
 				_ownerCube.body.addEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
 				_ownerCube.body.position = _ownerCube.spawnPosition;
 				var lookAtPoint:Vector3D = new Vector3D();
@@ -715,7 +714,7 @@ package com.mayhem.game
 		}
 		
 		private function onUserInRoom(dataObject:Object):void {
-			_allPlayers[dataObject.uid] = createMovingCube(dataObject.uid,dataObject.isMainUser, -1, dataObject.rigidBody);
+			_allPlayers[dataObject.user.uid] = createMovingCube(dataObject.user, dataObject.rigidBody);
 		}
 		
 		private function onUserCreated(user:GameUserVO):void {
@@ -723,7 +722,7 @@ package com.mayhem.game
 			if (user.isMainUser)
 				UISignals.UPDATE_USER_INFO.dispatch(user.igc, user.xp);
 				
-			_allPlayers[user.uid] = createMovingCube(user.uid, user.isMainUser, user.spawnIndex);			
+			_allPlayers[user.uid] = createMovingCube(user);			
 			var aiCube:MovingAICube = _allAICubes["ai_" + user.spawnIndex];
 			if (aiCube) {
 				_view3D.scene.removeChild(aiCube.mesh);

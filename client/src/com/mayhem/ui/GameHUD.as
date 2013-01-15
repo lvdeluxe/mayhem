@@ -178,7 +178,7 @@ package com.mayhem.ui
 		}
 		
 		private function updatePowerMeter(pupValue:uint):void {
-			_powerUpBar.scaleX = (pupValue / GameData.POWERUP_FULL);
+			_powerUpBar.value = (pupValue / GameData.POWERUP_FULL);
 		}
 		
 		private function clearTextFields():void {

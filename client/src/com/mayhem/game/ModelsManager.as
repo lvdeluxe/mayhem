@@ -167,7 +167,9 @@ package com.mayhem.game
 			return _aiVehicleTexture.bitmapData;
 		}
 		
-		
+		public function getVehicleTextureByIds(vId:uint, tId:uint):BitmapData {
+			return _allVehicleBitmaps[vId][tId].bitmapData;
+		}
 		
 		private function onVehicleComplete(event:AssetEvent):void {
 			if (event.asset.assetType == AssetType.MESH) {

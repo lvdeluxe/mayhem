@@ -24,6 +24,7 @@ package com.mayhem.game
 	import awayphysics.dynamics.AWPRigidBody;
 	import awayphysics.dynamics.vehicle.AWPVehicleTuning;
 	import awayphysics.events.AWPEvent;
+	import com.mayhem.multiplayer.GameUserVO;
 	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
@@ -54,15 +55,15 @@ package com.mayhem.game
 		private var _collisionTimer:Timer;		
 		private var _invisibilityTimer:Timer;
 		
-		private var _cubeMap:BitmapCubeTexture;
-		
 		public var isInContactWithGound:Boolean = false;
 		
+		private var _user:GameUserVO;
 		
-		public function MovingCube(id:String, isMainUser:Boolean, cubeMap:BitmapCubeTexture) 
+		
+		public function MovingCube(user:GameUserVO) 
 		{
-			name = id;
-			_cubeMap = cubeMap;
+			name = user.uid;
+			_user = user;
 			userInputs = new Dictionary();
 			userInputs[GameController.MOVE_DOWN_KEY] = false;
 			userInputs[GameController.MOVE_LEFT_KEY] = false;
@@ -76,7 +77,7 @@ package com.mayhem.game
 			_invisibilityTimer = new Timer(GameData.INVISIBILITY_DURATION, 1);
 			_invisibilityTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onInvisibilityComplete);
 
-			mesh = ModelsManager.instance.allVehicleMeshes[0].clone() as Mesh;
+			mesh = ModelsManager.instance.allVehicleMeshes[_user.vehicleId].clone() as Mesh;
 			mesh.material = getMaterial();
 			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;		
 
@@ -103,7 +104,8 @@ package com.mayhem.game
 		}
 		//
 		public function getMaterial():TextureMaterial {
-			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getRandomVehicleTexture());
+			//var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getRandomVehicleTexture());
+			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getVehicleTextureByIds(_user.vehicleId, _user.textureId));
 			var mat:TextureMaterial = new TextureMaterial(bmp);
 			return mat;
 		}
