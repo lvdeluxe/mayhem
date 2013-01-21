@@ -49,6 +49,27 @@ package com.mayhem.game
 			return _instance;
 		}
 		
+		public function setIntroPosition(pTransform:Matrix3D, pPos:Vector3D):void {
+			_axisQuaternion.fromAxisAngle(_rotateAxis, 0.25);
+			
+			_targetQuaternion.fromMatrix(pTransform);
+			_targetQuaternion.multiply(_targetQuaternion, _axisQuaternion);
+			
+			var cameraTransform:Matrix3D = _camera.transform.clone();
+			
+			_cameraQuaternion.fromMatrix(cameraTransform);
+			
+			_cameraQuaternion.lerp(_cameraQuaternion, _targetQuaternion,1);
+			
+			var newTransform:Matrix3D = _cameraQuaternion.toMatrix3D().clone();
+			
+			_camera.transform = newTransform;
+			
+			_camera.position = pPos;
+			_camera.moveBackward(900);
+			_camera.moveDown(100); 
+		}
+		
 		public function updateCamera(pTransform:Matrix3D, pPos:Vector3D):void {
 			_axisQuaternion.fromAxisAngle(_rotateAxis, GameData.CAMERA_ROTATION_X);
 			

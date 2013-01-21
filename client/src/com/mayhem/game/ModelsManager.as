@@ -76,13 +76,13 @@ package com.mayhem.game
 		[Embed(source = "/assets/vehicles/vehicle_2/textures/VehicleTexture_4.jpg")]
 		private var Vehicle_2_Texture_4:Class;		
 		
-		[Embed(source = "/assets/cubemap/skybox_1.jpg")]
-		private var cubemap_posZ:Class;		
-		[Embed(source = "/assets/cubemap/skybox_3.jpg")]
-		private var cubemap_negZ:Class;		
 		[Embed(source = "/assets/cubemap/skybox_2.jpg")]
-		private var cubemap_posX:Class;		
+		private var cubemap_posZ:Class;		
 		[Embed(source = "/assets/cubemap/skybox_4.jpg")]
+		private var cubemap_negZ:Class;		
+		[Embed(source = "/assets/cubemap/skybox_3.jpg")]
+		private var cubemap_posX:Class;		
+		[Embed(source = "/assets/cubemap/skybox_1.jpg")]
 		private var cubemap_negX:Class;	
 		[Embed(source = "/assets/cubemap/skybox_top.jpg")]
 		private var cubemap_posY:Class;

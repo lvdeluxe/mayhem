@@ -60,8 +60,8 @@ package com.mayhem.game
 			sliderAngSpeed.value = GameData.VEHICLE_ANG_VELOCITY;
 			
 			var sliderLinSpeed:HUISlider = new HUISlider(_container, 10, 94, 'Linear Speed', onSlideLinSpeed);
-			sliderLinSpeed.minimum = 50;
-			sliderLinSpeed.maximum = 5000;
+			sliderLinSpeed.minimum = 10000;
+			sliderLinSpeed.maximum = 20000;
 			sliderLinSpeed.value = GameData.VEHICLE_LIN_VELOCITY;			
 			
 			var camOffsetY:HUISlider = new HUISlider(_container, 10, 106, 'Camera Y Offset', onCamOffsetY);

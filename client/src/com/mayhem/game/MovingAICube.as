@@ -13,10 +13,12 @@ package com.mayhem.game
 	 */
 	public class MovingAICube extends MovingCube
 	{
+		public var isChaser:Boolean;
 		
-		public function MovingAICube(user:GameUserVO) 
+		public function MovingAICube(user:GameUserVO, pIsChaser:Boolean) 
 		{
 			super(user);
+			isChaser = pIsChaser;
 		}
 	
 		

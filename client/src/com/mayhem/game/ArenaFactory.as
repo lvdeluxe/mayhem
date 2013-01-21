@@ -9,10 +9,12 @@ package com.mayhem.game
 	import away3d.materials.methods.FilteredShadowMapMethod;
 	import away3d.materials.TextureMaterial;
 	import away3d.primitives.PlaneGeometry;
+	import away3d.tools.utils.Bounds;
 	import awayphysics.collision.dispatch.AWPGhostObject;
 	import awayphysics.collision.shapes.AWPBvhTriangleMeshShape;
 	import awayphysics.collision.shapes.AWPStaticPlaneShape;
 	import awayphysics.data.AWPCollisionFlags;
+	import awayphysics.data.AWPCollisionShapeType;
 	import awayphysics.dynamics.AWPDynamicsWorld;
 	import away3d.entities.Mesh;
 	import awayphysics.collision.shapes.AWPBoxShape;
@@ -28,6 +30,8 @@ package com.mayhem.game
 	import away3d.loaders.parsers.AWDParser;
 	import flash.net.URLRequest;
 	import com.mayhem.signals.GameSignals;
+	import flash.utils.Dictionary;
+	import flash.utils.setTimeout;
 	/**
 	 * ...
 	 * @author availlant
@@ -42,6 +46,7 @@ package com.mayhem.game
 		private var _physicsWorld:AWPDynamicsWorld;
 		private var _mainContainer:ObjectContainer3D;
 		public var allSpawnPoints:Vector.<Mesh> = new Vector.<Mesh>(Connector.MAX_USER_PER_ROOM);
+		private var _allDoors:Dictionary = new Dictionary();
 		public var mainBody:AWPRigidBody;
 		
 		public function ArenaFactory() 
@@ -53,6 +58,7 @@ package com.mayhem.game
 		
 		public function initialize(pPhysics:AWPDynamicsWorld):void {
 			_physicsWorld = pPhysics;
+			GameSignals.OPEN_DOOR.add(openDoor);
 		}
 		
 		public static function get instance():ArenaFactory {
@@ -62,6 +68,10 @@ package com.mayhem.game
 				_enableInstantiation = false;
 			}
 			return _instance;
+		}
+		
+		private function openDoor(doorIndex:uint):void {
+			_allDoors[doorIndex].y = 600;
 		}
 	
 		public function getAvailableSlots():uint {
@@ -90,6 +100,15 @@ package com.mayhem.game
 		}
 		
 		
+		private function meshDoorIndex(meshName:String):int {
+			for (var i:uint = 0 ; i < 12 ; i++ ) {
+				var mappingName:String = MeshMapping["DOOR_" + i.toString()];
+				if (mappingName == meshName)
+					return i;	
+			}
+			return -1;
+		}
+		
 		private function meshSpawnPointIndex(meshName:String):int {
 			for (var i:uint = 0 ; i < 12 ; i++ ) {
 				var mappingName:String = MeshMapping["SPAWN_POINT_" + i.toString()];
@@ -107,14 +126,6 @@ package com.mayhem.game
 			}
 			return false;
 		}
-		private function meshIsDoor(meshName:String):Boolean {
-			for (var i:uint = 0 ; i < 12 ; i++ ) {
-				var mappingName:String = MeshMapping["DOOR_" + i.toString()];
-				if (mappingName == meshName)
-					return true;	
-			}
-			return false;
-		}
 		
 		public function getDefaultArena():ObjectContainer3D {
 			_mainContainer = new ObjectContainer3D();
@@ -123,14 +134,13 @@ package com.mayhem.game
 				var prefix:String = mesh.name.split("_")[0];
 				var index:int = meshSpawnPointIndex(mesh.name);
 				if (index >= 0) {
-					//var pos:int = mesh.name.split("_")[1];
 					mesh.name = "start_" + index.toString();
 					mesh.extra = new Object();
 					mesh.extra.occupied = false;
 					if(index < allSpawnPoints.length	)
 						allSpawnPoints[index] = mesh;
 					
-				}else if(!meshIsDoor(mesh.name)){
+				}else{
 					mesh.material.bothSides = true;
 					mesh.material.lightPicker = MaterialsFactory.mainLightPicker;
 					ColorMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
@@ -138,23 +148,49 @@ package com.mayhem.game
 					if (meshIsBumper(mesh.name)) {
 						var b:Bumper = new Bumper(mesh);
 						body = b.body;
-					}else{
-						var shape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(mesh.geometry);
-						body = new AWPRigidBody(shape, mesh);
-						body.friction = 1
-						body.position = mesh.position;
-						
-						if (prefix == "refill") {
-							body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
-							body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
-							body.y -= 100;
-						}else {
-							mainBody = body;
-							body.friction = GameData.ARENA_FRICTION;
-							body.restitution = GameData.ARENA_RESTITUTION;
+					}else {
+						if (mesh.name == MeshMapping.INNER_FLOOR) {
+							var planeShape:AWPStaticPlaneShape = new AWPStaticPlaneShape();
+							body = new AWPRigidBody(planeShape, mesh);
+						}else if (mesh.name == MeshMapping.OUTTER_FLOOR) {
+							
+						}else{
+							var shape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(mesh.geometry, true);
+							body = new AWPRigidBody(shape, mesh);
+							body.friction = 1
+							body.position = mesh.position;
+							var doorIndex:int = meshDoorIndex(mesh.name);
+							if (prefix == "refill") {
+								body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+								body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
+							}else  if (doorIndex != -1) {
+								ColorMaterial(mesh.material).alpha = .5;
+								var m:ColorMaterial =  new ColorMaterial(0xcc0000,0);
+								var planeMesh:Mesh = new Mesh(new PlaneGeometry(200, 200), m);
+								planeMesh.name = "doorTrigger" + doorIndex.toString();
+								var pShape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(planeMesh.geometry);
+								var boxBody:AWPRigidBody = new AWPRigidBody(pShape, planeMesh);
+								boxBody.position = body.position.clone();
+								boxBody.rotationX = 90;
+								boxBody.rotationY = (doorIndex * (360 / 12));
+								boxBody.collisionFlags = AWPCollisionFlags.CF_DISABLE_VISUALIZE_OBJECT;
+								boxBody.collisionFlags |= AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+								_physicsWorld.addRigidBody(boxBody);
+								_mainContainer.addChild(planeMesh);
+								planeMesh.extra = new Object();
+								planeMesh.extra.door = body;
+								planeMesh.extra.index = doorIndex;
+								boxBody.addEventListener(AWPEvent.COLLISION_ADDED, onDoorPassed);
+								body.y = 600;
+								_allDoors[doorIndex] = body;
+							}else {
+								mainBody = body;
+								body.friction = GameData.ARENA_FRICTION;
+								body.restitution = GameData.ARENA_RESTITUTION;
+							}
 						}
 					}
-					_physicsWorld.addRigidBody(body);
+					if(body != null)_physicsWorld.addRigidBody(body);
 					_mainContainer.addChild(mesh);
 				}
 			}
@@ -169,6 +205,19 @@ package com.mayhem.game
 			return _mainContainer;
 		}
 		
+		private function onDoorPassed(event:AWPEvent):void {
+			if(event.collisionObject.skin){
+				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
+				if (vehicle && event.currentTarget.skin.extra.index == vehicle.spawnIndex) {
+					var doorBody:AWPRigidBody = event.currentTarget.skin.extra.door;
+					setTimeout(function():void {
+						doorBody.y = 193.81425380706787;
+						vehicle.enableBehavior = true;
+					},250);
+				}
+			}
+		}
+		
 		private function onRefillPowerUp(event:AWPEvent):void {
 			var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
 			if (fallingCube) {
@@ -176,10 +225,12 @@ package com.mayhem.game
 			}
 		}
 		private function onFallingCollision(event:AWPEvent):void {
-			var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
-			if (fallingCube && !fallingCube.hasFelt) {
-				fallingCube.hasFelt = true;
-				UserInputSignals.USER_IS_FALLING.dispatch(fallingCube);
+			if(event.collisionObject.skin){
+				var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
+				if (fallingCube && !fallingCube.hasFelt) {
+					fallingCube.hasFelt = true;
+					UserInputSignals.USER_IS_FALLING.dispatch(fallingCube);
+				}
 			}
 		}
 	}

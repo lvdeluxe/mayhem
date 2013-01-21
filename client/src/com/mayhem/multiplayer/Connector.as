@@ -57,14 +57,14 @@ package com.mayhem.multiplayer
 			registerClassAlias("GameStats", GameStats);
 			
 			PlayerIO.connect(
-				pStage,								//Referance to stage
+				pStage,										//Reference to stage
 				"office-mayhem-g9omnsmpskqoxaolbzotca",		//Game id (Get your own at playerio.com)
 				"testconnection",							//Connection id, default is public
-				"user_"+user.social_id.toString(),	//Username
-				"",									//User auth. Can be left blank if authentication is disabled on connection
-				null,								//Current PartnerPay partner.
-				handleConnect,						//Function executed on successful connect
-				handleError							//Function executed if we recive an error
+				"user_"+user.social_id.toString(),			//Username
+				"",											//User auth. Can be left blank if authentication is disabled on connection
+				null,										//Current PartnerPay partner.
+				handleConnect,								//Function executed on successful connect
+				handleError									//Function executed if we recive an error
 			);   
 		}
 		private function handleConnect(client:Client):void{
@@ -155,8 +155,7 @@ package com.mayhem.multiplayer
 			var pUpBytes:ByteArray = new ByteArray();
 			pUpBytes.writeObject(pUpMesage);
 			mess.add(pUpBytes);
-			_mainConnection.sendMessage(mess);	
-			trace("send from connector")
+			_mainConnection.sendMessage(mess);
 		}
 		
 		private function onCollision(manifold:CollisionManifold):void
@@ -243,6 +242,7 @@ package com.mayhem.multiplayer
 					user.vehicleId = m.getUInt(i - 2);
 					user.textureId = m.getUInt(i - 1);
 					user.isMainUser = false;
+					_allUsers[user.uid] = user;
 					MultiplayerSignals.USERS_IN_ROOM.dispatch( { user:user, rigidBody:lightBody} );
 				}
 			}

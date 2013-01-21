@@ -7,6 +7,10 @@ package com.mayhem.game
 	public class MeshMapping 
 	{
 		
+		
+		public static const OUTTER_FLOOR:String = 'arenaMaster_158';
+		public static const INNER_FLOOR:String = 'arenaMaster_157';
+		
 		public static const ENTRY_0:String = 'arenaMaster_134';
 		public static const ENTRY_1:String = 'arenaMaster_136';
 		public static const ENTRY_2:String = 'arenaMaster_138';
@@ -46,17 +50,17 @@ package com.mayhem.game
 		//public static const SPAWN_POINT_11:String = 'start_11';
 		
 		public static const DOOR_0:String = 'arenaMaster_133';
-		public static const DOOR_1:String = 'arenaMaster_135';
-		public static const DOOR_2:String = 'arenaMaster_137';
-		public static const DOOR_3:String = 'arenaMaster_139';
-		public static const DOOR_4:String = 'arenaMaster_141';
-		public static const DOOR_5:String = 'arenaMaster_143';
+		public static const DOOR_1:String = 'arenaMaster_155';
+		public static const DOOR_2:String = 'arenaMaster_153';
+		public static const DOOR_3:String = 'arenaMaster_151';
+		public static const DOOR_4:String = 'arenaMaster_149';
+		public static const DOOR_5:String = 'arenaMaster_147';
 		public static const DOOR_6:String = 'arenaMaster_145';
-		public static const DOOR_7:String = 'arenaMaster_147';
-		public static const DOOR_8:String = 'arenaMaster_149';
-		public static const DOOR_9:String = 'arenaMaster_151';
-		public static const DOOR_10:String = 'arenaMaster_153';
-		public static const DOOR_11:String = 'arenaMaster_155';
+		public static const DOOR_7:String = 'arenaMaster_143';
+		public static const DOOR_8:String = 'arenaMaster_141';
+		public static const DOOR_9:String = 'arenaMaster_139';
+		public static const DOOR_10:String = 'arenaMaster_137';
+		public static const DOOR_11:String = 'arenaMaster_135';
 		
 		//public static const BUMPER_BIG_0:String = 'arenaMaster_114';
 		//public static const BUMPER_BIG_1:String = 'arenaMaster_115';

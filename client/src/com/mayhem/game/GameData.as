@@ -16,20 +16,18 @@ package com.mayhem.game
 		public static const VEHICLE_LIN_FACTOR:Number = 0.25;
 		public static const VEHICLE_MAX_ENERGY:Number = 150;
 		public static const VEHICLE_RESPAWN_TIME:Number = 2000;
-		public static const ANG_DAMPING_DEFAULT:Number = 0.9;
-		public static const ANG_DAMPING_DECCEL:Number = 0.9;
-		public static const LIN_DAMPING_DEFAULT:Number = 0.9;
-		public static const LIN_DAMPING_DECCEL:Number = 0.9;
+		public static const ANG_DAMPING:Number = 0.999;
+		public static const LIN_DAMPING:Number = 0.99;
 		
 		public static const GAME_SESSION_DURATION:Number = 120000;
 		
-		public static var VEHICLE_LIN_VELOCITY:Number = 2700;
-		public static var VEHICLE_ANG_VELOCITY:Number = 60;
+		public static var VEHICLE_LIN_VELOCITY:Number = 15000;
+		public static var VEHICLE_ANG_VELOCITY:Number = 80;
 		public static var CAMERA_OFFSET_Y:Number = 100;
 		public static var CAMERA_OFFSET_Z:Number = 3000;
 		public static var CAMERA_ROTATION_X:Number = 0.5//Math.PI / 4;
 		
-		public static const BUMPER_FORCE:Number = 100;
+		public static const BUMPER_FORCE:Number = 250;
 		public static const EXPLOSION_FORCE:Number = 300;
 		
 		public static const POWERUP_FULL:Number = 50;

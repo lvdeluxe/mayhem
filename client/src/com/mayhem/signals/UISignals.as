@@ -19,6 +19,8 @@ package com.mayhem.signals
 		public static var UPDATE_USER_INFO:Signal = new Signal();
 		public static var SET_TEXTURE:Signal = new Signal();
 		public static var SET_VEHICLE:Signal = new Signal();
+		public static var SHOW_COUNTDOWN:Signal = new Signal();
+		public static var REMOVE_STATS:Signal = new Signal();
 		
 		public function UISignals() 
 		{

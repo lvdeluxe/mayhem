@@ -44,16 +44,19 @@ package com.mayhem.game
 		}
 		
 		private function updateVehicle(vehicleId:uint):void {
+			_vehicleId = vehicleId;
 			_container.removeChild(_vehicle);
 			_vehicle = ModelsManager.instance.getVehicleByIds(vehicleId, _textureId);
 			_vehicle.rotationY = 180;
 			_vehicle.material.lightPicker = MaterialsFactory.mainLightPicker;
+			_vehicle.material.bothSides = true;
 			_container.addChild(_vehicle);
 		}
 		
 		private function updateTexture(textureId:uint):void {
 			_textureId = textureId;
 			var mat:TextureMaterial = ModelsManager.instance.getMaterialById(_vehicleId, textureId);
+			mat.bothSides = true;
 			mat.lightPicker = MaterialsFactory.mainLightPicker;	
 			mat.shadowMethod = new TripleFilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
 			_vehicle.material = mat;
@@ -74,6 +77,7 @@ package com.mayhem.game
 			_container.addChild(_support);
 			_vehicle.rotationY = 180;
 			_vehicle.material.lightPicker = MaterialsFactory.mainLightPicker;
+			_vehicle.material.bothSides = true;
 			CameraManager.instance.setCameraPosition(_container.position);
 			
 		}

@@ -11,6 +11,8 @@ package com.mayhem.ui
 	import feathers.controls.Screen;
 	import feathers.text.BitmapFontTextFormat;
 	import starling.core.Starling;	
+	import flash.utils.setTimeout;
+	import starling.filters.BlurFilter;
 	/**
 	 * ...
 	 * @author availlant
@@ -44,16 +46,37 @@ package com.mayhem.ui
 			UISignals.UPDATE_GAME_TIMER.add(updateGameTimer);
 			UISignals.SHOW_STATS.add(showGameSessionStats);
 			UISignals.UPDATE_USER_INFO.add(updateUserInfo);			
-			MultiplayerSignals.SESSION_RESTARTED.add(removeEndSession);
+			UISignals.SHOW_COUNTDOWN.add(showCountDown);			
+			UISignals.REMOVE_STATS.add(removeEndSession);
 		}
 		
+		private function showCountDown():void {
+			_statusTextField.visible = true;
+			_statusTextField.text = "3";
+			setTimeout(function():void {
+				_statusTextField.text = "2";
+			}, 1000);
+			
+			setTimeout(function():void {
+				_statusTextField.text = "1";
+			}, 2000);
+			
+			setTimeout(function():void {
+				_statusTextField.text = "GO!";
+			}, 3000);
+			
+			setTimeout(function():void {
+				_statusTextField.text = "";
+				_statusTextField.visible = false;
+			}, 4000);
+		}
 		
 		override protected function draw():void
 		{
 			var tf:BitmapFontTextFormat = _statusTextField.textRendererProperties.textFormat;
 			_statusTextField.textRendererProperties.textFormat = null;
-			tf.size = 32;
-			tf.color = 0x151515;
+			tf.size = 48;
+			tf.color = 0xffffff;
 			_statusTextField.textRendererProperties.textFormat = tf;
 			
 			_xpBar.validate();
@@ -117,6 +140,7 @@ package com.mayhem.ui
 			_statusTextField.y = (Starling.current.nativeStage.stageHeight / 2) - 30;
 			_statusTextField.height = 60;
 			addChild(_statusTextField);	
+			_statusTextField.filter = BlurFilter.createDropShadow(3, 0.785, 0x000000, 1, 0, 1);
 			_statusTextField.visible = false;
 			
 			_xpBar = new ProgressBar();
@@ -163,7 +187,7 @@ package com.mayhem.ui
 			_xpBar.value = GameData.getFactorForXP(xp); 
 		}
 		
-		private function removeEndSession(vehicleName:String):void {
+		private function removeEndSession():void {
 			_endSessionScreen.visible = false;
 		}
 		

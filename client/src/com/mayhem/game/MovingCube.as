@@ -49,6 +49,7 @@ package com.mayhem.game
 		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
 		public var totalEnergy:int = GameData.VEHICLE_MAX_ENERGY;
 		public var spawnPosition:Vector3D = new Vector3D();
+		public var spawnIndex:uint;
 		public var powerupRefill:uint = 0;
 		public var isInvisible:Boolean = false;
 		
@@ -59,10 +60,13 @@ package com.mayhem.game
 		
 		private var _user:GameUserVO;
 		
+		public var enableBehavior:Boolean = false;
+		
 		
 		public function MovingCube(user:GameUserVO) 
 		{
 			name = user.uid;
+			spawnIndex = user.spawnIndex;
 			_user = user;
 			userInputs = new Dictionary();
 			userInputs[GameController.MOVE_DOWN_KEY] = false;
@@ -79,6 +83,7 @@ package com.mayhem.game
 
 			mesh = ModelsManager.instance.allVehicleMeshes[_user.vehicleId].clone() as Mesh;
 			mesh.material = getMaterial();
+			mesh.material.bothSides = true;
 			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;		
 
 			mesh.extra = this;
@@ -86,13 +91,15 @@ package com.mayhem.game
 			var boxShape : AWPBoxShape = new AWPBoxShape(450, 200, 600);
 			body = new AWPRigidBody(boxShape, mesh, GameData.VEHICLE_MASS);
 			body.addRay(new Vector3D(), new Vector3D(0,-150,0));
-			var trident:Trident = new Trident(150);
+			var trident:Trident = new Trident(500);
 			mesh.addChild(trident)
 			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
 			body.friction = GameData.VEHICLE_FRICTION;
 			body.restitution = GameData.VEHICLE_RESTITUTION;
-			body.ccdSweptSphereRadius = 0.5;
+			body.ccdSweptSphereRadius = 1;
 			body.ccdMotionThreshold = 1;
+			body.linearDamping = GameData.LIN_DAMPING;
+			body.angularDamping = GameData.ANG_DAMPING;
 			body.linearFactor = new Vector3D(1,GameData.VEHICLE_LIN_FACTOR,1);
 			body.angularFactor = new Vector3D(GameData.VEHICLE_ANG_FACTOR, 1, GameData.VEHICLE_ANG_FACTOR);
 			body.addEventListener(AWPEvent.RAY_CAST, testRayCast);
@@ -107,6 +114,7 @@ package com.mayhem.game
 			//var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getRandomVehicleTexture());
 			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getVehicleTextureByIds(_user.vehicleId, _user.textureId));
 			var mat:TextureMaterial = new TextureMaterial(bmp);
+			mat.bothSides = true;
 			return mat;
 		}
 		
@@ -157,7 +165,7 @@ package com.mayhem.game
 		}
 		
 		public function addUserInput(keyCode:uint):void {
-			if(isInContactWithGound){
+			if(enableBehavior){
 				switch(keyCode) {
 					case Keyboard.A:
 					case Keyboard.LEFT:

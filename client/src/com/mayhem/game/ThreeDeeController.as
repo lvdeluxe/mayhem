@@ -27,7 +27,7 @@ package com.mayhem.game
 		{
 			_stage = stage;		
 			MultiplayerSignals.USER_LOADED.add(onUserLoaded);
-			GameSignals.REMOVE_MENU.add(cleanup);
+			GameSignals.REMOVE_MENU.add(startTheGame);
 			setView(stage,proxy);
 			setLights();			
 			MaterialsFactory.initialize([_light]);			
@@ -35,16 +35,14 @@ package com.mayhem.game
 			stage.addChild(stats);			
 			ParticlesFactory.instance.initialize(_view3D.scene);
 			CameraManager.instance.initialize(_view3D.camera);
-			//_gameController = new GameController(stage, _view3D);
 		}	
 		
 		private function onUserLoaded(user:GameUserVO):void {
-			//_vehicleSelector = new VehicleSelector(_view3D);
 			_vehicleSelector = new VehicleSelector(_view3D.scene, user.vehicleId, user.textureId);
-			//_vehicleSelector = new VehicleSelector(_view3D.scene, ModelsManager.instance.getVehicleByIds(user.vehicleId, user.textureId));
 		}
 		
-		private function cleanup():void {
+		private function startTheGame():void {
+			_view3D.camera.lens.far = 35000;
 			_vehicleSelector.remove();
 			_gameController = new GameController(_stage, _view3D);
 		}
@@ -57,7 +55,7 @@ package com.mayhem.game
 			_view3D.camera.y = 2000
 			_view3D.camera.z = -5000;
 			_view3D.camera.rotationX = 45;
-			_view3D.camera.lens.far = 50000;
+			_view3D.camera.lens.far = 35000;
 		}
 		
 		private function setLights():void{			
