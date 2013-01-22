@@ -17,6 +17,8 @@ package com.mayhem.signals
 		public static var POWERUP_TRIGGERED:Signal = new Signal();
 		public static var SESSION_PAUSED:Signal = new Signal();
 		public static var SESSION_RESTARTED:Signal = new Signal();
+		public static var UPDATE_AI_TARGET:Signal = new Signal();
+		public static var AI_TARGET_UPDATED:Signal = new Signal();
 		
 		public function MultiplayerSignals() 
 		{

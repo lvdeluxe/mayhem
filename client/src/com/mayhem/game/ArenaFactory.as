@@ -213,6 +213,9 @@ package com.mayhem.game
 					setTimeout(function():void {
 						doorBody.y = 193.81425380706787;
 						vehicle.enableBehavior = true;
+						if (vehicle is MovingAICube) {
+							GameSignals.SET_AI_TARGET.dispatch(vehicle);
+						}
 					},250);
 				}
 			}

@@ -127,6 +127,14 @@ package com.mayhem.multiplayer
 			UserInputSignals.POWERUP_TRIGGER.add(onPowerupTrigger);
 			GameSignals.SESSION_PAUSE.add(onSessionPause);
 			GameSignals.SESSION_RESTART.add(onSessionRestart);
+			MultiplayerSignals.UPDATE_AI_TARGET.add(setAITarget);
+		}
+		
+		private function setAITarget(chaserId:String, targetId:String):void {
+			var mess:Message = _mainConnection.createMessage("SetAITarget");
+			mess.add(chaserId);
+			mess.add(targetId);
+			_mainConnection.sendMessage(mess);
 		}
 		
 		private function onSessionRestart(cubeId:String, spawnIndex:int):void {
@@ -318,6 +326,10 @@ package com.mayhem.multiplayer
 			MultiplayerSignals.SESSION_RESTARTED.dispatch(uid);
 		}
 		
+		private function onAITargetUpdated(m:Message, chaser_id:String, target_id:String):void {
+			MultiplayerSignals.AI_TARGET_UPDATED.dispatch(chaser_id,target_id);
+		}
+		
 		private function handleJoin(connection:Connection):void {
 			_mainConnection = connection;
 			trace("Sucessfully connected to the multiplayer server");
@@ -333,6 +345,7 @@ package com.mayhem.multiplayer
 			_mainConnection.addMessageHandler("PowerUpTriggered", powerUpTriggered);
 			_mainConnection.addMessageHandler("UserSessionExpired", userSessionExpired);
 			_mainConnection.addMessageHandler("UserSessionRestarted", userSessionRestarted);
+			_mainConnection.addMessageHandler("AITargetUpdated", onAITargetUpdated);
 		}
 		
 		private function handleDisconnect():void{
