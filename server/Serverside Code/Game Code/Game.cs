@@ -222,6 +222,11 @@ namespace MyGame {
                     int spawnIndex_restart = message.GetInt(1);
                     Broadcast("UserSessionRestarted", user_id_restart, spawnIndex_restart);
                     break;
+                case "SetAITarget":
+                    string chaser_id = message.GetString(0);
+                    string target_id = message.GetString(1);
+                    Broadcast("AITargetUpdated", chaser_id, target_id);
+                    break;
 			}
 		}
 

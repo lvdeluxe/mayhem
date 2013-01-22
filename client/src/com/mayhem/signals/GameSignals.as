@@ -14,6 +14,7 @@ package com.mayhem.signals
 		public static var SESSION_START:Signal = new Signal();
 		public static var REMOVE_MENU:Signal = new Signal();
 		public static var OPEN_DOOR:Signal = new Signal();
+		public static var SET_AI_TARGET:Signal = new Signal();
 		
 		public function GameSignals() 
 		{

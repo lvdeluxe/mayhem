@@ -14,6 +14,7 @@ package com.mayhem.game
 	public class MovingAICube extends MovingCube
 	{
 		public var isChaser:Boolean;
+		public var currentTarget:MovingCube;
 		
 		public function MovingAICube(user:GameUserVO, pIsChaser:Boolean) 
 		{

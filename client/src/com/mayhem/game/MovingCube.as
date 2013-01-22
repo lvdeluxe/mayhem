@@ -62,6 +62,8 @@ package com.mayhem.game
 		
 		public var enableBehavior:Boolean = false;
 		
+		public var targetedBy:MovingCube;
+		
 		
 		public function MovingCube(user:GameUserVO) 
 		{
