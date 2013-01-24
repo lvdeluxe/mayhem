@@ -308,6 +308,10 @@ package com.mayhem.game
 			return _ownerCube;
 		}
 		
+		/*private function hitFX():void{
+			trace("hitFX in action.");
+		}*/
+		
 		private function onKeyUp(event:KeyboardEvent):void {
 			var _isVehicleInput:Boolean = false;
 			switch(event.keyCode) {

@@ -9,6 +9,7 @@ package com.mayhem.game
 	import flash.geom.Vector3D;
 	import com.mayhem.signals.MultiplayerSignals;
 	import com.mayhem.signals.GameSignals;
+	//import away3d.filters.RadialBlurFilter3D;
 	
 	/**
 	 * ...
@@ -56,6 +57,7 @@ package com.mayhem.game
 			_view3D.camera.z = -5000;
 			_view3D.camera.rotationX = 45;
 			_view3D.camera.lens.far = 35000;
+			//_view3D.filters3d = [ new RadialBlurFilter3D(2) ];
 		}
 		
 		private function setLights():void{			
