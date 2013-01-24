@@ -135,7 +135,7 @@ package com.mayhem.game
 			_invisibilityTimer.start();
 		}
 		public function setExplosionState():void {
-			ParticlesFactory.instance.getExplosionParticles(body.position.clone(), null);
+			ParticlesFactory.instance.getExplosionParticles(body.position.clone());
 		}
 
 		private function onTimer(event:TimerEvent):void {
@@ -150,9 +150,9 @@ package com.mayhem.game
 		
 		public function setImpactState(position:Vector3D):void {
 			var particlesPosition:Vector3D = mesh.transform.transformVector(position);
-			ParticlesFactory.instance.getSparksParticles(particlesPosition, null);
-			_collisionTimer.reset();
-			_collisionTimer.start();
+			ParticlesFactory.instance.getSparksParticles(particlesPosition);
+			//_collisionTimer.reset();
+			//_collisionTimer.start();
 		}
 		
 		private function enableCollision():void {

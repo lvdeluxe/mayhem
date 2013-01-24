@@ -1,0 +1,45 @@
+<root main="0" minor="0">
+  <effect>
+    <system position="0,0,0" eulers="0,0,0" loop="1" during="1" scale="1,1,1"/>
+    <generater>
+      <shape>
+        <editor clazz="particleEditor.effect.generater.shape::PlaneEditor" varName="plane" width="20" height="20"/>
+      </shape>
+      <material>
+        <editor clazz="particleEditor.effect.generater.material::ColorMaterialEditor" varName="mat" bothSides="1" requiresBlending="1" blendMode="2" multipleRendering="1" renderTimes="1" timeInterval="0.1" fadeFactor="0.5" color="ffcc0000"/>
+      </material>
+      <sample>
+        <editor clazz="SamplesFactory.as$582::SampleEdior" varName="sample" material="0" shape="0"/>
+      </sample>
+      <output>
+        <editor clazz="particleEditor.effect.generater.subGenerate::SingleGeneraterEditor" sample="0" count="500"/>
+      </output>
+    </generater>
+    <vars>
+      <editor clazz="particleEditor.effect.param.vars::ConstNumberVarEditor" varName="start" number="0"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomNumberVarEditor" varName="rnd1" min="0.1" max="1"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomCircleVarEditor" varName="rndCircle" innerRadius="500" outerRadius="1850" x="0" y="0"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomNumberVarEditor" varName="rndVelocity" min="500" max="1000"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomNumberVarEditor" varName="rndRotation" min="45" max="180"/>
+      <exception comment="this if for time action">
+        <editor clazz="particleEditor.effect.param::TimeSelection" startTime="0" duringTime="1"/>
+      </exception>
+    </vars>
+    <action>
+      <global>
+        <editor clazz="particleEditor.effect.action.global::VelocityGlobalEditor" varName="VelocityGlobal" velocity="0,200,0"/>
+      </global>
+      <local>
+        <editor clazz="particleEditor.effect.action.local::OffsetActionEditor" varName="OffsetPositionLocal">
+          <editor clazz="OffsetActionEditor.as$668::OffsetParam" offset="2,0,3"/>
+        </editor>
+        <editor clazz="particleEditor.effect.action.local::VelocityLocalEditor" varName="VelocityLocal">
+          <editor clazz="VelocityLocalEditor.as$660::VelocityParam" velocity="0,4,0"/>
+        </editor>
+        <editor clazz="particleEditor.effect.action.local::RotateLocalEditor" varName="RandomRotateLocal">
+          <editor clazz="RotateLocalEditor.as$664::RotateParam" axis="0,5,0" cycle="1"/>
+        </editor>
+      </local>
+    </action>
+  </effect>
+</root>

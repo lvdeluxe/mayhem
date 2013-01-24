@@ -69,7 +69,7 @@ package
 		
 		private function onContextCreated(event : Stage3DEvent) : void {	
 			_stage3DProxy.removeEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
-			_social = new SocialModel(connectedToSocial, false);
+			_social = new SocialModel(connectedToSocial, true);
 		}
 		
 		

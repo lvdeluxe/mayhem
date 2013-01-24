@@ -8,10 +8,12 @@ package com.mayhem.game
 	import away3d.materials.MaterialBase;
 	import away3d.materials.methods.FilteredShadowMapMethod;
 	import away3d.materials.TextureMaterial;
+	import away3d.primitives.CylinderGeometry;
 	import away3d.primitives.PlaneGeometry;
 	import away3d.tools.utils.Bounds;
 	import awayphysics.collision.dispatch.AWPGhostObject;
 	import awayphysics.collision.shapes.AWPBvhTriangleMeshShape;
+	import awayphysics.collision.shapes.AWPCylinderShape;
 	import awayphysics.collision.shapes.AWPStaticPlaneShape;
 	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.data.AWPCollisionShapeType;
@@ -23,6 +25,7 @@ package com.mayhem.game
 	import awayphysics.events.AWPEvent;
 	import com.mayhem.multiplayer.Connector;
 	import com.mayhem.signals.MultiplayerSignals;
+	import com.mayhem.signals.UISignals;
 	import com.mayhem.signals.UserInputSignals;
 	import flash.geom.Vector3D;
 	import away3d.library.AssetLibrary;
@@ -195,6 +198,19 @@ package com.mayhem.game
 				}
 			}
 			
+			var dangerShape:AWPCylinderShape = new AWPCylinderShape(1800, 1000);
+			var mat:ColorMaterial = new ColorMaterial(0xcc0000, 0.1);
+			mat.bothSides = true;
+			var dangerMesh:Mesh = new Mesh(new CylinderGeometry(1800, 1800, 1000, 16, 1, false, false), mat);
+			dangerMesh.castsShadows = false;
+			var dangerRigidBody:AWPRigidBody = new AWPRigidBody(dangerShape, dangerMesh);
+			dangerRigidBody.y = 500;
+			dangerRigidBody.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+			_physicsWorld.addRigidBody(dangerRigidBody);
+			_mainContainer.addChild(dangerMesh);
+			ParticlesFactory.instance.getDangerParticles(null);
+			dangerRigidBody.addEventListener(AWPEvent.COLLISION_ADDED, onDangerCollision);
+			
 			var fallingShape : AWPStaticPlaneShape = new AWPStaticPlaneShape(new Vector3D(0, 1, 0));
 			var fallingRigidbody : AWPGhostObject = new AWPGhostObject(fallingShape);
 			fallingRigidbody.addEventListener(AWPEvent.COLLISION_ADDED, onFallingCollision);
@@ -225,6 +241,15 @@ package com.mayhem.game
 			var fallingCube:MovingCube = event.collisionObject.skin.extra as MovingCube;
 			if (fallingCube) {
 				GameSignals.REFILL_POWERUP.dispatch(fallingCube);
+			}
+		}
+		private function onDangerCollision(event:AWPEvent):void {
+			if(event.collisionObject.skin){
+				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
+				if (vehicle) {
+					GameSignals.DANGER_ZONE_COLLISION.dispatch(vehicle);
+					
+				}
 			}
 		}
 		private function onFallingCollision(event:AWPEvent):void {

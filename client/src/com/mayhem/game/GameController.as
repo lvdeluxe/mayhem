@@ -2,6 +2,7 @@ package com.mayhem.game
 {
 	import away3d.containers.View3D;
 	import away3d.events.Object3DEvent;
+	import away3d.materials.methods.OutlineMethod;
 	import away3d.primitives.SkyBox;
 	import away3d.textures.BitmapCubeTexture;
 	import awayphysics.debug.AWPDebugDraw;
@@ -140,8 +141,8 @@ package com.mayhem.game
 					if (!vehicle.isInContactWithGound) {
 						vehicle.body.linearDamping = 0;
 						vehicle.body.angularDamping = 0;
-						vehicle.body.mass = 10;
-						vehicle.body.gravity = new Vector3D(0,-1000,0);
+						vehicle.body.mass = 5;
+						vehicle.body.gravity = new Vector3D(0,-500,0);
 					}else {
 						vehicle.body.linearDamping = GameData.LIN_DAMPING;
 						vehicle.body.angularDamping = GameData.ANG_DAMPING;
@@ -177,6 +178,26 @@ package com.mayhem.game
 			MultiplayerSignals.SESSION_RESTARTED.add(restartSession);
 			MultiplayerSignals.AI_TARGET_UPDATED.add(onAITargetUpdate);
 			GameSignals.SET_AI_TARGET.add(setAITarget);
+			GameSignals.DANGER_ZONE_COLLISION.add(onDangerZone);
+		}
+		
+		private function onDangerZone(vehicle:MovingCube):void {
+			vehicle.totalEnergy--;
+			if (vehicle.totalEnergy < 0) {
+				vehicle.totalEnergy = 0;
+			}
+			if (vehicle == _ownerCube || vehicle is MovingAICube) {
+				if (vehicle.totalEnergy >= 0)
+					if (vehicle == _ownerCube) {
+						_stats.current_num_hits_received++;
+						UISignals.ENERGY_UPDATE.dispatch(vehicle.totalEnergy / GameData.VEHICLE_MAX_ENERGY);
+					}
+				if (vehicle.totalEnergy == 0) {
+					setVehicleDeath(vehicle);					
+				}				
+			}
+			//var outline:OutlineMethod = new OutlineMethod(0x00cc00, 10);
+			//TextureMaterial(vehicle.mesh.material).addMethod(outline)
 		}
 		
 		private function onAITargetUpdate(chaser_id:String, target_id:String):void {
@@ -187,7 +208,7 @@ package com.mayhem.game
 			var vehicleName:String = dbObject.key;
 			_stats.updateWithAllTimeData(dbObject);
 			_pausedVehicles[vehicleName] = _allPlayers[vehicleName];
-			var spawnIndex:int = _pausedVehicles[vehicleName].spawnIndex;// ArenaFactory.instance.getSpawnIndexByPosition(_pausedVehicles[vehicleName].spawnPosition);
+			var spawnIndex:int = _pausedVehicles[vehicleName].spawnIndex;
 			var movingCube:MovingAICube = createAICube(spawnIndex);
 			respawn(movingCube);
 			_allAICubes[movingCube.name] = movingCube;
@@ -226,17 +247,9 @@ package com.mayhem.game
 			if (_AIMaster)
 				movingCube.body.addEventListener(AWPEvent.COLLISION_ADDED, collisionDetectionHandler);
 			movingCube.spawnPosition = ArenaFactory.instance.getSpawnPoint(index);
-			_view3D.scene.addChild(movingCube.mesh);
-			_physicsWorld.addRigidBody(movingCube.body);
 			return movingCube;
 		}
-		//
-		//private function setAITargets():void {
-			//if (!_AIMaster) return;
-			//for each(var ai:MovingAICube in _allAICubes) {
-				//ai.currentTarget = getRandomAITarget(ai);
-			//}
-		//}
+		
 		
 		private function setAITarget(vehicle:MovingAICube):void {
 			vehicle.currentTarget = getRandomAITarget(vehicle);
@@ -252,7 +265,6 @@ package com.mayhem.game
 			}
 			if(arr_targets.length != 0){
 				var rnd:uint = Math.floor(Math.random() * arr_targets.length);
-				trace(arr_targets[rnd].name)
 				MultiplayerSignals.UPDATE_AI_TARGET.dispatch(aiCube.name, arr_targets[rnd].name);
 				return arr_targets[rnd];
 			}
@@ -392,8 +404,7 @@ package com.mayhem.game
 			delete _allAICubes["ai_" + pausedVehicle.spawnIndex.toString()];
 			delete _allPlayers["ai_" + pausedVehicle.spawnIndex.toString()];
 			_allPlayers[vehicleName] = pausedVehicle;
-			_physicsWorld.addRigidBody(pausedVehicle.body);
-			_view3D.scene.addChild(pausedVehicle.mesh);
+			
 			if (pausedVehicle == _ownerCube) {
 				_stats = new GameStats(_ownerCube.name);
 				_stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
@@ -467,7 +478,8 @@ package com.mayhem.game
 				UISignals.OWNER_RESPAWNED.dispatch();
 			}
 			GameSignals.OPEN_DOOR.dispatch(cube.spawnIndex);
-			cube.enableBehavior = false;
+			_physicsWorld.addRigidBody(cube.body);
+			_view3D.scene.addChild(cube.mesh);
 			cube.hasCollided = false;
 			cube.totalEnergy = GameData.VEHICLE_MAX_ENERGY;
 			cube.body.angularVelocity = new Vector3D();
@@ -483,6 +495,7 @@ package com.mayhem.game
 			var pos:Vector3D = cube.spawnPosition.clone();
 			pos = front.add(pos)
 			cube.body.position = pos;
+			
 			setCountDown(cube);			
 		}
 		
@@ -497,6 +510,18 @@ package com.mayhem.game
 			}, 3000);
 		}
 		
+		private function setVehicleDeath(deadVehicle:MovingCube):void {
+			deadVehicle.enableBehavior = false;
+			setTimeout(respawn, GameData.VEHICLE_RESPAWN_TIME, deadVehicle);
+			_physicsWorld.removeRigidBody(deadVehicle.body);
+			_view3D.scene.removeChild(deadVehicle.mesh);
+			ParticlesFactory.instance.getDeathParticles(deadVehicle.body.position.clone());
+			if (deadVehicle == _ownerCube) {
+				_stats.current_num_kills_received++;	
+				UISignals.ENERGY_OUT.dispatch();
+			}
+		}
+		
 		private function onCubeCollision(manifold:CollisionManifold):void {
 			var cubeA:MovingCube = _allPlayers[manifold.colliderA];
 			var cubeB:MovingCube = _allPlayers[manifold.colliderB];
@@ -508,18 +533,14 @@ package com.mayhem.game
 				loser.totalEnergy = 0;
 			}
 			if (loser == _ownerCube || loser is MovingAICube) {
-				
 				if (loser.totalEnergy >= 0)
 					if (loser == _ownerCube) {
 						_stats.current_num_hits_received++;
 						UISignals.ENERGY_UPDATE.dispatch(_ownerCube.totalEnergy / GameData.VEHICLE_MAX_ENERGY);
 					}
 				if (loser.totalEnergy == 0) {
-					if (loser == _ownerCube) {
-						_stats.current_num_kills_received++;
-						UISignals.ENERGY_OUT.dispatch();
-					}
-					setTimeout(respawn, GameData.VEHICLE_RESPAWN_TIME, loser);
+					setVehicleDeath(loser);
+					
 				}				
 			}
 			if (winner == _ownerCube) {
@@ -532,6 +553,7 @@ package com.mayhem.game
 			var collisionPosition:Vector3D = manifold.forceA > manifold.forceB ? manifold.positionB : manifold.positionA;
 			setTimeout(function():void{
 				winner.hasCollided = false;
+				loser.hasCollided = false;
 			},200);
 			
 			loser.setImpactState(collisionPosition);
@@ -740,8 +762,8 @@ package com.mayhem.game
 		
 		private function createMovingCube(user:GameUserVO, lightRigidBody:LightRigidBody = null):MovingCube {
 			var movingCube:MovingCube = new MovingCube(user);			
-			_view3D.scene.addChild(movingCube.mesh);
-			_physicsWorld.addRigidBody(movingCube.body);			
+			//_view3D.scene.addChild(movingCube.mesh);
+			//_physicsWorld.addRigidBody(movingCube.body);			
 			trace("created", movingCube.name);
 			if (user.isMainUser) {
 				
@@ -807,14 +829,16 @@ package com.mayhem.game
 					subs.negate();
 					subs.normalize();
 					subs.y = 0;
-					subs.scaleBy(manifold.forceB * 3);
+					var max1:Number = manifold.forceB * 3 > 300 ? 300 : manifold.forceB * 3;
+					subs.scaleBy(max1);
 					cubeCollider.body.applyCentralImpulse(subs);
 					
 					var subs2:Vector3D = cubeCollider.body.position.subtract(targetCube.body.position);
 					subs2.negate();
 					subs2.normalize();
 					subs2.y = 0;
-					subs2.scaleBy(manifold.forceA * 3);
+					var max2:Number = manifold.forceA * 3 > 300 ? 300 : manifold.forceA * 3;
+					subs2.scaleBy(max2);
 					targetCube.body.applyCentralImpulse(subs2);
 					
 					UserInputSignals.USER_IS_COLLIDING.dispatch(manifold);

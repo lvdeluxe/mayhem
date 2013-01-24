@@ -1,0 +1,37 @@
+<root main="0" minor="0">
+  <effect>
+    <system position="0,0,0" eulers="0,0,0" loop="0" during="1" scale="1,1,1"/>
+    <generater>
+      <shape>
+        <editor clazz="particleEditor.effect.generater.shape::SphereEditor" varName="sphere" radius="10" segmentsW="6" segmentsH="6"/>
+      </shape>
+      <material>
+        <editor clazz="particleEditor.effect.generater.material::ColorMaterialEditor" varName="mat" bothSides="0" requiresBlending="1" blendMode="0" multipleRendering="0" renderTimes="1" timeInterval="0.1" fadeFactor="0.5" color="ffff9900"/>
+      </material>
+      <sample>
+        <editor clazz="SamplesFactory.as$582::SampleEdior" varName="sample" material="0" shape="0"/>
+      </sample>
+      <output>
+        <editor clazz="particleEditor.effect.generater.subGenerate::SingleGeneraterEditor" sample="0" count="350"/>
+      </output>
+    </generater>
+    <vars>
+      <editor clazz="particleEditor.effect.param.vars::RandomGlobeVarEditor" varName="globe" innerRadius="250" outerRadius="1000" center="0,250,0"/>
+      <editor clazz="particleEditor.effect.param.vars::ConstNumberVarEditor" varName="zero" number="0"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomNumberVarEditor" varName="duration" min="0.5" max="1.5"/>
+      <exception comment="this if for time action">
+        <editor clazz="particleEditor.effect.param::TimeSelection" startTime="3" duringTime="4"/>
+      </exception>
+    </vars>
+    <action>
+      <global>
+        <editor clazz="particleEditor.effect.action.global::ChangeColorByLifeGlobalEditor" varName="ChangeColorByLifeGlobal" start="1,1,1,1,0,0,0,0" end="1,1,1,0,0,0,0,0"/>
+      </global>
+      <local>
+        <editor clazz="particleEditor.effect.action.local::VelocityLocalEditor" varName="VelocityLocal">
+          <editor clazz="VelocityLocalEditor.as$660::VelocityParam" velocity="0,1,2"/>
+        </editor>
+      </local>
+    </action>
+  </effect>
+</root>
