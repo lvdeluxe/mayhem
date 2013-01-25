@@ -245,7 +245,6 @@ package com.mayhem.multiplayer
 				if (i % numParams == numParams-1) {
 					var byteArray:ByteArray = m.getByteArray(i);
 					var lightBody:LightRigidBody = byteArray.readObject();
-					trace("SetRoomUsers", lightBody)
 					var user:GameUserVO = new GameUserVO(m.getString( i - 3));
 					user.vehicleId = m.getUInt(i - 2);
 					user.textureId = m.getUInt(i - 1);

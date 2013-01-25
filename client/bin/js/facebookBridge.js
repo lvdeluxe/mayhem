@@ -82,6 +82,21 @@ var FBBridge = {
 			FBBridge.gameElement.onJavaScriptError(error);
 		}
 	},
+	getUserInfos:function(params){
+		try {
+			FB.api('/'+params.id+'?fields=id,name', function(response) {
+				if(!response || response.error) {
+					FBBridge.gameElement.onFailure('onGetUsetInfos', response.error);
+				}
+				else {
+					FBBridge.gameElement.onGetUsetInfos(response);
+				}
+			});
+		}
+		catch(error) {
+			FBBridge.gameElement.onJavaScriptError(error);
+		}
+	},
 	getOwnerFriends:function(params, limit) {
 		try {
 			FB.api('me/friends&limit=' + limit, params, function(response) {

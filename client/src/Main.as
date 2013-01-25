@@ -43,6 +43,8 @@ package
 		private function init(e:Event = null):void 
 		{
 			Security.allowDomain("*") ;
+			https://fbcdn-profile-a.akamaihd.net/hprofile-ak-snc7/
+			Security.loadPolicyFile('https://fbcdn-profile-a.akamaihd.net/hprofile-ak-snc7/crossdomain.xml');
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			ModelsManager.instance.loadAllModels(setup);
 			

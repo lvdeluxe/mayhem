@@ -53,7 +53,17 @@ public class FacebookService {
 		registerCallback('onGetOwnerInfos', success, failure);
 		ExternalInterface.call('FBBridge.getOwnerInfos', fieldsObject);
 	}
+	
+	public static function getSocialUserInfo(fieldsObject:Object, success:Function, failure:Function = null):void {
+		registerCallback('onGetUsetInfos', success, failure);
+		ExternalInterface.call('FBBridge.getUserInfos', fieldsObject);
+	}
 
+	private static function onGetUsetInfos(result:Object):void {
+		var user:SocialUser = _socialUserParser.parse({data:result})[0];
+		unregisterCallback('onGetUsetInfos', SUCCESS)(user);
+	}
+	
 	private static function onGetOwnerInfos(result:Object):void {
 		var user:SocialUser = _socialUserParser.parse({data:result})[0];
 		unregisterCallback('onGetOwnerInfos', SUCCESS)(user);

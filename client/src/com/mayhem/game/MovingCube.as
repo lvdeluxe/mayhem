@@ -2,6 +2,7 @@ package com.mayhem.game
 {
 	import away3d.debug.Trident;
 	import away3d.entities.Mesh;
+	import away3d.entities.Sprite3D;
 	import away3d.events.AssetEvent;
 	import away3d.events.LoaderEvent;
 	import away3d.events.Object3DEvent;
@@ -25,6 +26,9 @@ package com.mayhem.game
 	import awayphysics.dynamics.vehicle.AWPVehicleTuning;
 	import awayphysics.events.AWPEvent;
 	import com.mayhem.multiplayer.GameUserVO;
+	import com.mayhem.signals.GameSignals;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
@@ -33,6 +37,9 @@ package com.mayhem.game
 	import flash.utils.SetIntervalTimer;
 	import flash.utils.Timer;
 	import awayphysics.dynamics.vehicle.AWPRaycastVehicle
+	import starling.text.BitmapFont;
+	import starling.text.TextField;
+	import starling.textures.Texture;
 	/**
 	 * ...
 	 * @author availlant
@@ -86,15 +93,17 @@ package com.mayhem.game
 			mesh = ModelsManager.instance.allVehicleMeshes[_user.vehicleId].clone() as Mesh;
 			mesh.material = getMaterial();
 			mesh.material.bothSides = true;
-			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;		
+			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;	
+			
+			
 
 			mesh.extra = this;
 			
 			var boxShape : AWPBoxShape = new AWPBoxShape(450, 200, 600);
 			body = new AWPRigidBody(boxShape, mesh, GameData.VEHICLE_MASS);
 			body.addRay(new Vector3D(), new Vector3D(0,-150,0));
-			var trident:Trident = new Trident(500);
-			mesh.addChild(trident)
+			//var trident:Trident = new Trident(500);
+			//mesh.addChild(trident)
 			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
 			body.friction = GameData.VEHICLE_FRICTION;
 			body.restitution = GameData.VEHICLE_RESTITUTION;
@@ -106,6 +115,20 @@ package com.mayhem.game
 			body.angularFactor = new Vector3D(GameData.VEHICLE_ANG_FACTOR, 1, GameData.VEHICLE_ANG_FACTOR);
 			body.addEventListener(AWPEvent.RAY_CAST, testRayCast);
 			
+			GameSignals.SET_USER_INFO_PLANE.add(setInfoPlane);
+			GameSignals.GET_USER_INFO_PLANE.dispatch(name);
+			
+		}
+		
+		private function setInfoPlane(userId:String,bitmapData:BitmapData):void 
+		{
+			if(userId == name){
+				var mat:TextureMaterial = new TextureMaterial(new BitmapTexture(bitmapData));
+				mat.alphaThreshold = 0.25;
+				var sprite:Sprite3D = new Sprite3D(mat, 500, 500);
+				sprite.y = 200;
+				mesh.addChild(sprite)
+			}
 		}
 		
 		private function testRayCast(event:AWPEvent):void {

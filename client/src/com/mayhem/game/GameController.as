@@ -225,8 +225,11 @@ package com.mayhem.game
 				UISignals.SHOW_STATS.dispatch(_stats);
 			}
 			
-			_view3D.scene.removeChild(_allPlayers[vehicleName].mesh);
-			_physicsWorld.removeRigidBody(_allPlayers[vehicleName].body);
+			if (_allPlayers[vehicleName].mesh.parent) {
+				_view3D.scene.removeChild(_allPlayers[vehicleName].mesh);
+				_physicsWorld.removeRigidBody(_allPlayers[vehicleName].body);
+			}
+			
 			delete _allPlayers[vehicleName];
 			
 		}
