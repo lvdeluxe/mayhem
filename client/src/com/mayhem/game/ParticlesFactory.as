@@ -6,6 +6,7 @@ package com.mayhem.game
 	 */
 	
 	import away3d.containers.Scene3D;
+	import away3d.entities.Mesh;
 	import flash.events.Event;
 	import flash.utils.Dictionary;
 	import particleEditor.EffectGroupFactoryS;
@@ -25,11 +26,17 @@ package com.mayhem.game
 		private var _dangerXML:Class;
 		[Embed(source="/assets/particles/death.xml", mimeType="application/octet-stream")]
 		private var _deathXML:Class;
+		[Embed(source="/assets/particles/random_ray.xml", mimeType="application/octet-stream")]
+		private var _randomRayXML:Class;
+		[Embed(source="/assets/particles/shield.xml", mimeType="application/octet-stream")]
+		private var _shieldXML:Class;
 		
+		private var _randomRayFactory:EffectGroupFactoryS;
 		private var _explosionFactory:EffectGroupFactoryS;
 		private var _collisionFactory:EffectGroupFactoryS;
 		private var _dangerFactory:EffectGroupFactoryS;
 		private var _deathFactory:EffectGroupFactoryS;
+		private var _shieldFactory:EffectGroupFactoryS;
 		private var _scene:Scene3D;
 		private var _runningParticles:Dictionary = new Dictionary();
 		
@@ -61,6 +68,16 @@ package com.mayhem.game
 			var xml4:XML = new XML(parts4);
 			_deathFactory = new EffectGroupFactoryS();
 			_deathFactory.importCode(xml4);
+			
+			var parts5:* = new _randomRayXML();
+			var xml5:XML = new XML(parts5);
+			_randomRayFactory = new EffectGroupFactoryS();
+			_randomRayFactory.importCode(xml5);
+			
+			var parts6:* = new _shieldXML();
+			var xml6:XML = new XML(parts6);
+			_shieldFactory = new EffectGroupFactoryS();
+			_shieldFactory.importCode(xml6);
 		}
 		
 		public static function get instance():ParticlesFactory {
@@ -90,8 +107,26 @@ package com.mayhem.game
 				position = new Vector3D();
 				
 			var effect:EffectGroup = _dangerFactory.createNeedStuff() as EffectGroup;
-			//_runningParticles[effect] = {particleEffect:effect, factory:_dangerFactory};
 			effect.position = position;
+			_scene.addChild(effect);
+			effect.start();
+		}
+		
+		public function getBeamParticles(target:Mesh):void {
+			var effect:EffectGroup = _randomRayFactory.createNeedStuff() as EffectGroup;
+			_runningParticles[effect] = {particleEffect:effect, factory:_randomRayFactory};
+			//effect.position = position;
+			target.addChild(effect);
+			effect.start();
+		}
+		public function getRandomRayParticles(position:Vector3D, target:Vector3D):void {
+			if (position == null)
+				position = new Vector3D();
+				
+			var effect:EffectGroup = _randomRayFactory.createNeedStuff() as EffectGroup;
+			_runningParticles[effect] = {particleEffect:effect, factory:_randomRayFactory};
+			effect.position = position;
+			effect.lookAt(target);
 			_scene.addChild(effect);
 			effect.start();
 		}
@@ -127,6 +162,13 @@ package com.mayhem.game
 			_runningParticles[effect] = {particleEffect:effect, factory:_collisionFactory};
 			effect.position = position;
 			_scene.addChild(effect);
+			effect.start();
+		}	
+		
+		public function getShieldParticles(target:Mesh):void {
+			var effect:EffectGroup = _shieldFactory.createNeedStuff() as EffectGroup;
+			_runningParticles[effect] = {particleEffect:effect, factory:_shieldFactory};
+			target.addChild(effect);
 			effect.start();
 		}		
 	}

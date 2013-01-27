@@ -13,7 +13,7 @@ package com.mayhem.game
 	public class VehiclePropertiesMenu 
 	{
 		
-		private var _visible:Boolean = true;
+		private var _visible:Boolean = false;
 		private var _gManager:GameController;
 		private var _container:Sprite;
 		
@@ -89,7 +89,8 @@ package com.mayhem.game
 			arenaRestitution.maximum = 10;
 			arenaRestitution.value = GameData.ARENA_RESTITUTION;
 			
-			stage.addChild(_container);	
+			stage.addChild(_container);				
+			visible = _visible;
 		}
 		
 		private function onArenaFriction(e:Event):void {

@@ -224,7 +224,7 @@ package com.mayhem.game
 		private function onDoorPassed(event:AWPEvent):void {
 			if(event.collisionObject.skin){
 				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
-				if (vehicle && event.currentTarget.skin.extra.index == vehicle.spawnIndex) {
+				if (vehicle && event.currentTarget.skin.extra.index == vehicle.user.spawnIndex) {
 					var doorBody:AWPRigidBody = event.currentTarget.skin.extra.door;
 					setTimeout(function():void {
 						doorBody.y = 193.81425380706787;

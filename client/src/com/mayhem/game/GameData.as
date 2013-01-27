@@ -31,9 +31,8 @@ package com.mayhem.game
 		public static const EXPLOSION_FORCE:Number = 300;
 		
 		public static const POWERUP_FULL:Number = 50;
-		public static const POWERUP_EXPLOSION:int = 0;
-		public static const POWERUP_INVISIBILITY:int = 1;
 		public static const INVISIBILITY_DURATION:Number = 10000;
+		public static const SHIELD_DURATION:Number = 10000;
 		
 		public static var ARENA_FRICTION:Number = 0.5;
 		public static var ARENA_RESTITUTION:Number = 0;

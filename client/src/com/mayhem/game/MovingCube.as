@@ -16,12 +16,16 @@ package com.mayhem.game
 	import away3d.materials.methods.SoftShadowMapMethod;
 	import away3d.materials.TextureMaterial;
 	import away3d.primitives.CubeGeometry;
+	import away3d.primitives.SphereGeometry;
 	import away3d.textures.BitmapCubeTexture;
 	import away3d.textures.BitmapTexture;
 	import away3d.textures.Texture2DBase;
+	import awayphysics.collision.dispatch.AWPCollisionObject;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.collision.shapes.AWPBvhTriangleMeshShape;
+	import awayphysics.collision.shapes.AWPSphereShape;
 	import awayphysics.data.AWPCollisionFlags;
+	import awayphysics.dynamics.AWPDynamicsWorld;
 	import awayphysics.dynamics.AWPRigidBody;
 	import awayphysics.dynamics.vehicle.AWPVehicleTuning;
 	import awayphysics.events.AWPEvent;
@@ -29,6 +33,7 @@ package com.mayhem.game
 	import com.mayhem.signals.GameSignals;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
@@ -50,33 +55,37 @@ package com.mayhem.game
 		public var body:AWPRigidBody;
 		public var mesh:Mesh
 		public var userInputs:Dictionary;
-		public var name:String;			
 		public var hasCollided:Boolean = false;
 		public var hasFelt:Boolean = false;
 		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
 		public var totalEnergy:int = GameData.VEHICLE_MAX_ENERGY;
 		public var spawnPosition:Vector3D = new Vector3D();
-		public var spawnIndex:uint;
 		public var powerupRefill:uint = 0;
 		public var isInvisible:Boolean = false;
 		
 		private var _collisionTimer:Timer;		
 		private var _invisibilityTimer:Timer;
+		private var _shieldTimer:Timer;
+		
 		
 		public var isInContactWithGound:Boolean = false;
 		
-		private var _user:GameUserVO;
+		public var user:GameUserVO;
 		
 		public var enableBehavior:Boolean = false;
 		
 		public var targetedBy:MovingCube;
 		
+		private var _shieldMesh:Mesh;
 		
-		public function MovingCube(user:GameUserVO) 
+		private var _shieldCollisionBody:AWPCollisionObject;
+		
+		public var infoPlane:Sprite3D;
+		
+		
+		public function MovingCube(pUser:GameUserVO) 
 		{
-			name = user.uid;
-			spawnIndex = user.spawnIndex;
-			_user = user;
+			user = pUser;			
 			userInputs = new Dictionary();
 			userInputs[GameController.MOVE_DOWN_KEY] = false;
 			userInputs[GameController.MOVE_LEFT_KEY] = false;
@@ -87,10 +96,14 @@ package com.mayhem.game
 			_collisionTimer.addEventListener(TimerEvent.TIMER,onTimer);
 			_collisionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete);
 			
+			
 			_invisibilityTimer = new Timer(GameData.INVISIBILITY_DURATION, 1);
 			_invisibilityTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onInvisibilityComplete);
+			
+			_shieldTimer = new Timer(GameData.SHIELD_DURATION, 1);
+			_shieldTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onShieldComplete);
 
-			mesh = ModelsManager.instance.allVehicleMeshes[_user.vehicleId].clone() as Mesh;
+			mesh = ModelsManager.instance.allVehicleMeshes[user.vehicleId].clone() as Mesh;
 			mesh.material = getMaterial();
 			mesh.material.bothSides = true;
 			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;	
@@ -116,18 +129,18 @@ package com.mayhem.game
 			body.addEventListener(AWPEvent.RAY_CAST, testRayCast);
 			
 			GameSignals.SET_USER_INFO_PLANE.add(setInfoPlane);
-			GameSignals.GET_USER_INFO_PLANE.dispatch(name);
+			GameSignals.GET_USER_INFO_PLANE.dispatch(user.uid);
 			
 		}
 		
 		private function setInfoPlane(userId:String,bitmapData:BitmapData):void 
 		{
-			if(userId == name){
+			if(userId == user.uid){
 				var mat:TextureMaterial = new TextureMaterial(new BitmapTexture(bitmapData));
 				mat.alphaThreshold = 0.25;
-				var sprite:Sprite3D = new Sprite3D(mat, 500, 500);
-				sprite.y = 200;
-				mesh.addChild(sprite)
+				infoPlane = new Sprite3D(mat, 500, 500);
+				infoPlane.y = 200;
+				mesh.addChild(infoPlane);
 			}
 		}
 		
@@ -136,8 +149,7 @@ package com.mayhem.game
 		}
 		//
 		public function getMaterial():TextureMaterial {
-			//var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getRandomVehicleTexture());
-			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getVehicleTextureByIds(_user.vehicleId, _user.textureId));
+			var bmp:BitmapTexture = new BitmapTexture(ModelsManager.instance.getVehicleTextureByIds(user.vehicleId, user.textureId));
 			var mat:TextureMaterial = new TextureMaterial(bmp);
 			mat.bothSides = true;
 			return mat;
@@ -149,6 +161,56 @@ package com.mayhem.game
 			isInvisible = false;
 		}
 		
+		private function onShieldCollision(event:AWPEvent):void {
+			
+			if (!event.collisionObject.skin)
+				return;
+			var targetVehicle:MovingCube = event.collisionObject.skin.extra as MovingCube
+			if (targetVehicle && targetVehicle != this) {
+				var force:Vector3D = targetVehicle.body.position.subtract(body.position);
+				force.normalize();
+				force.y = 0;
+				force.scaleBy(200);
+				targetVehicle.body.applyCentralImpulse(force);
+				//var explosion1:ExplosionData = new ExplosionData();
+				//explosion1.impulse = force1;
+				//explosion1.target = vehicle1.user.uid;
+			}
+		}
+		
+		private function onShieldComplete(event:TimerEvent):void {
+			mesh.removeEventListener(Object3DEvent.POSITION_CHANGED, onShieldFrame);
+			_shieldCollisionBody.removeEventListener(AWPEvent.COLLISION_ADDED, onShieldCollision);
+			AWPDynamicsWorld.getInstance().removeCollisionObject(_shieldCollisionBody);
+			mesh.parent.removeChild(_shieldMesh);
+			_shieldCollisionBody = null;
+			_shieldMesh = null;
+		}
+		
+		public function setShieldState():void {
+			if (_shieldMesh != null) {
+				_shieldTimer.stop();
+				_shieldTimer.reset();
+				_shieldTimer.start();
+				return;
+			}
+			ParticlesFactory.instance.getShieldParticles(mesh);
+			_shieldMesh = new Mesh(new SphereGeometry(500), new ColorMaterial(0x33ff00, 0.25));
+			mesh.parent.addChild(_shieldMesh);	
+			var shieldShape:AWPSphereShape = new AWPSphereShape(500);
+			_shieldCollisionBody = new AWPCollisionObject(shieldShape,_shieldMesh);
+			_shieldCollisionBody.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+			_shieldCollisionBody.addEventListener(AWPEvent.COLLISION_ADDED, onShieldCollision);
+			AWPDynamicsWorld.getInstance().addCollisionObject(_shieldCollisionBody);
+			mesh.addEventListener(Object3DEvent.POSITION_CHANGED, onShieldFrame);
+			_shieldTimer.start();
+		}
+		
+		private function onShieldFrame(e:Object3DEvent):void 
+		{
+			_shieldCollisionBody.position = body.position;
+		}
+		
 		
 		public function setInvisibilityState(alphaValue:Number):void {
 			TextureMaterial(mesh.material).alpha = alphaValue;
@@ -157,8 +219,19 @@ package com.mayhem.game
 			_invisibilityTimer.reset();
 			_invisibilityTimer.start();
 		}
+		
 		public function setExplosionState():void {
 			ParticlesFactory.instance.getExplosionParticles(body.position.clone());
+		}
+		
+		public function setBeamState():void {
+			ParticlesFactory.instance.getBeamParticles(mesh);
+		}
+		
+		public function setRandomMayhemState(targetPosition1:Vector3D,targetPosition2:Vector3D,targetPosition3:Vector3D):void {
+			ParticlesFactory.instance.getRandomRayParticles(body.position.clone(), targetPosition1);
+			ParticlesFactory.instance.getRandomRayParticles(body.position.clone(), targetPosition2);
+			ParticlesFactory.instance.getRandomRayParticles(body.position.clone(), targetPosition3);
 		}
 
 		private function onTimer(event:TimerEvent):void {
