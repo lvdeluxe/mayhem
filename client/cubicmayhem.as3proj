@@ -6,8 +6,8 @@
     <movie input="" />
     <movie path="bin\cubicmayhem.swf" />
     <movie fps="60" />
-    <movie width="1500" />
-    <movie height="768" />
+    <movie width="800" />
+    <movie height="600" />
     <movie version="11" />
     <movie minorVersion="5" />
     <movie platform="Flash Player" />

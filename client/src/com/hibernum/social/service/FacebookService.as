@@ -26,6 +26,7 @@ public class FacebookService {
 		addCallback('onInit', onInit);
 		addCallback('onGetOwnerInfos', onGetOwnerInfos);
 		addCallback('onGetOwnerFriends', onGetOwnerFriends);
+		addCallback('onGetUsetInfos', onGetUsetInfos);
 		addCallback('onDeleteAppRequest', onDeleteAppRequest);
 		addCallback('onRequest', onRequest);
 		addCallback('onStreamPublish', onStreamPublish);

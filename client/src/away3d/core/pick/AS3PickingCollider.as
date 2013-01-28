@@ -1,8 +1,8 @@
 package away3d.core.pick
 {
-	import away3d.core.base.*;
+	import flash.geom.Vector3D;
 	
-	import flash.geom.*;
+	import away3d.core.base.SubMesh;
 	
 	/**
 	 * Pure AS3 picking collider for entity objects. Used with the <code>RaycastPicker</code> picking object.
@@ -48,6 +48,8 @@ package away3d.core.pick
 			var vertexData:Vector.<Number> = subMesh.vertexData;
 			var uvData:Vector.<Number> = subMesh.UVData;
 			var collisionTriangleIndex:int = -1;
+			var bothSides:Boolean = subMesh.material.bothSides;
+			
 			numTriangles = subMesh.numTriangles;
 			
 			for( i = 0; i < numTriangles; ++i ) { // sweep all triangles
@@ -87,12 +89,11 @@ package away3d.core.pick
 
 				// -- plane intersection test --
 				nDotV = nx * rayDirection.x + ny * + rayDirection.y + nz * rayDirection.z; // rayDirection . normal
-				if( nDotV < 0 ) { // an intersection must exist
+				if( ( !bothSides && nDotV < 0.0 ) || ( bothSides && nDotV != 0.0 ) ) { // an intersection must exist
 					// find collision t
 					D = -( nx * p0x + ny * p0y + nz * p0z );
 					disToPlane = -( nx * rayPosition.x + ny * rayPosition.y + nz * rayPosition.z + D );
 					t = disToPlane / nDotV;
-					// TODO: can put t < shortestCollisionDistance here?
 					// find collision point
 					cx = rayPosition.x + t * rayDirection.x;
 					cy = rayPosition.y + t * rayDirection.y;
@@ -119,7 +120,6 @@ package away3d.core.pick
 						pickingCollisionVO.localPosition = new Vector3D( cx, cy, cz );
 						pickingCollisionVO.localNormal = new Vector3D( nx, ny, nz );
 						pickingCollisionVO.uv = getCollisionUV( indexData, uvData, index, v, w, u );
-						
 						// if not looking for best hit, first found will do...
 						if (!_findClosestCollision)
 							return true;

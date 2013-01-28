@@ -40,14 +40,14 @@ package com.hibernum.social.model
 		public function SocialModel(onUserLogged:Function, standalone:Boolean) 
 		{
 			GameSignals.GET_USER_INFO_PLANE.add(getUserImage);
-			MultiplayerSignals.USERS_IN_ROOM.add(addUser);
-			MultiplayerSignals.USER_JOINED.add(addUserFromJoin);
+			//MultiplayerSignals.USERS_IN_ROOM.add(addUser);
+			//MultiplayerSignals.USER_JOINED.add(addUserFromJoin);
 			SocialSignals.IMAGE_LOADED.add(createUserInfoBitmapData);
 			_isSocial = !standalone;
 			if (standalone) {
 				var socialUser:SocialUser = new SocialUser();
-				socialUser.social_id = "1234";// Math.round(Math.random() * 10000).toString();
-				//socialUser.social_id = Math.round(Math.random() * 10000).toString();
+				//socialUser.social_id = "1234";// Math.round(Math.random() * 10000).toString();
+				socialUser.social_id = Math.round(Math.random() * 10000).toString();
 				socialUser.name = getRandomName();
 				onUserLogged(socialUser);
 				_allUsers[socialUser.social_id] = socialUser;
@@ -61,67 +61,95 @@ package com.hibernum.social.model
 		private function getUserImage(userId:String):void 
 		{
 			var socialId:String = userId.split("_")[1];
-			var user:SocialUser = _allUsers[socialId];
-			if (user != null) {
-				if (_isSocial) {
-					var imgLoader:SocialImageLoader = new SocialImageLoader(userId);
-					
-				}else {
-					createUserInfoBitmapData(userId,new Bitmap(new BitmapData(50, 50, false, 0xcc0000)));
-				}
-			}else {
+			if (userId.split("_")[0] == "ai") {
 				createUserInfoBitmapData(userId,new Bitmap(new BitmapData(50, 50, false, 0x00cc00)));
+			}else{
+				if (_isSocial) {
+					if (_allUsers[socialId] != null) {
+						getImageAfterUserLoaded(_allUsers[socialId]);
+					}else{
+						FacebookService.getSocialUserInfo( { id:socialId }, getImageAfterUserLoaded, onFailure);
+					}
+				}else {
+					var userVo:SocialUser = new SocialUser();
+					userVo.social_id = userId.split("_")[1];
+					getImageAfterUserLoaded(userVo);
+				}
 			}
+		}
+		
+		private function getImageAfterUserLoaded(user:SocialUser):void {
+			_allUsers[user.social_id] = user;
+			//var socialId:String = userId.split("_")[1];
+			//var user:SocialUser = _allUsers[user.social_id];
+			//if (user != null) {
+			if (_isSocial) {
+				var imgLoader:SocialImageLoader = new SocialImageLoader("user_"+user.social_id);
+				
+			}else {
+				createUserInfoBitmapData(user.social_id,new Bitmap(new BitmapData(50, 50, false, 0xcc0000)));
+			}
+			//}else {
+				//createUserInfoBitmapData(userId,new Bitmap(new BitmapData(50, 50, false, 0x00cc00)));
+			//}
 		}
 		
 		private function createUserInfoBitmapData(userId:String,bmp:Bitmap):void {
-		var tf:TextField = new TextField();
-		tf.width = 128;
-		var tff:TextFormat = new TextFormat("Verdana", 14, 0x000000);
-		tff.align = 'center';
-		var socialId:String = userId.split("_")[1];
-		var user:SocialUser = _allUsers[socialId];
-		if (user != null) {
-			tf.text = user.name
-		}else {
-			tf.text = "CPU " + socialId;
-			tff.size = 24;
-		}
-		tf.setTextFormat(tff);
-		tf.y = 50
-		var sp:Sprite = new Sprite();
-		bmp.x = 39
-		//bmp.y = 18;
-		sp.addChild(bmp);
-		sp.addChild(tf);
-		var bmpData:BitmapData = new BitmapData(128, 128,true,0x00000000);
-		bmpData.draw(sp);
-		GameSignals.SET_USER_INFO_PLANE.dispatch(userId,bmpData);
-		}
-		
-		
-		
-		private function addUserFromJoin(userObject:GameUserVO):void {
-			if(_isSocial){
-				var userId:String = userObject.uid;
-				var socialId:String = userId.split("_")[1];
-				FacebookService.getOwnerInfo( { id:socialId }, onUserAdded, onFailure);				
-			}else {
-				
-			}
-		}
-		
-		private function addUser(userObject:Object):void {
-			var userId:String = userObject.user.uid;
+			var tf:TextField = new TextField();
+			tf.width = 128;
+			var tff:TextFormat = new TextFormat("Verdana", 14, 0x000000);
+			tff.align = 'center';
 			var socialId:String = userId.split("_")[1];
-			FacebookService.getOwnerInfo( { id:socialId }, onUserAdded, onFailure);
+			var user:SocialUser = _allUsers[socialId];
+			if (user != null) {
+				tf.text = user.name
+			}else {
+				tf.text = "CPU " + socialId;
+				tff.size = 24;
+			}
+			tf.setTextFormat(tff);
+			tf.y = 50
+			var sp:Sprite = new Sprite();
+			bmp.x = 39
+			//bmp.y = 18;
+			sp.addChild(bmp);
+			sp.addChild(tf);
+			var bmpData:BitmapData = new BitmapData(128, 128,true,0x00000000);
+			bmpData.draw(sp);
+			GameSignals.SET_USER_INFO_PLANE.dispatch(userId,bmpData);
 		}
 		
 		
-		private function onUserAdded(user:SocialUser):void {
-			trace(user.name);
-			_allUsers[user.social_id] = user;
-		}
+		
+		//private function addUserFromJoin(userObject:GameUserVO):void {
+			//if(_isSocial){
+				//var userId:String = userObject.uid;
+				//var socialId:String = userId.split("_")[1];
+				//FacebookService.getOwnerInfo( { id:socialId }, onUserAdded, onFailure);				
+			//}else {
+				//var userVo:SocialUser = new SocialUser();
+				//userVo.social_id = userId.split("_")[1];
+				//onUserAdded(userVo);
+			//}
+		//}
+		//
+		//private function addUser(userObject:Object):void {
+			//if(_isSocial){
+				//var userId:String = userObject.user.uid;
+				//var socialId:String = userId.split("_")[1];
+				//FacebookService.getOwnerInfo( { id:socialId }, onUserAdded, onFailure);
+			//}else {
+				//var userVo:SocialUser = new SocialUser();
+				//userVo.social_id = userId.split("_")[1];
+				//onUserAdded(userVo);
+			//}
+		//}
+		//
+		//
+		//private function onUserAdded(user:SocialUser):void {
+			//trace(user.name);
+			//_allUsers[user.social_id] = user;
+		//}
 		
 		private function getRandomName():String {
 			var str:String = "";

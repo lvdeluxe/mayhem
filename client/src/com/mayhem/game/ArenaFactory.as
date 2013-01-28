@@ -11,6 +11,8 @@ package com.mayhem.game
 	import away3d.primitives.CylinderGeometry;
 	import away3d.primitives.PlaneGeometry;
 	import away3d.tools.utils.Bounds;
+	import awayphysics.collision.dispatch.AWPCollisionObject;
+	import awayphysics.collision.dispatch.AWPCollisionWorld;
 	import awayphysics.collision.dispatch.AWPGhostObject;
 	import awayphysics.collision.shapes.AWPBvhTriangleMeshShape;
 	import awayphysics.collision.shapes.AWPCylinderShape;
@@ -51,6 +53,8 @@ package com.mayhem.game
 		public var allSpawnPoints:Vector.<Mesh> = new Vector.<Mesh>(Connector.MAX_USER_PER_ROOM);
 		private var _allDoors:Dictionary = new Dictionary();
 		public var mainBody:AWPRigidBody;
+		private var _rampRigidBody:AWPRigidBody;
+		private var _rampRotation:Number = 0;
 		
 		public function ArenaFactory() 
 		{
@@ -121,6 +125,13 @@ package com.mayhem.game
 			return -1;
 		}
 		
+		public function rotateRamp():void {
+			if (_rampRigidBody) {
+				_rampRotation+=0.2;
+				//_rampRigidBody.rotation = new Vector3D(0,_rampRotation,0);
+			}
+		}
+		
 		
 		private function meshIsBumper(meshName:String):Boolean {
 			for (var i:uint = 0 ; i < MeshMapping.ALL_BUMPERS.length ; i++ ) {
@@ -140,13 +151,13 @@ package com.mayhem.game
 					mesh.name = "start_" + index.toString();
 					mesh.extra = new Object();
 					mesh.extra.occupied = false;
-					if(index < allSpawnPoints.length	)
+					if(index < allSpawnPoints.length)
 						allSpawnPoints[index] = mesh;
 					
 				}else{
 					mesh.material.bothSides = true;
 					mesh.material.lightPicker = MaterialsFactory.mainLightPicker;
-					ColorMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
+					TextureMaterial(mesh.material).shadowMethod = new FilteredShadowMapMethod(MaterialsFactory.mainLightPicker.lights[0]);
 					
 					if (meshIsBumper(mesh.name)) {
 						var b:Bumper = new Bumper(mesh);
@@ -167,7 +178,7 @@ package com.mayhem.game
 								body.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
 								body.addEventListener(AWPEvent.COLLISION_ADDED, onRefillPowerUp);
 							}else  if (doorIndex != -1) {
-								ColorMaterial(mesh.material).alpha = .5;
+								
 								var m:ColorMaterial =  new ColorMaterial(0xcc0000,0);
 								var planeMesh:Mesh = new Mesh(new PlaneGeometry(200, 200), m);
 								planeMesh.name = "doorTrigger" + doorIndex.toString();
@@ -193,18 +204,22 @@ package com.mayhem.game
 							}
 						}
 					}
+					if (mesh.name == MeshMapping.RAMP) {
+						_rampRigidBody = body;		
+						//var rBody:AWPCollisionObject = new AWPCollisionObject();
+					}
 					if(body != null)_physicsWorld.addRigidBody(body);
 					_mainContainer.addChild(mesh);
 				}
 			}
 			
-			var dangerShape:AWPCylinderShape = new AWPCylinderShape(1800, 1000);
+			var dangerShape:AWPCylinderShape = new AWPCylinderShape(3000, 500);
 			var mat:ColorMaterial = new ColorMaterial(0xcc0000, 0.1);
 			mat.bothSides = true;
-			var dangerMesh:Mesh = new Mesh(new CylinderGeometry(1800, 1800, 1000, 16, 1, false, false), mat);
+			var dangerMesh:Mesh = new Mesh(new CylinderGeometry(3000, 3000, 500, 16, 1, false, false), mat);
 			dangerMesh.castsShadows = false;
 			var dangerRigidBody:AWPRigidBody = new AWPRigidBody(dangerShape, dangerMesh);
-			dangerRigidBody.y = 500;
+			dangerRigidBody.y = 250;
 			dangerRigidBody.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
 			_physicsWorld.addRigidBody(dangerRigidBody);
 			_mainContainer.addChild(dangerMesh);
@@ -247,8 +262,8 @@ package com.mayhem.game
 			if(event.collisionObject.skin){
 				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
 				if (vehicle) {
-					GameSignals.DANGER_ZONE_COLLISION.dispatch(vehicle);
-					
+					if(!vehicle.hasShield)
+						GameSignals.DANGER_ZONE_COLLISION.dispatch(vehicle);					
 				}
 			}
 		}

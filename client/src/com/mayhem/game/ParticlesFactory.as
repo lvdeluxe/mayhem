@@ -115,7 +115,6 @@ package com.mayhem.game
 		public function getBeamParticles(target:Mesh):void {
 			var effect:EffectGroup = _randomRayFactory.createNeedStuff() as EffectGroup;
 			_runningParticles[effect] = {particleEffect:effect, factory:_randomRayFactory};
-			//effect.position = position;
 			target.addChild(effect);
 			effect.start();
 		}

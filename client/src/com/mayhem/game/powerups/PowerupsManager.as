@@ -1,10 +1,12 @@
 package com.mayhem.game.powerups 
 {
+	import away3d.bounds.BoundingSphere;
 	import away3d.containers.Scene3D;
 	import away3d.core.pick.PickingCollisionVO;
 	import away3d.core.pick.RaycastPicker;
 	import away3d.entities.Mesh;
 	import away3d.tools.utils.Ray;
+	import awayphysics.collision.dispatch.AWPRay;
 	import awayphysics.events.AWPEvent;
 	import com.mayhem.game.GameController;
 	import com.mayhem.game.GameData;
@@ -54,6 +56,13 @@ package com.mayhem.game.powerups
 						break;
 					case PowerUpMessage.POWERUP_SHIELD:
 						_gameController.getVehicleById(mess.triggerdBy).setShieldState();
+						break;
+					case PowerUpMessage.POWERUP_BEAM:
+						for each(var eData3:ExplosionData in mess.targets) {
+							var cube3:MovingCube = _gameController.getVehicleById(eData3.target);
+							cube3.body.applyCentralImpulse(eData3.impulse);
+						}
+						_gameController.getVehicleById(mess.triggerdBy).setBeamState();
 						break;
 					case PowerUpMessage.POWERUP_RANDOM_MAYHEM:
 						for each(var eData2:ExplosionData in mess.targets) {
@@ -166,15 +175,30 @@ package com.mayhem.game.powerups
 		
 		private function triggerBeam(pCube:MovingCube):void {
 			pCube.setBeamState();
-			//var r:Ray = new Ray();
-			//r.orig = pCube.body.position;
-			//r.dir = pCube.body.front;
-			//pCube.mesh.
-			var r2:RaycastPicker = new RaycastPicker(false);
-			var collisionData:PickingCollisionVO = r2.getSceneCollision(pCube.body.position, pCube.body.front, pCube.mesh.parent as Scene3D);
-			trace(collisionData);
+			var r:Ray = new Ray();
+			var message:PowerUpMessage = new PowerUpMessage();
+			message.triggerdBy = pCube.user.uid;
+			message.powerUpId = PowerUpMessage.POWERUP_BEAM;
+			message.targets = new Vector.<ExplosionData>();
 			
+			for each(var vehicle:MovingCube in _gameController.allPlayers) {
+				if(pCube != vehicle){
+					var sphere:BoundingSphere
+					var intersect:Boolean = r.intersectsSphere(pCube.body.position, pCube.body.front, vehicle.body.position, 300);
+					if (intersect) {
+						var force:Vector3D = pCube.body.front.clone();
+						force.scaleBy(200);
+						vehicle.body.applyCentralImpulse(force);
+						var explosion:ExplosionData = new ExplosionData();
+						explosion.impulse = force;
+						explosion.target = vehicle.user.uid;
+						message.targets.push(explosion);
+					}
+				}
+			}			
+			UserInputSignals.POWERUP_TRIGGER.dispatch(message);
 		}
+		
 		
 		private function triggerExplosion(pCube:MovingCube):void {
 			pCube.powerupRefill = 0;

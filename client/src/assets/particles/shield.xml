@@ -16,7 +16,7 @@
       </output>
     </generater>
     <vars>
-      <editor clazz="particleEditor.effect.param.vars::RandomGlobeVarEditor" varName="rndGlobe" innerRadius="400" outerRadius="500" center="0,0,0"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomGlobeVarEditor" varName="rndGlobe" innerRadius="550" outerRadius="600" center="0,0,0"/>
       <editor clazz="particleEditor.effect.param.vars::ConstNumberVarEditor" varName="start" number="0"/>
       <editor clazz="particleEditor.effect.param.vars::RandomNumberVarEditor" varName="rnd" min="0" max="5"/>
       <exception comment="this if for time action">

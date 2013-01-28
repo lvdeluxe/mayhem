@@ -74,7 +74,7 @@ package com.mayhem.multiplayer
 			//MultiplayerSignals.CONNECTED.dispatch();
 			//uncomment this line for local server 
 			GameSignals.SESSION_START.add(onGameStart);
-			_client.multiplayer.developmentServer = "localhost:8184";
+			//_client.multiplayer.developmentServer = "localhost:8184";
 			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError)
 			//_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			//setSignals();
@@ -84,8 +84,9 @@ package com.mayhem.multiplayer
 			trace("Game starts", vId, tId);
 			_vehicle_id = vId;
 			_texture_id = tId;
-			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			setSignals();
+			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
+			
 		}
 		
 		private function onUserDataLoaded(dbObject:DatabaseObject):void {

@@ -132,6 +132,7 @@ package com.mayhem.game
 					}
 				}
 			}
+			ArenaFactory.instance.rotateRamp();
 			var dt:Number = getElapsedTime();
 			moveObjects(dt);
 			ParticlesFactory.instance.checkRemoveParticles();
@@ -152,8 +153,8 @@ package com.mayhem.game
 					if (!vehicle.isInContactWithGound) {
 						vehicle.body.linearDamping = 0;
 						vehicle.body.angularDamping = 0;
-						vehicle.body.mass = 5;
-						vehicle.body.gravity = new Vector3D(0,-500,0);
+						vehicle.body.mass = 10;
+						vehicle.body.gravity = new Vector3D(0,-750,0);
 					}else {
 						vehicle.body.linearDamping = GameData.LIN_DAMPING;
 						vehicle.body.angularDamping = GameData.ANG_DAMPING;
@@ -298,8 +299,8 @@ package com.mayhem.game
 		}
 		
 		private function setAIBehavior():void {
-			//for each(var AICube:MovingAICube in _allAICubes) 
-				//if(AICube.enableBehavior)chaseTarget(AICube, AICube.currentTarget);
+			for each(var AICube:MovingAICube in _allAICubes) 
+				if(AICube.enableBehavior)chaseTarget(AICube, AICube.currentTarget);
 		}
 		
 		private function setUpdateTimer():void{			
@@ -569,7 +570,9 @@ package com.mayhem.game
 		
 		private function onUserUpdateState(uid:String, rBodyObject:LightRigidBody):void {
 			var cube:MovingCube = _allPlayers[uid]	
-			if (!cube.user.isMainUser) {
+			trace(uid)
+			trace(cube)
+			if (cube && !cube.user.isMainUser) {
 				updateCube(cube,rBodyObject);
 			}
 		}

@@ -82,6 +82,8 @@ package com.mayhem.game
 		
 		public var infoPlane:Sprite3D;
 		
+		public var hasShield:Boolean = false;
+		
 		
 		public function MovingCube(pUser:GameUserVO) 
 		{
@@ -120,8 +122,8 @@ package com.mayhem.game
 			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
 			body.friction = GameData.VEHICLE_FRICTION;
 			body.restitution = GameData.VEHICLE_RESTITUTION;
-			body.ccdSweptSphereRadius = 1;
-			body.ccdMotionThreshold = 1;
+			body.ccdSweptSphereRadius = 200;
+			body.ccdMotionThreshold = 10;
 			body.linearDamping = GameData.LIN_DAMPING;
 			body.angularDamping = GameData.ANG_DAMPING;
 			body.linearFactor = new Vector3D(1,GameData.VEHICLE_LIN_FACTOR,1);
@@ -145,6 +147,7 @@ package com.mayhem.game
 		}
 		
 		private function testRayCast(event:AWPEvent):void {
+			//event.collisionObject.
 			isInContactWithGound = true;
 		}
 		//
@@ -183,11 +186,13 @@ package com.mayhem.game
 			_shieldCollisionBody.removeEventListener(AWPEvent.COLLISION_ADDED, onShieldCollision);
 			AWPDynamicsWorld.getInstance().removeCollisionObject(_shieldCollisionBody);
 			mesh.parent.removeChild(_shieldMesh);
+			hasShield = false;
 			_shieldCollisionBody = null;
 			_shieldMesh = null;
 		}
 		
 		public function setShieldState():void {
+			hasShield = true;
 			if (_shieldMesh != null) {
 				_shieldTimer.stop();
 				_shieldTimer.reset();
@@ -195,9 +200,9 @@ package com.mayhem.game
 				return;
 			}
 			ParticlesFactory.instance.getShieldParticles(mesh);
-			_shieldMesh = new Mesh(new SphereGeometry(500), new ColorMaterial(0x33ff00, 0.25));
+			_shieldMesh = new Mesh(new SphereGeometry(600), new ColorMaterial(0x33ff00, 0.25));
 			mesh.parent.addChild(_shieldMesh);	
-			var shieldShape:AWPSphereShape = new AWPSphereShape(500);
+			var shieldShape:AWPSphereShape = new AWPSphereShape(600);
 			_shieldCollisionBody = new AWPCollisionObject(shieldShape,_shieldMesh);
 			_shieldCollisionBody.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
 			_shieldCollisionBody.addEventListener(AWPEvent.COLLISION_ADDED, onShieldCollision);

@@ -30,7 +30,7 @@ package com.mayhem.game
 		public var allArenaMeshes:Vector.<Mesh> = new Vector.<Mesh>();
 		public var allVehicleMeshes:Vector.<Mesh> = new Vector.<Mesh>();
 		
-		[Embed(source = "/assets/Arena4.awd", mimeType = "application/octet-stream")]
+		[Embed(source = "/assets/Arena5.awd", mimeType = "application/octet-stream")]
 		private var ArenaClass:Class;
 		[Embed(source = "/assets/vehicles/vehicle_0/Vehicle.awd", mimeType = "application/octet-stream")]
 		private var VehicleClass_0:Class;
