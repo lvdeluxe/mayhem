@@ -9,7 +9,8 @@ package com.mayhem.game
 	import flash.geom.Vector3D;
 	import com.mayhem.signals.MultiplayerSignals;
 	import com.mayhem.signals.GameSignals;
-	//import away3d.filters.RadialBlurFilter3D;
+	import away3d.filters.RadialBlurFilter3D;
+	import com.mayhem.signals.UISignals;
 	
 	/**
 	 * ...
@@ -18,11 +19,14 @@ package com.mayhem.game
 	public class ThreeDeeController 
 	{
 		
-		private var _view3D:View3D;	
+		private var _view3D:View3D;
+		/*private var _first_view3D:View3D;
+		private var _second_view3D:View3D;*/
 		private var _light:DirectionalLight;
 		private var _stage:Stage;
 		private var _gameController:GameController;
 		private var _vehicleSelector:VehicleSelector;
+		private var _cameraToggleBool:Boolean;
 	
 		public function ThreeDeeController(stage:Stage, proxy:Stage3DProxy) 
 		{
@@ -30,13 +34,33 @@ package com.mayhem.game
 			MultiplayerSignals.USER_LOADED.add(onUserLoaded);
 			GameSignals.REMOVE_MENU.add(startTheGame);
 			setView(stage,proxy);
-			setLights();			
+			/*setFirstView(stage,proxy);
+			setSecondView(stage,proxy);*/
+			setLights(_view3D);
+			/*setLights(_first_view3D);
+			setLights(_second_view3D);	*/		
 			MaterialsFactory.initialize([_light]);			
 			var stats:AwayStats = new AwayStats(_view3D)
 			stage.addChild(stats);			
 			ParticlesFactory.instance.initialize(_view3D.scene);
 			CameraManager.instance.initialize(_view3D.camera);
+			UISignals.CAMERA_TOGGLE.add(changeCameraView);
 		}	
+		
+		private function setNewCamera(temp_view3D:View3D):void{
+			ParticlesFactory.instance.initialize(temp_view3D.scene);
+			CameraManager.instance.initialize(temp_view3D.camera);
+		}
+		
+		private function changeCameraView(bool:Boolean):void{
+			/*trace("received msg from ui: " + bool);
+			_cameraToggleBool = bool;
+			if(bool){
+				setNewCamera(_view3D);
+			}else{
+				setNewCamera(_first_view3D);
+			}*/
+		}
 		
 		private function onUserLoaded(user:GameUserVO):void {
 			_vehicleSelector = new VehicleSelector(_view3D.scene, user.vehicleId, user.textureId);
@@ -57,10 +81,32 @@ package com.mayhem.game
 			_view3D.camera.z = -5000;
 			_view3D.camera.rotationX = 45;
 			_view3D.camera.lens.far = 35000;
-			//_view3D.filters3d = [ new RadialBlurFilter3D(2) ];
 		}
 		
-		private function setLights():void{			
+		/*private function setFirstView(pStage:Stage, pProxy:Stage3DProxy):void{						
+				_first_view3D = new View3D();
+				_first_view3D.stage3DProxy = pProxy;
+				_first_view3D.shareContext = true;
+				pStage.addChild(_first_view3D);			
+				_first_view3D.camera.y = 2000
+				_first_view3D.camera.z = -5000;
+				_first_view3D.camera.rotationX = 45;
+				_first_view3D.camera.lens.far = 35000;
+			}
+			
+			private function setSecondView(pStage:Stage, pProxy:Stage3DProxy):void{						
+				_second_view3D = new View3D();
+				_second_view3D.stage3DProxy = pProxy;
+				_second_view3D.shareContext = true;
+				pStage.addChild(_second_view3D);			
+				_second_view3D.camera.y = 2000
+				_second_view3D.camera.z = -5000;
+				_second_view3D.camera.rotationX = 45;
+				_second_view3D.camera.lens.far = 35000;
+				_second_view3D.filters3d = [ new RadialBlurFilter3D(2) ];
+			}*/
+		
+		private function setLights(temp_view3D:View3D):void{			
 			_light = new DirectionalLight();
 			_light.diffuse = 1;
 			_light.color = 0xFFFFFF;
@@ -71,7 +117,7 @@ package com.mayhem.game
 			_light.shaderPickingDetails = true;
 			_light.direction = new Vector3D(-0.07848641852943786, -0.9962904287522878, -0.035288293852277955);
 			_light.name = "pointlight_0";
-			_view3D.scene.addChild(_light);
+			temp_view3D.scene.addChild(_light);
 		}	
 		
 		public function render():void {	
@@ -79,12 +125,17 @@ package com.mayhem.game
 				_vehicleSelector.doStuff();
 			}
 			if(_gameController)_gameController.renderGame();
-			_view3D.render();
+			/*if(_cameraToggleBool)*/_view3D.render();
+			//if(!_cameraToggleBool)_first_view3D.render();
 			if(_gameController)_gameController.checkVehicleCollision();
 		}
 		
 		public function get renderer():View3D {
+			//if(_cameraToggleBool){
 			return _view3D;
+			/*}else{
+				return _first_view3D;
+			}*/
 		}		
 	}
 }

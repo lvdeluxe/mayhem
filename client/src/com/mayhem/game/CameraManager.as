@@ -32,6 +32,10 @@ package com.mayhem.game
 			_camera.lens.far = 10000
 		}
 		
+		public function setCamera(pCam:Camera3D):void{
+			_camera = pCam;
+		}
+		
 		public function setCameraPosition(position:Vector3D):void {
 			var pos:Vector3D = position.clone();
 			pos.z -= 1500;

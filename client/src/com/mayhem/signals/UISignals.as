@@ -21,7 +21,8 @@ package com.mayhem.signals
 		public static var SET_VEHICLE:Signal = new Signal();
 		public static var SHOW_COUNTDOWN:Signal = new Signal();
 		public static var REMOVE_STATS:Signal = new Signal();
-		
+		public static var CAMERA_TOGGLE:Signal = new Signal();
+				
 		public function UISignals() 
 		{
 			

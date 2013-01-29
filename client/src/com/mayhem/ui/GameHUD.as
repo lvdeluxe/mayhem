@@ -8,11 +8,13 @@ package com.mayhem.ui
 	import com.mayhem.game.GameStats;
 	import feathers.controls.Label;
 	import feathers.controls.ProgressBar;
+	import feathers.controls.ToggleSwitch;
 	import feathers.controls.Screen;
 	import feathers.text.BitmapFontTextFormat;
 	import starling.core.Starling;	
 	import flash.utils.setTimeout;
 	import starling.filters.BlurFilter;
+	import starling.events.Event;
 	/**
 	 * ...
 	 * @author availlant
@@ -27,6 +29,8 @@ package com.mayhem.ui
 		private var _levelTextField:Label;
 		private var _statusTextField:Label;
 		private var _timerTextField:Label;
+		private var _cameraToggleLabel:Label;
+		private var _cameraToggle:ToggleSwitch;
 		
 		private  var _totalTimeString:String;
 		private var _endSessionScreen:EndSessionScreen;
@@ -126,9 +130,11 @@ package com.mayhem.ui
 			_timerTextField.width = _powerUpBar.width - 20;
 			_timerTextField.x = _powerUpBar.x + 10;
 			_timerTextField.y = _powerUpBar.y + _powerUpBar.height + 5;
-			_timerTextField.textRendererProperties.textFormat = tf;
+			_timerTextField.textRendererProperties.textFormat = tf;		
 			
-			
+			_cameraToggle.validate();
+			_cameraToggle.x	= Starling.current.nativeStage.width - _cameraToggle.width - 10;
+			_cameraToggle.y = _powerUpLabel.y + _powerUpLabel.height + 5;
 		}
 		
 		private function createUI():void {
@@ -177,9 +183,20 @@ package com.mayhem.ui
 			_timerTextField.text = 'Time';
 			addChild(_timerTextField);
 			
+			_cameraToggle = new ToggleSwitch();
+			_cameraToggle.isSelected = true;
+			_cameraToggle.addEventListener(Event.CHANGE, cameraToggle_changeHandler)
+			//addChild(_cameraToggle);
+			
 			_endSessionScreen = new EndSessionScreen();
 			addChild(_endSessionScreen);
 			_endSessionScreen.visible = false;
+		}
+		
+		private function cameraToggle_changeHandler(event:Event):void{
+			var toggle:ToggleSwitch = ToggleSwitch(event.currentTarget);
+		    trace( "toggle.isSelected changed:", toggle.isSelected );
+			UISignals.CAMERA_TOGGLE.dispatch(toggle.isSelected);
 		}
 		
 		private function updateUserInfo(igc:uint, xp:int):void {
