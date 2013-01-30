@@ -204,7 +204,8 @@ package com.mayhem.game.powerups
 			pCube.powerupRefill = 0;
 			UISignals.OWNER_POWERUP_FILL.dispatch(pCube.powerupRefill);
 			pCube.setExplosionState();
-			
+			var message:PowerUpMessage = new PowerUpMessage();
+			message.targets = new Vector.<ExplosionData>();
 			var radius:Number = 2001;
 			var maxForce:Number = GameData.EXPLOSION_FORCE;
 			for each(var cube:MovingCube in _gameController.allPlayers) {
@@ -221,9 +222,7 @@ package com.mayhem.game.powerups
 					data.impulse = forceVector;
 					message.targets.push(data);
 				}
-			}
-			
-			var message:PowerUpMessage = new PowerUpMessage();
+			}			
 			message.triggerdBy = pCube.user.uid;
 			message.powerUpId = PowerUpMessage.POWERUP_EXPLOSION;
 			UserInputSignals.POWERUP_TRIGGER.dispatch(message);

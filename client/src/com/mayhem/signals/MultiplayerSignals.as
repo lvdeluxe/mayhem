@@ -19,6 +19,8 @@ package com.mayhem.signals
 		public static var SESSION_RESTARTED:Signal = new Signal();
 		public static var UPDATE_AI_TARGET:Signal = new Signal();
 		public static var AI_TARGET_UPDATED:Signal = new Signal();
+		public static var VEHICLE_DIE:Signal = new Signal();
+		public static var VEHICLE_DIED:Signal = new Signal();
 		
 		public function MultiplayerSignals() 
 		{

@@ -89,6 +89,9 @@ package com.mayhem.game
 		[Embed(source = "/assets/cubemap/skybox_bottom.jpg")]
 		private var cubemap_negY:Class;
 		
+		[Embed(source = "/assets/skullface.jpg")]
+		public var skullFace:Class;
+		
 		private var numVehicles:uint = 0;
 		public var maxVehicles:uint = 3;
 		

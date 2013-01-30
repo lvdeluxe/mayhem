@@ -7,6 +7,7 @@ package com.hibernum.social.model
 	
 	import com.hibernum.social.controller.SocialImageLoader;
 	import com.hibernum.social.service.FacebookService;
+	import com.mayhem.game.ModelsManager;
 	import com.mayhem.multiplayer.GameUserVO;
 	import com.mayhem.signals.GameSignals;
 	import com.mayhem.signals.MultiplayerSignals;
@@ -40,8 +41,6 @@ package com.hibernum.social.model
 		public function SocialModel(onUserLogged:Function, standalone:Boolean) 
 		{
 			GameSignals.GET_USER_INFO_PLANE.add(getUserImage);
-			//MultiplayerSignals.USERS_IN_ROOM.add(addUser);
-			//MultiplayerSignals.USER_JOINED.add(addUserFromJoin);
 			SocialSignals.IMAGE_LOADED.add(createUserInfoBitmapData);
 			_isSocial = !standalone;
 			if (standalone) {
@@ -62,17 +61,25 @@ package com.hibernum.social.model
 		{
 			var socialId:String = userId.split("_")[1];
 			if (userId.split("_")[0] == "ai") {
-				createUserInfoBitmapData(userId,new Bitmap(new BitmapData(50, 50, false, 0x00cc00)));
+				createUserInfoBitmapData(userId,new ModelsManager.instance.skullFace());
 			}else{
 				if (_isSocial) {
 					if (_allUsers[socialId] != null) {
+						//main user
 						getImageAfterUserLoaded(_allUsers[socialId]);
 					}else{
 						FacebookService.getSocialUserInfo( { id:socialId }, getImageAfterUserLoaded, onFailure);
 					}
 				}else {
-					var userVo:SocialUser = new SocialUser();
-					userVo.social_id = userId.split("_")[1];
+					var userVo:SocialUser;
+					if (_allUsers[socialId] != null) {
+						userVo = _allUsers[socialId]
+						
+					}else {
+						userVo = new SocialUser();
+						userVo.name = getRandomName();
+						userVo.social_id = userId.split("_")[1];
+					}
 					getImageAfterUserLoaded(userVo);
 				}
 			}
@@ -80,18 +87,12 @@ package com.hibernum.social.model
 		
 		private function getImageAfterUserLoaded(user:SocialUser):void {
 			_allUsers[user.social_id] = user;
-			//var socialId:String = userId.split("_")[1];
-			//var user:SocialUser = _allUsers[user.social_id];
-			//if (user != null) {
 			if (_isSocial) {
 				var imgLoader:SocialImageLoader = new SocialImageLoader("user_"+user.social_id);
 				
 			}else {
-				createUserInfoBitmapData(user.social_id,new Bitmap(new BitmapData(50, 50, false, 0xcc0000)));
+				createUserInfoBitmapData("user_"+user.social_id,new Bitmap(new BitmapData(50, 50, false, 0xcc0000)));
 			}
-			//}else {
-				//createUserInfoBitmapData(userId,new Bitmap(new BitmapData(50, 50, false, 0x00cc00)));
-			//}
 		}
 		
 		private function createUserInfoBitmapData(userId:String,bmp:Bitmap):void {

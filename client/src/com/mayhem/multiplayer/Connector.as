@@ -129,6 +129,13 @@ package com.mayhem.multiplayer
 			GameSignals.SESSION_PAUSE.add(onSessionPause);
 			GameSignals.SESSION_RESTART.add(onSessionRestart);
 			MultiplayerSignals.UPDATE_AI_TARGET.add(setAITarget);
+			MultiplayerSignals.VEHICLE_DIE.add(setVehicleDie);
+		}
+		
+		private function setVehicleDie(vehicleId:String):void {
+			var mess:Message = _mainConnection.createMessage("SetVehicleDie");
+			mess.add(vehicleId);
+			_mainConnection.sendMessage(mess);
 		}
 		
 		private function setAITarget(chaserId:String, targetId:String):void {
@@ -330,6 +337,10 @@ package com.mayhem.multiplayer
 			MultiplayerSignals.AI_TARGET_UPDATED.dispatch(chaser_id,target_id);
 		}
 		
+		private function onVehicleDied(m:Message, deadVehicleId:String):void {
+			MultiplayerSignals.VEHICLE_DIED.dispatch(deadVehicleId);
+		}
+		
 		private function handleJoin(connection:Connection):void {
 			_mainConnection = connection;
 			trace("Sucessfully connected to the multiplayer server");
@@ -346,6 +357,7 @@ package com.mayhem.multiplayer
 			_mainConnection.addMessageHandler("UserSessionExpired", userSessionExpired);
 			_mainConnection.addMessageHandler("UserSessionRestarted", userSessionRestarted);
 			_mainConnection.addMessageHandler("AITargetUpdated", onAITargetUpdated);
+			_mainConnection.addMessageHandler("VehicleDied", onVehicleDied);
 		}
 		
 		private function handleDisconnect():void{

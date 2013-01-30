@@ -19,7 +19,7 @@ package com.mayhem.game
 		public static const ANG_DAMPING:Number = 0.999;
 		public static const LIN_DAMPING:Number = 0.99;
 		
-		public static const GAME_SESSION_DURATION:Number = 600000;
+		public static const GAME_SESSION_DURATION:Number = 300000;
 		
 		public static var VEHICLE_LIN_VELOCITY:Number = 15000;
 		public static var VEHICLE_ANG_VELOCITY:Number = 80;

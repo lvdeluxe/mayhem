@@ -132,6 +132,9 @@ namespace MyGame {
                 case "PlayerStoppedMoving":
                     Broadcast("PlayerHasStoppedMoving", player.ConnectUserId, message.GetUInt(0), message.GetDouble(1));
                     break;
+                case "SetVehicleDie":
+                    Broadcast("VehicleDied", message.GetString(0));
+                    break;
                 case "AIUpdateState":
                     Byte[] AIByteArray = message.GetByteArray(0);
                     Broadcast("AIHasStateUpdate", AIByteArray);

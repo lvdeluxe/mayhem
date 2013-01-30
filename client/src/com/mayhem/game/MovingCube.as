@@ -122,8 +122,8 @@ package com.mayhem.game
 			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
 			body.friction = GameData.VEHICLE_FRICTION;
 			body.restitution = GameData.VEHICLE_RESTITUTION;
-			body.ccdSweptSphereRadius = 200;
-			body.ccdMotionThreshold = 10;
+			body.ccdSweptSphereRadius = 0.5;
+			body.ccdMotionThreshold = 1;
 			body.linearDamping = GameData.LIN_DAMPING;
 			body.angularDamping = GameData.ANG_DAMPING;
 			body.linearFactor = new Vector3D(1,GameData.VEHICLE_LIN_FACTOR,1);
