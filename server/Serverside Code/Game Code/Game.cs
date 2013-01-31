@@ -13,6 +13,7 @@ namespace MyGame {
         public uint VehicleId;
         public uint TextureId;
         public Byte[] RigidBodyDescription;
+        public bool IsAIMaster;
 	}
 
 	[RoomType("OfficeMayhem")]
@@ -21,6 +22,7 @@ namespace MyGame {
         private Dictionary<string, Player> allUsers;
         private Dictionary<string, Player> allAICubes;
         private int maxPerRoom = 12;
+        private int _numUserJoined = 0;
 
 
 		// This method is called when an instance of your the game is created
@@ -65,18 +67,8 @@ namespace MyGame {
                 Console.WriteLine("User already in the game");
                 return;
             }
-
             PlayerIO.BigDB.Load("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo)
             {
-                //if (!userInfo.Contains("username"))
-                //{
-                //    //Empty object, initialize it
-                //    userInfo.Set("username", player.JoinData["name"]);
-                //    userInfo.Set("xp", 0);
-                    
-                //}else{
-                //    player.XP = userInfo.GetInt("xp");
-                //}
                 userInfo.Set("vehicleId", player.JoinData["vehicleId"]);
                 userInfo.Set("textureId", player.JoinData["textureId"]);
                 userInfo.Save();
@@ -91,10 +83,12 @@ namespace MyGame {
                 allAICubes.Remove("ai_" + player.UserIndex.ToString());
                 player.PayVault.Refresh(delegate()
                 {
-                    Broadcast("UserJoined", player.ConnectUserId, player.UserIndex, player.XP, player.PayVault.Coins, player.VehicleId, player.TextureId);
+                    player.IsAIMaster = _numUserJoined == 0;
+                    Console.WriteLine("player.IsAIMaster = " + player.IsAIMaster);
+                    Broadcast("UserJoined", player.ConnectUserId, player.UserIndex, player.XP, player.PayVault.Coins, player.VehicleId, player.TextureId, player.IsAIMaster);
+                    _numUserJoined++;
                 });
-            });    
-            
+            });           
 		}
 
         private Player GetAICube(int index)
@@ -106,11 +100,29 @@ namespace MyGame {
         }
 
 		public override void UserLeft(Player player) {
+            _numUserJoined--;
+            bool isAIMaster = player.IsAIMaster;
             allUsers.Remove(player.ConnectUserId);
             allAICubes.Add("ai_" + player.UserIndex.ToString(), GetAICube(player.UserIndex));
             Console.WriteLine("userId left: " + player.ConnectUserId);
-            Broadcast("UserLeft", player.ConnectUserId, player.UserIndex);
+            string newMaster = "";
+            if (isAIMaster)
+            {
+                newMaster = getNewAIMaster();
+            }
+            Broadcast("UserLeft", player.ConnectUserId, player.UserIndex, newMaster);
 		}
+
+        private string getNewAIMaster()
+        {
+            foreach (KeyValuePair<string, Player> plyr in allUsers){
+                if(!plyr.Value.IsAIMaster){
+                    plyr.Value.IsAIMaster = true;
+                    return plyr.Value.ConnectUserId;
+                }
+            }
+            return "";
+        }
 
 		public override void GotMessage(Player player, Message message) {
             switch(message.Type) {
@@ -123,7 +135,6 @@ namespace MyGame {
                             msg.Add(plyr.Value.ConnectUserId);
                             msg.Add(plyr.Value.VehicleId);
                             msg.Add(plyr.Value.TextureId);
-                            Console.WriteLine(plyr.Value.TextureId);
                             msg.Add(plyr.Value.RigidBodyDescription);
                         }
                     }

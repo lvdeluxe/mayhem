@@ -239,11 +239,11 @@ package com.mayhem.game
 		private function onDoorPassed(event:AWPEvent):void {
 			if(event.collisionObject.skin){
 				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
-				if (vehicle && event.currentTarget.skin.extra.index == vehicle.user.spawnIndex) {
+				if (vehicle && event.currentTarget.skin.extra.index == vehicle.user.spawnIndex && !vehicle.enableBehavior) {
 					var doorBody:AWPRigidBody = event.currentTarget.skin.extra.door;
+					vehicle.enableBehavior = true;
 					setTimeout(function():void {
 						doorBody.y = 193.81425380706787;
-						vehicle.enableBehavior = true;
 						if (vehicle is MovingAICube) {
 							GameSignals.SET_AI_TARGET.dispatch(vehicle);
 						}

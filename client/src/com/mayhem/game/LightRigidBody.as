@@ -10,14 +10,10 @@ package com.mayhem.game
 	public class LightRigidBody 
 	{
 		
-		//public var linearDamping:Number;
-		//public var angularDamping:Number;
 		public var linearVelocity:Vector3D;
 		public var angularVelocity:Vector3D;
 		public var position:Vector3D;
 		public var rotation:Vector3D;
-		//public var totalForce:Vector3D;
-		//public var totalTorque:Vector3D;
 		
 		public function LightRigidBody() 
 		{

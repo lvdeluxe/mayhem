@@ -14,6 +14,7 @@ package com.mayhem.multiplayer
 		public var isMainUser:Boolean;
 		public var vehicleId:uint;
 		public var textureId:uint;
+		public var isAIMaster:Boolean;
 		
 		public function GameUserVO(pId:String) 
 		{

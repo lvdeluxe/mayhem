@@ -22,6 +22,7 @@ package com.mayhem.ui
 		private var nextButton:Button;
 		private var _vehicleId:uint;
 		private var _textureId:uint;
+		private var _buttonGroup:ButtonGroup
 		
 		
 		public function SelectMenu(vId:uint, tId:uint) 
@@ -39,17 +40,24 @@ package com.mayhem.ui
 		}
 		
 		public function cleanup():void {
+			//_startButton.removeEventListener(Event.TRIGGERED, startGame);
+			//removeChild(_startButton);
+			//prevButton.removeEventListener( Event.TRIGGERED, prevVehicle );
+			//nextButton.removeEventListener( Event.TRIGGERED, nextVehicle );
+			//removeChild(prevButton);
+			//removeChild(nextButton);
+		}
+		
+		
+		private function startGame(event:Event):void {
+			GameSignals.SESSION_START.dispatch(_vehicleId, _textureId);
 			_startButton.removeEventListener(Event.TRIGGERED, startGame);
 			removeChild(_startButton);
 			prevButton.removeEventListener( Event.TRIGGERED, prevVehicle );
 			nextButton.removeEventListener( Event.TRIGGERED, nextVehicle );
 			removeChild(prevButton);
 			removeChild(nextButton);
-		}
-		
-		
-		private function startGame(event:Event):void {
-			GameSignals.SESSION_START.dispatch(_vehicleId, _textureId);
+			removeChild(_buttonGroup);
 		}
 		
 		private function setVehicleButtons():void {
@@ -79,13 +87,13 @@ package com.mayhem.ui
 		}
 		
 		private function setTextureSelector():void {
-			var buttonGroup:ButtonGroup = new ButtonGroup();
+			_buttonGroup = new ButtonGroup();
 			
-			buttonGroup.width = 300;
-			buttonGroup.height = 30;
-			buttonGroup.direction = "horizontal";
+			_buttonGroup.width = 300;
+			_buttonGroup.height = 30;
+			_buttonGroup.direction = "horizontal";
 			
-			buttonGroup.dataProvider = new ListCollection( [
+			_buttonGroup.dataProvider = new ListCollection( [
 				{ label: "", defaultIcon:new Quad(20, 20, 0x00d3dc), triggered:setColor_0},
 				{ label: "", defaultIcon:new Quad(20, 20, 0x00dc16), triggered:setColor_1},
 				{ label: "", defaultIcon:new Quad(20, 20, 0xce01da), triggered:setColor_2},
@@ -93,9 +101,9 @@ package com.mayhem.ui
 				{ label: "", defaultIcon:new Quad(20, 20, 0xe7d300), triggered:setColor_4}
 			]);		
 			
-			addChild(buttonGroup);
-			buttonGroup.x = (Starling.current.nativeStage.stageWidth - buttonGroup.width )  / 2 
-			buttonGroup.y = 150; 
+			addChild(_buttonGroup);
+			_buttonGroup.x = (Starling.current.nativeStage.stageWidth - _buttonGroup.width )  / 2 
+			_buttonGroup.y = 150; 
 		}
 		
 		private function setColor_0(event:Event):void {

@@ -74,7 +74,7 @@ package com.mayhem.multiplayer
 			//MultiplayerSignals.CONNECTED.dispatch();
 			//uncomment this line for local server 
 			GameSignals.SESSION_START.add(onGameStart);
-			//_client.multiplayer.developmentServer = "localhost:8184";
+			_client.multiplayer.developmentServer = "localhost:8184";
 			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError)
 			//_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			//setSignals();
@@ -263,7 +263,7 @@ package com.mayhem.multiplayer
 			}
 		}
 		
-		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int, vehicleId:uint, textureId:uint):void {
+		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int, vehicleId:uint, textureId:uint, isAIMaster:Boolean):void {
 			_allUsers[userid] = new GameUserVO(userid);			
 			var isMain:Boolean;
 			if (userid == "user_"+_socialUser.social_id){
@@ -280,6 +280,7 @@ package com.mayhem.multiplayer
 			_allUsers[userid].xp = xp;
 			_allUsers[userid].vehicleId = vehicleId;
 			_allUsers[userid].textureId = textureId;
+			_allUsers[userid].isAIMaster = isAIMaster;
 			MultiplayerSignals.USER_JOINED.dispatch( _allUsers[userid] );
 			if (isMain)
 				_mainConnection.send("GetRoomUsers");
@@ -302,9 +303,9 @@ package com.mayhem.multiplayer
 			UserInputSignals.USER_HAS_STOPPED_MOVING.dispatch(userid, keyCode,timestamp);
 		}
 		
-		private function userLeftHandler(m:Message, userid:String, userIndex:int):void{
+		private function userLeftHandler(m:Message, userid:String, userIndex:int, newMasterId:String):void{
 			trace("Player with the userid ", userid, " just left the room");
-			MultiplayerSignals.USER_REMOVED.dispatch(userid,userIndex);
+			MultiplayerSignals.USER_REMOVED.dispatch(userid,userIndex,newMasterId);
 		}
 		
 		private function powerUpTriggered(m:Message, byteArray:ByteArray):void {
