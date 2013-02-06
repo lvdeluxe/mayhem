@@ -3,6 +3,7 @@ package
 	import away3d.core.managers.Stage3DManager;
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.debug.AwayStats;
+	import com.mayhem.game.powerups.PowerupsModel;
 	import com.mayhem.game.ThreeDeeController;
 	import com.mayhem.multiplayer.Connector;
 	import com.hibernum.social.model.SocialModel;

@@ -90,15 +90,6 @@ package com.mayhem.game
 			return slotsAvail;
 		}
 		
-		public function getSpawnIndexByPosition(pos:Vector3D):int {
-			var index:int = -1
-			for (var i:uint = 0 ; i < allSpawnPoints.length ; i++ ) {
-				if (allSpawnPoints[i].position.x == pos.x && allSpawnPoints[i].position.z == pos.z)
-					return i;
-			}
-			return index;
-		}
-		
 		public function getSpawnPoint(index:int):Vector3D {
 			var pos:Vector3D = allSpawnPoints[index].position.clone();
 			allSpawnPoints[index].extra.occupied = true;
@@ -167,7 +158,7 @@ package com.mayhem.game
 							var planeShape:AWPStaticPlaneShape = new AWPStaticPlaneShape();
 							body = new AWPRigidBody(planeShape, mesh);
 						}else if (mesh.name == MeshMapping.OUTTER_FLOOR) {
-							
+							//mesh = null;
 						}else{
 							var shape:AWPBvhTriangleMeshShape = new AWPBvhTriangleMeshShape(mesh.geometry, true);
 							body = new AWPRigidBody(shape, mesh);
@@ -195,7 +186,7 @@ package com.mayhem.game
 								planeMesh.extra.door = body;
 								planeMesh.extra.index = doorIndex;
 								boxBody.addEventListener(AWPEvent.COLLISION_ADDED, onDoorPassed);
-								body.y = 600;
+								//body.y = 600;
 								_allDoors[doorIndex] = body;
 							}else {
 								mainBody = body;
@@ -204,12 +195,12 @@ package com.mayhem.game
 							}
 						}
 					}
-					if (mesh.name == MeshMapping.RAMP) {
+					if (mesh!=null && mesh.name == MeshMapping.RAMP) {
 						_rampRigidBody = body;		
 						//var rBody:AWPCollisionObject = new AWPCollisionObject();
 					}
 					if(body != null)_physicsWorld.addRigidBody(body);
-					_mainContainer.addChild(mesh);
+					if(mesh!=null)_mainContainer.addChild(mesh);
 				}
 			}
 			
@@ -237,7 +228,7 @@ package com.mayhem.game
 		}
 		
 		private function onDoorPassed(event:AWPEvent):void {
-			if(event.collisionObject.skin){
+			if (event.collisionObject.skin) {
 				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
 				if (vehicle && event.currentTarget.skin.extra.index == vehicle.user.spawnIndex && !vehicle.enableBehavior) {
 					var doorBody:AWPRigidBody = event.currentTarget.skin.extra.door;

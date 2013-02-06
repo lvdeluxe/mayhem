@@ -1,0 +1,49 @@
+{
+	"powerups":{
+		"powerup_0":{
+			"index":0,
+			"id":"powerup_0",
+			"title":"Explosion",
+			"description":"Creates an explosion that blows-up every vehicle within its radius.",
+			"unlockLevel":0,
+			"unlockCoins":0,
+			"unlockCredits":0
+		},
+		"powerup_1":{
+			"index":1,
+			"id":"powerup_1",
+			"title":"Invisibility",
+			"description":"You are invisible for all players during 10 seconds.",
+			"unlockLevel":2,
+			"unlockCoins":1000,
+			"unlockCredits":10
+		},
+		"powerup_2":{
+			"index":2,
+			"id":"powerup_2",
+			"title":"Random Mayhem",
+			"description":"Targets 3 random players with a beam that makes them bumping.",
+			"unlockLevel":5,
+			"unlockCoins":5000,
+			"unlockCredits":50
+		},
+		"powerup_3":{
+			"index":3,
+			"id":"powerup_3",
+			"title":"Random Mayhem",
+			"description":"Creates a shield around your vehicle, protecting you from any damage during 10 seconds.",
+			"unlockLevel":10,
+			"unlockCoins":10000,
+			"unlockCredits":100
+		},
+		"powerup_4":{
+			"index":4,
+			"id":"powerup_4",
+			"title":"Front Beam",
+			"description":"Triggers a beam in front of your vehicle, that will make all aimed vehicles bump.",
+			"unlockLevel":20,
+			"unlockCoins":20000,
+			"unlockCredits":2000
+		}	
+	}
+}

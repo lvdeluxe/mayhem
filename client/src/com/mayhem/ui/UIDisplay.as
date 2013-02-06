@@ -1,6 +1,7 @@
 package com.mayhem.ui 
 {
 	
+	import com.mayhem.game.powerups.PowerupsModel;
 	import com.mayhem.multiplayer.GameUserVO;
 	import feathers.controls.Label;
 	import feathers.controls.Screen;
@@ -23,20 +24,22 @@ package com.mayhem.ui
 		private var _theme:AzureMobileTheme;
 		private var _titleLabel:Label;
 		private var _igcTextField:Label;
+		private var _powerupsModel:PowerupsModel;
 		
 		public function UIDisplay() 
 		{
-			_theme = new AzureMobileTheme(this, false);
+			_theme = new AzureMobileTheme(Starling.current.stage, false);
+			trace(_theme.bitmapFont.name)
 			MultiplayerSignals.USER_LOADED.add(onUserLoaded);
 			GameSignals.REMOVE_MENU.add(cleanup);
-			
+			_powerupsModel = new PowerupsModel();
 			setView();			
 		}	
 		
 		
 		private function onUserLoaded(user:GameUserVO):void {
 			_igcTextField.text = "Coins:" + user.igc.toString();
-			_selectMenu = new SelectMenu(user.vehicleId, user.textureId);
+			_selectMenu = new SelectMenu(user,_powerupsModel.allPowerups);
 			addChild(_selectMenu);			
 		}
 		

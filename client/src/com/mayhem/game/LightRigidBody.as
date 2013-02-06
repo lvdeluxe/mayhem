@@ -22,8 +22,8 @@ package com.mayhem.game
 		
 		public static function fromAWPRigidBody(rBody:AWPRigidBody):LightRigidBody {
 			var lightRigidBody:LightRigidBody = new LightRigidBody();
-			lightRigidBody.linearVelocity = rBody.linearVelocity.clone();
-			lightRigidBody.angularVelocity = rBody.angularVelocity.clone();
+			//lightRigidBody.linearVelocity = rBody.linearVelocity.clone();
+			//lightRigidBody.angularVelocity = rBody.angularVelocity.clone();
 			lightRigidBody.position = rBody.position.clone();
 			lightRigidBody.rotation = rBody.rotation.clone();
 			return lightRigidBody;
@@ -32,8 +32,8 @@ package com.mayhem.game
 		public function applyToRigidBody(rBody:AWPRigidBody):void {
 			rBody.rotation = rotation;
 			rBody.position = position;
-			rBody.linearVelocity = linearVelocity;
-			rBody.angularVelocity = angularVelocity;
+			//rBody.linearVelocity = linearVelocity;
+			//rBody.angularVelocity = angularVelocity;
 		}
 		
 		

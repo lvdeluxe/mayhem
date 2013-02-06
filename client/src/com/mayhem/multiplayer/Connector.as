@@ -74,7 +74,7 @@ package com.mayhem.multiplayer
 			//MultiplayerSignals.CONNECTED.dispatch();
 			//uncomment this line for local server 
 			GameSignals.SESSION_START.add(onGameStart);
-			_client.multiplayer.developmentServer = "localhost:8184";
+			//_client.multiplayer.developmentServer = "localhost:8184";
 			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError)
 			//_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			//setSignals();
@@ -92,6 +92,7 @@ package com.mayhem.multiplayer
 		private function onUserDataLoaded(dbObject:DatabaseObject):void {
 			if (dbObject == null) {
 				_client.payVault.credit(100, "startGame", onFirstTimeCredit, handleError);
+				//_client.payVault.
 				
 			}else {
 				onUserCreated(dbObject);
@@ -99,6 +100,10 @@ package com.mayhem.multiplayer
 		}
 		
 		private function onFirstTimeCredit():void {
+			_client.payVault.give([{itemKey:"powerup_0"},{itemKey:"powerup_slot_0"}], onFirstTimePowerup, handleError);			
+		}
+		
+		private function onFirstTimePowerup():void {
 			_client.bigDB.createObject("PlayerObjects", _client.connectUserId, { username:_socialUser.name, xp:0, vehicleId:0, textureId:0 }, onUserCreated, handleError);
 		}
 		
@@ -113,7 +118,14 @@ package com.mayhem.multiplayer
 		}
 		
 		private function onPayVaultLoaded():void {
-			trace(_client.payVault.coins)
+			for (var i:uint = 0 ; i < _client.payVault.items.length ; i++) {
+				var vaultItem:VaultItem = _client.payVault.items[i];
+				if (vaultItem.itemKey.split("_")[1] == "slot") {
+					_allUsers[_client.connectUserId].powerupSlots++;
+				}else {
+					_allUsers[_client.connectUserId].powerups.push(vaultItem.itemKey);
+				}
+			}
 			_allUsers[_client.connectUserId].igc = _client.payVault.coins;
 			MultiplayerSignals.USER_LOADED.dispatch(_allUsers[_client.connectUserId]);
 		}
@@ -248,12 +260,13 @@ package com.mayhem.multiplayer
 		}
 		
 		private function setRoomUsersHandler(m:Message):void {
-			var numParams:uint = 4;
+			var numParams:uint = 5;
 			for (var i:uint = 0; i < m.length; i++ ) {
 				if (i % numParams == numParams-1) {
 					var byteArray:ByteArray = m.getByteArray(i);
 					var lightBody:LightRigidBody = byteArray.readObject();
-					var user:GameUserVO = new GameUserVO(m.getString( i - 3));
+					var user:GameUserVO = new GameUserVO(m.getString( i - 4));
+					user.spawnIndex = m.getUInt( i - 3);
 					user.vehicleId = m.getUInt(i - 2);
 					user.textureId = m.getUInt(i - 1);
 					user.isMainUser = false;
@@ -261,6 +274,7 @@ package com.mayhem.multiplayer
 					MultiplayerSignals.USERS_IN_ROOM.dispatch( { user:user, rigidBody:lightBody} );
 				}
 			}
+			MultiplayerSignals.CREATE_AI_VEHICLES.dispatch();
 		}
 		
 		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int, vehicleId:uint, textureId:uint, isAIMaster:Boolean):void {

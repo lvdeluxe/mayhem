@@ -23,12 +23,25 @@ namespace MyGame {
         private Dictionary<string, Player> allAICubes;
         private int maxPerRoom = 12;
         private int _numUserJoined = 0;
+        private List<int> indexList = new List<int>();
 
 
 		// This method is called when an instance of your the game is created
 		public override void GameStarted() {
             allUsers = new Dictionary<string, Player>();
             allAICubes = new Dictionary<string, Player>();
+            indexList.Add(0);
+            indexList.Add(1);
+            indexList.Add(2);
+            indexList.Add(3);
+            indexList.Add(4);
+            indexList.Add(5);
+            indexList.Add(6);
+            indexList.Add(7);
+            indexList.Add(8);
+            indexList.Add(9);
+            indexList.Add(10);
+            indexList.Add(11);
             
             for (int i = 0; i < maxPerRoom; i++)
             {
@@ -73,11 +86,13 @@ namespace MyGame {
                 userInfo.Set("textureId", player.JoinData["textureId"]);
                 userInfo.Save();
 
-                Console.WriteLine("userId: " + player.ConnectUserId);
-                player.UserIndex = allUsers.Count;
+                
+                player.UserIndex = indexList[0];
+                Console.WriteLine("userId: " + player.ConnectUserId + " " + player.UserIndex.ToString());
+                indexList.RemoveAt(0);
                 player.TextureId = Convert.ToUInt32(player.JoinData["textureId"]);
                 player.VehicleId = Convert.ToUInt32(player.JoinData["vehicleId"]);
-                Console.WriteLine(player.TextureId); ;
+                Console.WriteLine(player.TextureId);
                 Console.WriteLine(player.JoinData["textureId"]); ;
                 allUsers.Add(player.ConnectUserId, player);
                 allAICubes.Remove("ai_" + player.UserIndex.ToString());
@@ -103,6 +118,7 @@ namespace MyGame {
             _numUserJoined--;
             bool isAIMaster = player.IsAIMaster;
             allUsers.Remove(player.ConnectUserId);
+            indexList.Add(player.UserIndex);
             allAICubes.Add("ai_" + player.UserIndex.ToString(), GetAICube(player.UserIndex));
             Console.WriteLine("userId left: " + player.ConnectUserId);
             string newMaster = "";
@@ -133,6 +149,7 @@ namespace MyGame {
                         if (plyr.Value.ConnectUserId != player.ConnectUserId)
                         {
                             msg.Add(plyr.Value.ConnectUserId);
+                            msg.Add(plyr.Value.UserIndex);
                             msg.Add(plyr.Value.VehicleId);
                             msg.Add(plyr.Value.TextureId);
                             msg.Add(plyr.Value.RigidBodyDescription);

@@ -21,6 +21,7 @@ package com.mayhem.signals
 		public static var AI_TARGET_UPDATED:Signal = new Signal();
 		public static var VEHICLE_DIE:Signal = new Signal();
 		public static var VEHICLE_DIED:Signal = new Signal();
+		static public const CREATE_AI_VEHICLES:Signal = new Signal();
 		
 		public function MultiplayerSignals() 
 		{

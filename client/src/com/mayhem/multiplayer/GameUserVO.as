@@ -15,6 +15,8 @@ package com.mayhem.multiplayer
 		public var vehicleId:uint;
 		public var textureId:uint;
 		public var isAIMaster:Boolean;
+		public var powerupSlots:uint = 0;
+		public var powerups:Vector.<String> = new Vector.<String>();
 		
 		public function GameUserVO(pId:String) 
 		{
