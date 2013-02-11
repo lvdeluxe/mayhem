@@ -22,6 +22,13 @@ package com.mayhem.signals
 		public static var VEHICLE_DIE:Signal = new Signal();
 		public static var VEHICLE_DIED:Signal = new Signal();
 		static public const CREATE_AI_VEHICLES:Signal = new Signal();
+		static public const POWERUP_UNLOCK:Signal = new Signal();
+		static public const POWERUP_UNLOCKED:Signal = new Signal();
+		static public const POWERUP_CREDITS_UNLOCK:Signal = new Signal();
+		static public const SLOT_UNLOCK:Signal = new Signal();
+		static public const SLOT_UNLOCKED:Signal = new Signal();
+		static public const SLOT_CREDITS_UNLOCK:Signal = new Signal();
+		static public const SLOT_CREDITS_UNLOCKED:Signal = new Signal();
 		
 		public function MultiplayerSignals() 
 		{

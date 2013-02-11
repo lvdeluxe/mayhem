@@ -7,15 +7,20 @@ package com.mayhem.multiplayer
 	
 	import away3d.entities.Mesh;
 	import awayphysics.dynamics.AWPRigidBody;
+	import com.hibernum.social.model.SocialPayment;
 	import com.hibernum.social.model.SocialUser;
+	import com.hibernum.social.service.FacebookService;
 	import com.mayhem.game.ArenaFactory;
 	import com.mayhem.game.CollisionManifold;
 	import com.mayhem.game.GameStats;
 	import com.mayhem.game.LightRigidBody;
 	import com.mayhem.game.MovingCube;
 	import com.mayhem.game.powerups.ExplosionData;
+	import com.mayhem.game.powerups.PowerupDefinition;
 	import com.mayhem.game.powerups.PowerUpMessage;
+	import com.mayhem.game.powerups.PowerupSlot;
 	import flash.display.Stage;
+	import flash.external.ExternalInterface;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.utils.ByteArray;
@@ -38,6 +43,9 @@ package com.mayhem.multiplayer
 		private var _mainConnection:Connection;
 		private var _vehicle_id:uint;
 		private var _texture_id:uint;
+		private var _allPowerups:Vector.<PowerupDefinition>
+		private var _allCoinsPacks:Vector.<CoinsPackage>;
+		private var _allSlots:Vector.<PowerupSlot>;
 		
 		public static const MAX_USER_PER_ROOM:uint = 12;
 		
@@ -70,21 +78,16 @@ package com.mayhem.multiplayer
 		private function handleConnect(client:Client):void{
 			trace("Sucessfully connected to player.io");
 			_client = client;
-			
-			//MultiplayerSignals.CONNECTED.dispatch();
+			setSignals();
 			//uncomment this line for local server 
-			GameSignals.SESSION_START.add(onGameStart);
 			//_client.multiplayer.developmentServer = "localhost:8184";
-			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError)
-			//_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
-			//setSignals();
+			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError);
 		}
 		
 		private function onGameStart(vId:uint, tId:uint):void {
 			trace("Game starts", vId, tId);
 			_vehicle_id = vId;
 			_texture_id = tId;
-			setSignals();
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
 			
 		}
@@ -92,15 +95,13 @@ package com.mayhem.multiplayer
 		private function onUserDataLoaded(dbObject:DatabaseObject):void {
 			if (dbObject == null) {
 				_client.payVault.credit(100, "startGame", onFirstTimeCredit, handleError);
-				//_client.payVault.
-				
 			}else {
 				onUserCreated(dbObject);
 			}
 		}
 		
 		private function onFirstTimeCredit():void {
-			_client.payVault.give([{itemKey:"powerup_0"},{itemKey:"powerup_slot_0"}], onFirstTimePowerup, handleError);			
+			_client.payVault.give([{itemKey:"powerup_0"},{itemKey:"slot_0"}], onFirstTimePowerup, handleError);			
 		}
 		
 		private function onFirstTimePowerup():void {
@@ -117,21 +118,66 @@ package com.mayhem.multiplayer
 			_client.payVault.refresh(onPayVaultLoaded, handleError);			
 		}
 		
-		private function onPayVaultLoaded():void {
+		private function onPayVaultLoaded():void {			
 			for (var i:uint = 0 ; i < _client.payVault.items.length ; i++) {
 				var vaultItem:VaultItem = _client.payVault.items[i];
-				if (vaultItem.itemKey.split("_")[1] == "slot") {
+				trace(vaultItem.itemKey)
+				if (vaultItem.itemKey.split("_")[0] == "slot") {
 					_allUsers[_client.connectUserId].powerupSlots++;
-				}else {
+				}else if (vaultItem.itemKey.split("_")[0] == "powerup"){
 					_allUsers[_client.connectUserId].powerups.push(vaultItem.itemKey);
 				}
 			}
 			_allUsers[_client.connectUserId].igc = _client.payVault.coins;
-			MultiplayerSignals.USER_LOADED.dispatch(_allUsers[_client.connectUserId]);
+			var allItems:Array = ["powerup_0","powerup_1","powerup_2","powerup_3","powerup_4","slot_0","slot_1","slot_2","slot_3","slot_4","coins_0", "coins_1", "coins_2", "coins_3"]
+			_client.bigDB.loadKeys("PayVaultItems", allItems, onCompleteLoadVaultItems, handleError);
+			
+		}
+		
+		private function onCompleteLoadVaultItems(dbarr:Array):void {
+			_allPowerups = new Vector.<PowerupDefinition>();
+			_allCoinsPacks = new Vector.<CoinsPackage>();
+			_allSlots = new Vector.<PowerupSlot>();
+			for (var i:uint = 0 ; i < dbarr.length ; i++ ) {
+				var dbObject:DatabaseObject = dbarr[i];
+				var keySplit:String = dbObject.key.split("_")[0];
+				if (keySplit == "powerup") {
+					_allPowerups.push(new PowerupDefinition(dbObject));
+				}else if (keySplit == "slot") {
+					_allSlots.push(new PowerupSlot(dbObject));
+				}else if (keySplit == "coins") {
+					_allCoinsPacks.push(new CoinsPackage(dbObject));
+				}				
+			}
+			MultiplayerSignals.USER_LOADED.dispatch(_allUsers[_client.connectUserId],_allPowerups,_allCoinsPacks,_allSlots);
+		}
+		
+		
+		private function getPowerupById(powerup_id:String):PowerupDefinition {
+			var def:PowerupDefinition;
+			for each(var pUpDef:PowerupDefinition in _allPowerups) {
+				if (pUpDef.id == powerup_id) {
+					return pUpDef;
+				}
+			}
+			return def;
+		}
+		
+		private function unlockPowerup(powerupId:String):void {
+			var powerup:PowerupDefinition = getPowerupById(powerupId);
+			_client.payVault.buy([ { itemKey:powerup.id } ], true, function():void {
+				_client.payVault.refresh(function():void {
+					var mainUser:GameUserVO = _allUsers[_client.connectUserId];
+					mainUser.powerups.push(powerupId);
+					mainUser.igc = _client.payVault.coins;
+					MultiplayerSignals.POWERUP_UNLOCKED.dispatch(_allUsers[_client.connectUserId],powerupId);
+				}, handleError);
+			}, handleError);
 		}
 		
 		
 		private function setSignals():void {
+			GameSignals.SESSION_START.add(onGameStart);
 			UserInputSignals.USER_IS_MOVING.add(onPlayerMoving);
 			UserInputSignals.USER_STOPPED_MOVING.add(onPlayerStopMoving);
 			UserInputSignals.USER_UPDATE_STATE.add(onPlayerUpdateState);
@@ -142,6 +188,127 @@ package com.mayhem.multiplayer
 			GameSignals.SESSION_RESTART.add(onSessionRestart);
 			MultiplayerSignals.UPDATE_AI_TARGET.add(setAITarget);
 			MultiplayerSignals.VEHICLE_DIE.add(setVehicleDie);
+			MultiplayerSignals.POWERUP_UNLOCK.add(unlockPowerup);
+			SocialSignals.COINS_PURCHASE.add(puchaseCoins);
+			MultiplayerSignals.POWERUP_CREDITS_UNLOCK.add(BuyPowerupWithCredits);
+			MultiplayerSignals.SLOT_CREDITS_UNLOCK.add(unlockSlotWithCredits);
+			MultiplayerSignals.SLOT_UNLOCK.add(unlockSlotWithCoins);;
+		}
+		
+		private function unlockSlotWithCoins(slot_id:String):void {
+			_client.payVault.buy([{itemKey:slot_id}], true, function():void {
+				_client.payVault.refresh(function():void {
+					var mainUser:GameUserVO = _allUsers[_client.connectUserId];
+					mainUser.powerupSlots++;
+					mainUser.igc = _client.payVault.coins;
+					MultiplayerSignals.SLOT_UNLOCKED.dispatch(mainUser, slot_id);
+				}, handleError);
+			}, handleError);
+		}
+		
+		private function unlockSlotWithCredits(slot_id:String):void 
+		{
+			var slot:PowerupSlot;
+			for (var i:uint = 0 ; i < _allSlots.length ; i++ ) {
+				if (slot_id == _allSlots[i].id) {
+					slot = _allSlots[i];
+					break;
+				}
+			}
+			var dataObject:Object = {                           
+				title:"+1 Power-up Slot",                    
+				description:"Unlock a new Power-up slot!",
+				image_url:_client.gameFS.getURL("/img/powerup_empty_slot.png"),
+				product_url:""
+			};
+			_client.payVault.getBuyDirectInfo(
+				"facebook",
+				dataObject,
+				[ { itemKey:slot_id } ],
+				function(info:Object):void {
+					FacebookService.makePayment(info, function(response:Object):void {
+						_client.payVault.refresh(function():void {
+							var mainUser:GameUserVO = _allUsers[_client.connectUserId];
+							mainUser.powerupSlots++;
+							mainUser.igc = _client.payVault.coins;
+							MultiplayerSignals.SLOT_UNLOCKED.dispatch(mainUser, slot_id);
+						}, handleError);
+					},function(error:Object):void {
+						//error or cancelled payment
+					});
+				},
+				handleError
+			);
+		}
+		
+		private function BuyPowerupWithCredits(powerup_id:String):void {
+			var powerup:PowerupDefinition;
+			for (var i:uint = 0 ; i < _allPowerups.length ; i++ ) {
+				if (powerup_id == _allPowerups[i].id) {
+					powerup = _allPowerups[i];
+					break;
+				}
+			}
+			var dataObject:Object = {                           
+				title:powerup.title,                    
+				description:"Unlock this awesome power-up!",
+				image_url:_client.gameFS.getURL("/img/"+powerup.id+".jpg"),
+				product_url:""
+			};
+			_client.payVault.getBuyDirectInfo(
+				"facebook",
+				dataObject,
+				[ { itemKey:powerup_id } ],
+				function(info:Object):void {
+					FacebookService.makePayment(info, function(response:Object):void {
+						_client.payVault.refresh(function():void {
+							var mainUser:GameUserVO = _allUsers[_client.connectUserId];
+							mainUser.powerups.push(powerup_id);
+							mainUser.igc = _client.payVault.coins;
+							MultiplayerSignals.POWERUP_UNLOCKED.dispatch(_allUsers[_client.connectUserId],(powerup_id));
+						}, handleError);
+					},function(error:Object):void {
+						//error or cancelled payment
+					});
+				},
+				handleError
+			);
+		}
+		
+		private function puchaseCoins(package_id:String):void 
+		{
+			var coinsPackage:CoinsPackage;
+			for (var i:uint = 0 ; i < _allCoinsPacks.length ; i++ ) {
+				if (package_id == _allCoinsPacks[i].id) {
+					coinsPackage = _allCoinsPacks[i];
+					break;
+				}
+			}
+			var dataObject:Object = {                           
+					coinamount:coinsPackage.amount.toString(),                         
+					title:coinsPackage.amount.toString() + " Coins",
+					description:"Buy " + coinsPackage.amount.toString() + " Coins, thank you!",
+					image_url:_client.gameFS.getURL("/img/coins.png"),
+					product_url:""
+				};
+			_client.payVault.getBuyCoinsInfo(
+				"facebook",  
+				dataObject,
+				function(info:Object):void {
+					FacebookService.makePayment(info, function(response:Object):void {
+						_client.payVault.refresh(onPaymentComplete, handleError);
+					},function(error:Object):void {
+						//error or cancelled payment
+					});
+				},
+				handleError
+			)
+		}
+		
+		private function onPaymentComplete():void {
+			var mainUser:GameUserVO = _allUsers[_client.connectUserId];
+			mainUser.igc = _client.payVault.coins;
+			SocialSignals.COINS_PURCHASED.dispatch(mainUser);
 		}
 		
 		private function setVehicleDie(vehicleId:String):void {

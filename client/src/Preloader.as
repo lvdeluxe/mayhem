@@ -49,8 +49,8 @@ package
 		
 		private function setLoadingBar():void {
 			_loadingBar = new Sprite();
-			_loadingBar.graphics.beginFill(0xcc0000);
-			_loadingBar.graphics.drawRect(0, 0, 200, 25);
+			_loadingBar.graphics.beginFill(0xffffff);
+			_loadingBar.graphics.drawRect(0, 0, 200, 5);
 			_loadingBar.x = (stage.stageWidth / 2) - 100;
 			_loadingBar.y = (stage.stageHeight / 2) - 12;
 			_loadingBar.scaleX = 00;

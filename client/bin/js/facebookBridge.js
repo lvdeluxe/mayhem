@@ -6,6 +6,7 @@ var FBBridge = {
 
 	setGameElement:function(objectId) {
 		FBBridge.gameElement = document.getElementById('game');
+		console.log("FBBridge.gameElement "+FBBridge.gameElement)
 	},
 
 	onInit:function (response) {
@@ -43,16 +44,8 @@ var FBBridge = {
 		}
 	},
 	makePayment:function(order_info) {
-		var obj = {
-			method:'pay',
-			action:'buy_item',
-			order_info:order_info,
-			dev_purchase_params:{'oscif':true}
-		};
 		try {
-			FBBridge.displayFlashScreenshot();
-			FB.ui(obj, function(response) {
-				FBBridge.hideFlashScreenshot();
+			FB.ui(order_info, function(response) {
 				if(response.order_id) {
 					FBBridge.gameElement.onMakePayment(response);
 				} else if(response.error_code) {
@@ -191,16 +184,16 @@ var FBBridge = {
 		}
 	},
 	displayFlashScreenshot:function() {
-		var screenshotData = FBBridge.gameElement.exportScreenshot();
-		FBBridge.screenshotElement.src = 'data:image/jpeg;base64,' + screenshotData;
-		FBBridge.screenshotElement.width = FBBridge.gameElement.width;
-		FBBridge.screenshotElement.height = FBBridge.gameElement.height;
+		//var screenshotData = FBBridge.gameElement.exportScreenshot();
+		//FBBridge.screenshotElement.src = 'data:image/jpeg;base64,' + screenshotData;
+		//FBBridge.screenshotElement.width = FBBridge.gameElement.width;
+		//FBBridge.screenshotElement.height = FBBridge.gameElement.height;
 		FBBridge.gameElement.style.top = '-10000px';
-		FBBridge.imageElement.style.top = '';
+		//FBBridge.imageElement.style.top = '';
 	},
 
 	hideFlashScreenshot:function() {
 		FBBridge.gameElement.style.top = '';
-		FBBridge.imageElement.style.top = '-10000px';
+		//FBBridge.imageElement.style.top = '-10000px';
 	}
 };

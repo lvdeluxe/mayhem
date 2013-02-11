@@ -1,5 +1,6 @@
 package com.mayhem.game.powerups 
 {
+	import playerio.DatabaseObject;
 	/**
 	 * ...
 	 * @author availlant
@@ -11,18 +12,17 @@ package com.mayhem.game.powerups
 		private var _description:String;
 		private var _unlockLevel:uint;
 		private var _unlockCoins:uint;
-		private var _unlokcCredits:uint;
-		private var _index:uint;
+		private var _unlockCredits:uint;
+		//private var _index:uint;
 		
-		public function PowerupDefinition(obj:Object) 
+		public function PowerupDefinition(obj:DatabaseObject) 
 		{
-			_id = obj.id;
-			_index = obj.index;
-			_title = obj.title;
-			_description = obj.description;
-			_unlockLevel = obj.unlockLevel;
-			_unlockCoins = obj.unlockCoins;
-			_unlokcCredits = obj.unlockCredits;
+			_id = obj.key;
+			_title = obj.Title;
+			_description = obj.Description;
+			_unlockLevel = obj.UnlockLevel;
+			_unlockCoins = obj.PriceCoins;
+			_unlockCredits = obj.PriceFBC;
 		}
 		
 		public function get id():String 
@@ -52,14 +52,8 @@ package com.mayhem.game.powerups
 		
 		public function get unlokcCredits():uint 
 		{
-			return _unlokcCredits;
-		}
-		
-		public function get index():uint 
-		{
-			return _index;
-		}
-		
+			return _unlockCredits;
+		}		
 	}
 
 }

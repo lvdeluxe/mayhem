@@ -449,6 +449,10 @@ package feathers.themes
 			button.minWidth = button.minHeight = 66 * this.scale;
 			button.minTouchWidth = button.minTouchHeight = 88 * this.scale;
 		}
+		
+		public function get themeButtonInitializer():Function {
+			return buttonInitializer;
+		}
 
 		protected function buttonGroupButtonInitializer(button:Button):void
 		{

@@ -12,17 +12,14 @@ package com.mayhem.game.powerups
 		
 		public function PowerupsModel() 
 		{
-			var allPups:Object = JSON.parse(new Powerups());
-			allPowerups = new Vector.<PowerupDefinition>();
-			for each(var pup:Object in allPups.powerups) {
-				allPowerups.push(new PowerupDefinition(pup));
-			}
-			allPowerups.sort(sort);
+			//var allPups:Object = JSON.parse(new Powerups());
+			//allPowerups = new Vector.<PowerupDefinition>();
+			//for each(var pup:Object in allPups.powerups) {
+				//allPowerups.push(new PowerupDefinition(pup));
+			//}
+			//allPowerups.sort(sort);
 		}
 		
-		private function sort(a:PowerupDefinition, b:PowerupDefinition):Number {
-			return a.index - b.index
-		}
 		
 	}
 

@@ -107,7 +107,7 @@ public class FacebookService {
 		unregisterCallback('onStreamPublish', SUCCESS)(result);
 	}
 
-	public static function makePayment(payment:SocialPayment, success:Function, failure:Function = null):void {
+	public static function makePayment(payment:*, success:Function, failure:Function = null):void {
 		registerCallback('onMakePayment', success, failure);
 		ExternalInterface.call('FBBridge.makePayment', payment);
 	}
@@ -150,7 +150,7 @@ public class FacebookService {
 
 	private static function addCallback(name:String, method:Function):void {
 		ExternalInterface.addCallback(name, method);
-		_currentCallbacks[name] = []
+		_currentCallbacks[name] = [];
 	}
 
 	private static function onFailure(name:String, error:Object):void {
@@ -163,6 +163,9 @@ public class FacebookService {
 	}
 
 	private static function onJavaScriptError(error:*):void {
+		for (var prop:String in error) {
+			trace(prop +"==>"+ error[prop])
+		}
 		throw Error(error);
 	}
 

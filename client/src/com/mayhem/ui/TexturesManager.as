@@ -1,5 +1,7 @@
 package com.mayhem.ui 
 {
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	/**
 	 * ...
 	 * @author availlant
@@ -27,10 +29,38 @@ package com.mayhem.ui
 		public static var PowerUp4_Locked:Class;
 		[Embed(source = "/assets/powerups/powerup5_locked.jpg")]
 		public static var PowerUp5_Locked:Class;
+		[Embed(source = "/assets/ui/cross.png")]
+		public static var CloseButton:Class;
+		[Embed(source = "/assets/ui/powerup_empty_slot.png")]
+		public static var EmptySlot:Class;
+		[Embed(source = "/assets/ui/powerup_locked_slot.png")]
+		public static var LockedSlot:Class;
 		
 		public function TexturesManager() 
 		{
 			
+		}
+		
+		public static function getPowerupBitmapDataById(powerup_id:String):BitmapData {
+			var bmpData:BitmapData;
+			switch(powerup_id) {
+				case "powerup_0":
+					bmpData = Bitmap(new PowerUp1()).bitmapData;
+					break;
+				case "powerup_1":
+					bmpData = Bitmap(new PowerUp2()).bitmapData;
+					break;
+				case "powerup_2":
+					bmpData = Bitmap(new PowerUp3()).bitmapData;
+					break;
+				case "powerup_3":
+					bmpData = Bitmap(new PowerUp4()).bitmapData;
+					break;
+				case "powerup_4":
+					bmpData = Bitmap(new PowerUp5()).bitmapData;
+					break;
+			}
+			return bmpData;
 		}
 		
 	}

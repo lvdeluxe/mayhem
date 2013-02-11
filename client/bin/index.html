@@ -8,10 +8,12 @@
 		}
 
 		body{
+		  height:100%;
+		  min-height: 100%;
 		  margin:0;
-		  padding:0
+		  padding:0;
 		  overflow:hidden;
-		  background:blue;
+		  background:black;
 		}
 
 		#game {
@@ -37,7 +39,17 @@
 				$('#game').html('<p style="position:relative;">You need at least <a href="http://www.adobe.com/go/getflashplayer">Flash Player 11.2.0</a> to play this game.</p>');
 			}
 		});
+		
 */
+function refreshFlashMoviePosition(){
+				console.log("test")
+				
+				var windowHeight = window.innerHeight;
+				console.log(windowHeight)
+				var gameDiv = document.getElementsById('game');
+				console.log(gameDiv)
+				div.style.height = 200;
+}
 	</script>
 
 </head>
@@ -45,8 +57,18 @@
 <div id="allContent" style="position:relative; margin-top: 7px;">
 	<div id="fb-root"></div>
 	<div class="center-wrapper">
-		<div id="game">
+		<div id="game" onload="refreshFlashMoviePosition()">
+			
 			{% swf src='preloader.swf' width='100%' height=800 version='11.4.0' wmode='direct' allowScriptAccess='always' id='game' name='game' otherParam %}
+			<script type="text/javascript">
+				
+				/*var myDiv = document.createElement('div');
+				
+				var text = 'newNeId: ' + newNeId + 
+				'<br/> newNeGroupId: ' + newNeGroupId';
+				body.appendChild(myDiv);
+				document.getElementById('myDiv').innerHTML = text;*/
+			</script>
 		</div>
 	</div>
 </div>

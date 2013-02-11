@@ -1,8 +1,12 @@
 package com.mayhem.ui 
 {
 	
+	import com.mayhem.game.powerups.PowerupDefinition;
+	import com.mayhem.game.powerups.PowerupSlot;
 	import com.mayhem.game.powerups.PowerupsModel;
+	import com.mayhem.multiplayer.CoinsPackage;
 	import com.mayhem.multiplayer.GameUserVO;
+	import com.mayhem.signals.SocialSignals;
 	import feathers.controls.Label;
 	import feathers.controls.Screen;
 	import feathers.text.BitmapFontTextFormat;
@@ -24,22 +28,34 @@ package com.mayhem.ui
 		private var _theme:AzureMobileTheme;
 		private var _titleLabel:Label;
 		private var _igcTextField:Label;
-		private var _powerupsModel:PowerupsModel;
 		
 		public function UIDisplay() 
 		{
 			_theme = new AzureMobileTheme(Starling.current.stage, false);
-			trace(_theme.bitmapFont.name)
 			MultiplayerSignals.USER_LOADED.add(onUserLoaded);
 			GameSignals.REMOVE_MENU.add(cleanup);
-			_powerupsModel = new PowerupsModel();
+			MultiplayerSignals.POWERUP_UNLOCKED.add(onPowerupUnlocked);
+			SocialSignals.COINS_PURCHASED.add(onCoinsPurchased);
+			MultiplayerSignals.SLOT_UNLOCKED.add(onSlotPurchased);
 			setView();			
 		}	
 		
-		
-		private function onUserLoaded(user:GameUserVO):void {
+		private function onSlotPurchased(user:GameUserVO, slot_id:String):void {
 			_igcTextField.text = "Coins:" + user.igc.toString();
-			_selectMenu = new SelectMenu(user,_powerupsModel.allPowerups);
+		}
+		
+		private function onCoinsPurchased(user:GameUserVO):void {
+			_igcTextField.text = "Coins:" + user.igc.toString();
+		}
+		
+		private function onPowerupUnlocked(user:GameUserVO, powerupId:String):void {
+			_igcTextField.text = "Coins:" + user.igc.toString();
+		}
+		
+		
+		private function onUserLoaded(user:GameUserVO, powerups:Vector.<PowerupDefinition>,coinPacks:Vector.<CoinsPackage>, slots:Vector.<PowerupSlot>):void {
+			_igcTextField.text = "Coins:" + user.igc.toString();
+			_selectMenu = new SelectMenu(user,powerups, coinPacks, slots, _theme);
 			addChild(_selectMenu);			
 		}
 		

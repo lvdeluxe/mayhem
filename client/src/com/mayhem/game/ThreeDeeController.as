@@ -4,6 +4,9 @@ package com.mayhem.game
 	import away3d.core.managers.Stage3DProxy;
 	import away3d.debug.AwayStats
 	import away3d.lights.DirectionalLight;
+	import com.mayhem.game.powerups.PowerupDefinition;
+	import com.mayhem.game.powerups.PowerupSlot;
+	import com.mayhem.multiplayer.CoinsPackage;
 	import com.mayhem.multiplayer.GameUserVO;
 	import flash.display.Stage;
 	import flash.geom.Vector3D;
@@ -34,11 +37,7 @@ package com.mayhem.game
 			MultiplayerSignals.USER_LOADED.add(onUserLoaded);
 			GameSignals.REMOVE_MENU.add(startTheGame);
 			setView(stage,proxy);
-			/*setFirstView(stage,proxy);
-			setSecondView(stage,proxy);*/
 			setLights(_view3D);
-			/*setLights(_first_view3D);
-			setLights(_second_view3D);	*/		
 			MaterialsFactory.initialize([_light]);			
 			var stats:AwayStats = new AwayStats(_view3D)
 			stage.addChild(stats);			
@@ -62,8 +61,8 @@ package com.mayhem.game
 			}*/
 		}
 		
-		private function onUserLoaded(user:GameUserVO):void {
-			_vehicleSelector = new VehicleSelector(_view3D.scene, user.vehicleId, user.textureId);
+		private function onUserLoaded(user:GameUserVO, powerups:Vector.<PowerupDefinition>, coins:Vector.<CoinsPackage>, slots:Vector.<PowerupSlot>):void {
+			_vehicleSelector = new VehicleSelector(_view3D.scene, user.vehicleId, user.textureId, user.powerupSlots,powerups);
 		}
 		
 		private function startTheGame():void {
