@@ -19,6 +19,7 @@ package com.mayhem.multiplayer
 	import com.mayhem.game.powerups.PowerupDefinition;
 	import com.mayhem.game.powerups.PowerUpMessage;
 	import com.mayhem.game.powerups.PowerupSlot;
+	import com.mayhem.SoundsManager;
 	import flash.display.Stage;
 	import flash.external.ExternalInterface;
 	import flash.geom.Point;
@@ -46,6 +47,7 @@ package com.mayhem.multiplayer
 		private var _allPowerups:Vector.<PowerupDefinition>
 		private var _allCoinsPacks:Vector.<CoinsPackage>;
 		private var _allSlots:Vector.<PowerupSlot>;
+		private var _selectedPowerups:Array;
 		
 		public static const MAX_USER_PER_ROOM:uint = 12;
 		
@@ -80,12 +82,13 @@ package com.mayhem.multiplayer
 			_client = client;
 			setSignals();
 			//uncomment this line for local server 
-			//_client.multiplayer.developmentServer = "localhost:8184";
+			_client.multiplayer.developmentServer = "localhost:8184";
 			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError);
 		}
 		
-		private function onGameStart(vId:uint, tId:uint):void {
+		private function onGameStart(vId:uint, tId:uint, selectedPowerups:Array):void {
 			trace("Game starts", vId, tId);
+			_selectedPowerups = selectedPowerups;
 			_vehicle_id = vId;
 			_texture_id = tId;
 			_client.multiplayer.listRooms("OfficeMayhem", { }, 20, 0, onGetRoomList, handleError);	
@@ -105,7 +108,7 @@ package com.mayhem.multiplayer
 		}
 		
 		private function onFirstTimePowerup():void {
-			_client.bigDB.createObject("PlayerObjects", _client.connectUserId, { username:_socialUser.name, xp:0, vehicleId:0, textureId:0 }, onUserCreated, handleError);
+			_client.bigDB.createObject("PlayerObjects", _client.connectUserId, { username:_socialUser.name, xp:0, vehicleId:0, textureId:0, music:true }, onUserCreated, handleError);
 		}
 		
 		private function onUserCreated(dbObject:DatabaseObject):void {
@@ -114,6 +117,7 @@ package com.mayhem.multiplayer
 			user.name = dbObject.username;
 			user.vehicleId = dbObject.vehicleId;
 			user.textureId = dbObject.textureId;
+			user.hasMusic = dbObject.music;
 			_allUsers[_client.connectUserId] = user;	
 			_client.payVault.refresh(onPayVaultLoaded, handleError);			
 		}
@@ -128,6 +132,7 @@ package com.mayhem.multiplayer
 					_allUsers[_client.connectUserId].powerups.push(vaultItem.itemKey);
 				}
 			}
+			trace(_allUsers[_client.connectUserId].powerupSlots)
 			_allUsers[_client.connectUserId].igc = _client.payVault.coins;
 			var allItems:Array = ["powerup_0","powerup_1","powerup_2","powerup_3","powerup_4","slot_0","slot_1","slot_2","slot_3","slot_4","coins_0", "coins_1", "coins_2", "coins_3"]
 			_client.bigDB.loadKeys("PayVaultItems", allItems, onCompleteLoadVaultItems, handleError);
@@ -192,7 +197,35 @@ package com.mayhem.multiplayer
 			SocialSignals.COINS_PURCHASE.add(puchaseCoins);
 			MultiplayerSignals.POWERUP_CREDITS_UNLOCK.add(BuyPowerupWithCredits);
 			MultiplayerSignals.SLOT_CREDITS_UNLOCK.add(unlockSlotWithCredits);
-			MultiplayerSignals.SLOT_UNLOCK.add(unlockSlotWithCoins);;
+			MultiplayerSignals.SLOT_UNLOCK.add(unlockSlotWithCoins);
+			UISignals.BACK_TO_SELECTOR.add(removeUserFormServer);
+			MultiplayerSignals.CHANGE_MUSIC_SETTINGS.add(onChangeMusicSettings);
+			MultiplayerSignals.LEVEL_UP.add(onLevelUp)
+		}
+		
+		
+		
+		private function onChangeMusicSettings(hasMusic:Boolean):void {
+			_client.bigDB.loadMyPlayerObject(function(dbObject:DatabaseObject):void {
+				dbObject.music = hasMusic;
+				dbObject.save();
+			},handleError);
+		}
+		
+		private function removeUserFormServer():void {
+			var mess:Message = _mainConnection.createMessage("RemoveUser");
+			_mainConnection.sendMessage(mess);
+		}
+		
+		private function onLevelUp():void 
+		{
+			_client.payVault.credit(500, "levelup", function():void {
+				_client.payVault.refresh(function():void {
+					var mainUser:GameUserVO = _allUsers[_client.connectUserId];
+					mainUser.igc = _client.payVault.coins;
+					UISignals.UPDATE_USER_INFO.dispatch(mainUser);
+				}, handleError);
+			},handleError);
 		}
 		
 		private function unlockSlotWithCoins(slot_id:String):void {
@@ -445,24 +478,31 @@ package com.mayhem.multiplayer
 		}
 		
 		private function UserJoinedHandler(m:Message, userid:String, userIndex:int, xp:uint, igc:int, vehicleId:uint, textureId:uint, isAIMaster:Boolean):void {
-			_allUsers[userid] = new GameUserVO(userid);			
+			var currentUser:GameUserVO;
+			if (_allUsers[userid] == null) {
+				currentUser = new GameUserVO(userid)
+				_allUsers[userid] = currentUser;
+			}else {
+				currentUser = _allUsers[userid];
+			}	
 			var isMain:Boolean;
 			if (userid == "user_"+_socialUser.social_id){
 				trace("You are the main user", userid);
+				currentUser.selectedPowerups = _selectedPowerups;
 				GameSignals.REMOVE_MENU.dispatch();
 				isMain = true;
 			}else{
 				trace("Player with the userid", userid, "just joined the game");
 				isMain = false;
 			}
-			_allUsers[userid].igc = igc;
-			_allUsers[userid].isMainUser = isMain;
-			_allUsers[userid].spawnIndex = userIndex;
-			_allUsers[userid].xp = xp;
-			_allUsers[userid].vehicleId = vehicleId;
-			_allUsers[userid].textureId = textureId;
-			_allUsers[userid].isAIMaster = isAIMaster;
-			MultiplayerSignals.USER_JOINED.dispatch( _allUsers[userid] );
+			currentUser.igc = igc;
+			currentUser.isMainUser = isMain;
+			currentUser.spawnIndex = userIndex;
+			currentUser.xp = xp;
+			currentUser.vehicleId = vehicleId;
+			currentUser.textureId = textureId;
+			currentUser.isAIMaster = isAIMaster;
+			MultiplayerSignals.USER_JOINED.dispatch( currentUser );
 			if (isMain)
 				_mainConnection.send("GetRoomUsers");
 		}
@@ -503,8 +543,9 @@ package com.mayhem.multiplayer
 			var user:GameUserVO = _allUsers[uid];
 			user.igc = coins;
 			user.xp = xp;
+			trace("userSessionExpired",user.powerupSlots)
 			_client.bigDB.load("UserStats", uid, onStatsComplete);
-			UISignals.UPDATE_USER_INFO.dispatch(user.igc, user.xp);
+			UISignals.UPDATE_USER_INFO.dispatch(user);
 		}
 		
 		private function onStatsComplete(dbObject:DatabaseObject):void {

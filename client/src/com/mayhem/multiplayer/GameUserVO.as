@@ -17,6 +17,8 @@ package com.mayhem.multiplayer
 		public var isAIMaster:Boolean;
 		public var powerupSlots:uint = 0;
 		public var powerups:Vector.<String> = new Vector.<String>();
+		public var selectedPowerups:Array;
+		public var hasMusic:Boolean;
 		
 		public function GameUserVO(pId:String) 
 		{

@@ -18,6 +18,7 @@ package com.mayhem.game.powerups
 	import com.mayhem.signals.PowerUpsSignals;
 	import com.mayhem.signals.UISignals;
 	import com.mayhem.signals.UserInputSignals;
+	import com.mayhem.SoundsManager;
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
 	/**
@@ -43,26 +44,27 @@ package com.mayhem.game.powerups
 		
 		private function onPowerUpTriggered(mess:PowerUpMessage):void {
 			if (mess.triggerdBy != _gameController.getOwnerVehicle().user.uid) {
+				var triggeredBy:MovingCube = _gameController.getVehicleById(mess.triggerdBy);
 				switch(mess.powerUpId) {
 					case PowerUpMessage.POWERUP_EXPLOSION:
-						_gameController.getVehicleById(mess.triggerdBy).setExplosionState();
+						triggeredBy.setExplosionState();
 						for each(var eData:ExplosionData in mess.targets) {
 							var cube:MovingCube = _gameController.getVehicleById(eData.target);
 							cube.body.applyCentralImpulse(eData.impulse);
 						}
 						break;
 					case PowerUpMessage.POWERUP_INVISIBILITY:
-						_gameController.getVehicleById(mess.triggerdBy).setInvisibilityState(0);
+						triggeredBy.setInvisibilityState(0);
 						break;
 					case PowerUpMessage.POWERUP_SHIELD:
-						_gameController.getVehicleById(mess.triggerdBy).setShieldState();
+						triggeredBy.setShieldState();
 						break;
 					case PowerUpMessage.POWERUP_BEAM:
 						for each(var eData3:ExplosionData in mess.targets) {
 							var cube3:MovingCube = _gameController.getVehicleById(eData3.target);
 							cube3.body.applyCentralImpulse(eData3.impulse);
 						}
-						_gameController.getVehicleById(mess.triggerdBy).setBeamState();
+						triggeredBy.setBeamState();
 						break;
 					case PowerUpMessage.POWERUP_RANDOM_MAYHEM:
 						for each(var eData2:ExplosionData in mess.targets) {
@@ -72,10 +74,10 @@ package com.mayhem.game.powerups
 						var vehicle1:MovingCube = _gameController.getVehicleById(mess.targets[0].target);
 						var vehicle2:MovingCube = _gameController.getVehicleById(mess.targets[1].target);
 						var vehicle3:MovingCube = _gameController.getVehicleById(mess.targets[2].target);
-						_gameController.getVehicleById(mess.triggerdBy).setRandomMayhemState(vehicle1.body.position.clone(),vehicle2.body.position.clone(),vehicle3.body.position.clone());
+						triggeredBy.setRandomMayhemState(vehicle1.body.position.clone(),vehicle2.body.position.clone(),vehicle3.body.position.clone());
 						break;
 				}
-				
+				SoundsManager.playPowerupSFX(triggeredBy.body.position.clone());				
 			}
 		}
 		

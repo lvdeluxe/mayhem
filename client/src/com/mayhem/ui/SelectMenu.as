@@ -65,12 +65,16 @@ package com.mayhem.ui
 		private var _closePurchaseCoinsBtn:Button;
 		private var _closePurchaseBtn:Button;
 		private var _purchaseCreditsBtn:Button;
+		private var _unlockSlotBtn:Button;
 		private var _btnContainer:Sprite;
 		private var _theme:AzureMobileTheme;
 		private var _numFreeSlots:uint;
-		private var _unlockSlotBtn:Button;
+		
+		private var _selectedPowerups:Array = [];
 		
 		private static const CUSTOM_BUTTON_NAME:String = "customName";
+		
+		private var howToPlayString:String = "\nBumper Mayhem is a realtime multiplayer 3D game in which you control a vehicle in a 12-player arena,\nto try and destroy all your opponents.\nThe more hits you make, the more XP and Coins you get, which will allow you to unlock new Power-Ups!\nEvery time you get destroyed,\nyou respawn but you lose some precious seconds...\nEach session last 3:00 minutes, but you can play as many sessions as you want.\n\nYou control the vehicle with the W / A / S / D or ARROW keys,\nand unleash you power-ups with the 1 / 2 / 3 / 4 / 5 keys.\nYou need to fill up your power-up before using them, by staying on the the item located on top of the bridge.\n\nHAVE FUN!"
 		
 		
 		public function SelectMenu(user:GameUserVO, powerupDefs:Vector.<PowerupDefinition>, coinPacks:Vector.<CoinsPackage>, slots:Vector.<PowerupSlot>, theme:AzureMobileTheme) 
@@ -98,13 +102,23 @@ package com.mayhem.ui
 			UISignals.POWERUP_SLOT_CLICKED.add(onSlotSelected);
 			MultiplayerSignals.POWERUP_UNLOCKED.add(onPowerupUnlocked);
 			MultiplayerSignals.SLOT_UNLOCKED.add(onSlotUnlocked);
+			for (var i:uint = 0 ; i < _user.powerupSlots ; i++ ) {
+				_selectedPowerups.push("");
+			}
 		}
 		
 		private function onSlotUnlocked(mainUser:GameUserVO, slot_id:String):void 
 		{
 			_user = mainUser;
 			_numFreeSlots++;
-			trace("_numFreeSlots",_numFreeSlots)
+			_selectedPowerups.push("");
+		}
+		
+		private function removeSelectedPowerupsById(powerup_id:String):void {
+			var index:uint = _selectedPowerups.indexOf(powerup_id);
+			if (index != -1)
+				_selectedPowerups[index] = "";
+			trace(_selectedPowerups);
 		}
 		
 		private function onSlotSelected(powerup_index:uint, isAssigned:String):void {
@@ -115,9 +129,9 @@ package com.mayhem.ui
 					var btn:Button = Button(_btnContainer.getChildByName(isAssigned));
 					btn.isEnabled = true;
 					btn.defaultIcon.alpha = 1;
+					removeSelectedPowerupsById(isAssigned);
 					UISignals.REMOVE_POWERUP_FROM_SLOT.dispatch(isAssigned);
 					_numFreeSlots++;
-					trace("_numFreeSlots",_numFreeSlots)
 				}
 			}
 		}
@@ -163,7 +177,7 @@ package com.mayhem.ui
 			unlockSlotDesc.height = 200;
 			
 			var currentUnlockableSlot:PowerupSlot = _powerupSlots[_user.powerupSlots];
-			var currentLevel:uint = 1000//GameData.getLevelForXP(_user.xp) + 1;
+			var currentLevel:uint = GameData.getLevelForXP(_user.xp) + 1;
 			
 			if (currentLevel >= currentUnlockableSlot.unlockLevel) {
 				unlockSlotDesc.x = 50;
@@ -195,8 +209,7 @@ package com.mayhem.ui
 			PopUpManager.removePopUp(_unlockSlotContainer);
 			var powerupSlot:PowerupSlot = _powerupSlots[uint(btn.name.split("_")[1])];
 			trace(powerupSlot.unlockCredits)
-			MultiplayerSignals.SLOT_CREDITS_UNLOCK.dispatch(powerupSlot.id);
-			
+			MultiplayerSignals.SLOT_CREDITS_UNLOCK.dispatch(powerupSlot.id);			
 		}
 		
 		private function onClickUnlockSlotWithCoins(e:Event):void 
@@ -205,9 +218,7 @@ package com.mayhem.ui
 			_unlockSlotBtn.removeEventListener(Event.TRIGGERED, onClickUnlockSlotWithCoins);
 			UISignals.REMOVE_POPUP.dispatch();
 			PopUpManager.removePopUp(_unlockSlotContainer);
-			trace("unlock slot with coins", btn.name)
 			var powerupSlot:PowerupSlot = _powerupSlots[uint(btn.name.split("_")[1])];
-			trace(powerupSlot.unlockCredits)
 			if (_user.igc >= powerupSlot.unlockCoins) {
 				MultiplayerSignals.SLOT_UNLOCK.dispatch(powerupSlot.id);
 			}else {
@@ -241,7 +252,7 @@ package com.mayhem.ui
 			_howToPlay.height = 280;
 			_howToPlay.x = 50;
 			_howToPlay.y = 54
-			_howToPlay.text = "how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play how to play ";
+			_howToPlay.text = howToPlayString;
 			
 			var creditsTitle:Label = new Label();
 			creditsTitle.width = 800;
@@ -413,10 +424,19 @@ package com.mayhem.ui
 				}
 				
 			}else {
-				UISignals.ADD_POWERUP_TO_SLOT.dispatch(name, new Point(posX,posY));
+				UISignals.ADD_POWERUP_TO_SLOT.dispatch(name, new Point(posX, posY));
+				addPowerupToSelection(name);
 				_numFreeSlots--;
-				trace("_numFreeSlots",_numFreeSlots)
 			}			
+		}
+		
+		private function addPowerupToSelection(powerup_id:String):void {
+			for (var i:uint = 0; i < _selectedPowerups.length ; i++ ) {
+				if (_selectedPowerups[i] == "") {
+					_selectedPowerups[i] = powerup_id;
+					break;
+				}
+			}
 		}
 		
 		private function getPowerupById(powerup_id:String):PowerupDefinition {
@@ -455,7 +475,7 @@ package com.mayhem.ui
 			_purchaseCreditsBtn.height = 50;
 			_purchaseCreditsBtn.x = 150;
 			
-			var currentLevel:uint = 1000//GameData.getLevelForXP(_user.xp) + 1;
+			var currentLevel:uint = GameData.getLevelForXP(_user.xp) + 1;
 			if (currentLevel >= powerupDef.unlockLevel) {
 				_purchaseCreditsBtn.y = 220;
 				purchaseWithCoins.y = 100;
@@ -697,29 +717,35 @@ package com.mayhem.ui
 					break;
 			}
 			return "";
-		}
-		
-		
-		
-		public function cleanup():void {
-			//_startButton.removeEventListener(Event.TRIGGERED, startGame);
-			//removeChild(_startButton);
-			//prevButton.removeEventListener( Event.TRIGGERED, prevVehicle );
-			//nextButton.removeEventListener( Event.TRIGGERED, nextVehicle );
-			//removeChild(prevButton);
-			//removeChild(nextButton);
-		}
-		
+		}		
 		
 		private function startGame(event:Event):void {
-			GameSignals.SESSION_START.dispatch(_vehicleId, _textureId);
+			if (_purchaseCreditsBtn && _purchaseCreditsBtn.hasEventListener(Event.TRIGGERED))
+				_purchaseCreditsBtn.removeEventListener(Event.TRIGGERED, onClickUnlockWithCoins);
+			if (_closePurchaseCoinsBtn && _closePurchaseCoinsBtn.hasEventListener(Event.TRIGGERED))
+				_closePurchaseCoinsBtn.removeEventListener(Event.TRIGGERED, onClickClosePurchaseCoins);
+			if (_closeUnlockSlotBtn && _closeUnlockSlotBtn.hasEventListener(Event.TRIGGERED))
+				_closeUnlockSlotBtn.removeEventListener(Event.TRIGGERED, onCloseUnlockSlot);
+			if (_unlockSlotBtn && _unlockSlotBtn.hasEventListener(Event.TRIGGERED))
+				_unlockSlotBtn.removeEventListener(Event.TRIGGERED, onClickUnlockSlotWithCoins);
+			if (_closePurchaseBtn && _closePurchaseBtn.hasEventListener(Event.TRIGGERED))
+				_closePurchaseBtn.removeEventListener(Event.TRIGGERED, onClickClosePurchase);
+			
+			UISignals.POWERUP_SLOT_CLICKED.remove(onSlotSelected);
+			MultiplayerSignals.POWERUP_UNLOCKED.remove(onPowerupUnlocked);
+			MultiplayerSignals.SLOT_UNLOCKED.remove(onSlotUnlocked);
+			
 			_startButton.removeEventListener(Event.TRIGGERED, startGame);
+			_prevButton.removeEventListener( Event.TRIGGERED, prevVehicle);
+			_nextButton.removeEventListener( Event.TRIGGERED, nextVehicle);
 			removeChild(_startButton);
-			_prevButton.removeEventListener( Event.TRIGGERED, prevVehicle );
-			_nextButton.removeEventListener( Event.TRIGGERED, nextVehicle );
+			removeChild(_btnContainer);
 			removeChild(_prevButton);
 			removeChild(_nextButton);
 			removeChild(_colorSelector);
+			dispose();
+			GameSignals.SESSION_START.dispatch(_vehicleId, _textureId,_selectedPowerups);
+			
 		}
 		
 		private function setVehicleButtons():void {

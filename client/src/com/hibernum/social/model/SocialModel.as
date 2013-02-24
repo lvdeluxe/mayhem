@@ -45,7 +45,7 @@ package com.hibernum.social.model
 			_isSocial = !standalone;
 			if (standalone) {
 				var socialUser:SocialUser = new SocialUser();
-				socialUser.social_id = "1234";// Math.round(Math.random() * 10000).toString();
+				socialUser.social_id = "1234";
 				//socialUser.social_id = Math.round(Math.random() * 10000).toString();
 				socialUser.name = getRandomName();
 				onUserLogged(socialUser);

@@ -11,6 +11,7 @@ package
 	import flash.system.LoaderContext;
 	import flash.system.SecurityDomain;
 	import flash.text.TextField;
+	import playerio.GameFS;
 	/**
 	 * ...
 	 * @author availlant
@@ -33,8 +34,9 @@ package
 			setLoadingBar();
 			var context:LoaderContext = new LoaderContext(true, ApplicationDomain.currentDomain, SecurityDomain.currentDomain);
 			context.securityDomain = SecurityDomain.currentDomain;
+			//var gameFS:GameFS = GameFS.
+			//GameFS.
 			var request:URLRequest = new URLRequest("http://r.playerio.com/r/office-mayhem-g9omnsmpskqoxaolbzotca/Cube Mayhem/cubicmayhem.swf");
-			//var t:TinyLoad
 			var loader:Loader = new Loader();
 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onCompleteHandler);
 			loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, onProgressHandler);

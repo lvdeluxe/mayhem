@@ -19,17 +19,22 @@
       <editor clazz="particleEditor.effect.param.vars::ConstNumberVarEditor" varName="start" number="0"/>
       <editor clazz="particleEditor.effect.param.vars::ConstNumberVarEditor" varName="duration" number="0.5"/>
       <editor clazz="particleEditor.effect.param.vars::RandomCircleVarEditor" varName="rndCircle" innerRadius="500" outerRadius="3000" x="0" y="0"/>
+      <editor clazz="particleEditor.effect.param.vars::RandomNumberVarEditor" varName="rndScale" min="0.5" max="1"/>
       <exception comment="this if for time action">
         <editor clazz="particleEditor.effect.param::TimeSelection" startTime="0" duringTime="1"/>
       </exception>
     </vars>
     <action>
       <global>
-        <editor clazz="particleEditor.effect.action.global::ChangeColorByLifeGlobalEditor" varName="ChangeColorByLifeGlobal" start="1,1,1,1,0,0,0,0" end="1,1,1,1,0,0,0,-255"/>
+        <editor clazz="particleEditor.effect.action.global::ChangeColorByLifeGlobalEditor" varName="ChangeColorByLifeGlobal" start="1,1,1,1,0,0,0,0" end="2,0,0,1,255,-30,-14,-255"/>
+        <editor clazz="particleEditor.effect.action.global::ScaleByLifeGlobalEditor" varName="ScaleByLifeGlobal" start="1" end="0.5"/>
       </global>
       <local>
         <editor clazz="particleEditor.effect.action.local::VelocityLocalEditor" varName="VelocityLocal">
           <editor clazz="VelocityLocalEditor.as$660::VelocityParam" velocity="2,0,3"/>
+        </editor>
+        <editor clazz="particleEditor.effect.action.local::RandomScaleLocalEditor" varName="RandomScaleLocal">
+          <editor clazz="RandomScaleLocalEditor.as$661::ScaleParam" scale="4,4,4"/>
         </editor>
       </local>
     </action>

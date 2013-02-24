@@ -8,6 +8,7 @@ package
 	import com.mayhem.multiplayer.Connector;
 	import com.hibernum.social.model.SocialModel;
 	import com.hibernum.social.model.SocialUser;
+	import com.mayhem.SoundsManager;
 	import com.mayhem.ui.UIManager;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -72,7 +73,7 @@ package
 		
 		private function onContextCreated(event : Stage3DEvent) : void {	
 			_stage3DProxy.removeEventListener(Stage3DEvent.CONTEXT3D_CREATED, onContextCreated);
-			_social = new SocialModel(connectedToSocial, false);
+			_social = new SocialModel(connectedToSocial, true);
 		}
 		
 		

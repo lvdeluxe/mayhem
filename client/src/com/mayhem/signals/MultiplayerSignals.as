@@ -1,5 +1,6 @@
 package com.mayhem.signals 
 {
+	import org.osflash.signals.natives.base.SignalBitmap;
 	import org.osflash.signals.Signal;
 	/**
 	 * ...
@@ -29,6 +30,8 @@ package com.mayhem.signals
 		static public const SLOT_UNLOCKED:Signal = new Signal();
 		static public const SLOT_CREDITS_UNLOCK:Signal = new Signal();
 		static public const SLOT_CREDITS_UNLOCKED:Signal = new Signal();
+		static public const CHANGE_MUSIC_SETTINGS:Signal = new Signal();
+		static public const LEVEL_UP:Signal = new Signal();
 		
 		public function MultiplayerSignals() 
 		{

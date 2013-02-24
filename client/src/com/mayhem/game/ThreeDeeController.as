@@ -8,6 +8,7 @@ package com.mayhem.game
 	import com.mayhem.game.powerups.PowerupSlot;
 	import com.mayhem.multiplayer.CoinsPackage;
 	import com.mayhem.multiplayer.GameUserVO;
+	import com.mayhem.SoundsManager;
 	import flash.display.Stage;
 	import flash.geom.Vector3D;
 	import com.mayhem.signals.MultiplayerSignals;
@@ -23,13 +24,13 @@ package com.mayhem.game
 	{
 		
 		private var _view3D:View3D;
-		/*private var _first_view3D:View3D;
-		private var _second_view3D:View3D;*/
 		private var _light:DirectionalLight;
 		private var _stage:Stage;
 		private var _gameController:GameController;
 		private var _vehicleSelector:VehicleSelector;
 		private var _cameraToggleBool:Boolean;
+		private var _user:GameUserVO;
+		private var _allPowerups:Vector.<PowerupDefinition>;
 	
 		public function ThreeDeeController(stage:Stage, proxy:Stage3DProxy) 
 		{
@@ -40,34 +41,36 @@ package com.mayhem.game
 			setLights(_view3D);
 			MaterialsFactory.initialize([_light]);			
 			var stats:AwayStats = new AwayStats(_view3D)
-			stage.addChild(stats);			
+			//stage.addChild(stats);			
 			ParticlesFactory.instance.initialize(_view3D.scene);
 			CameraManager.instance.initialize(_view3D.camera);
-			UISignals.CAMERA_TOGGLE.add(changeCameraView);
+			UISignals.BACK_TO_SELECTOR.add(backToSelector);
 		}	
+		
+		private function backToSelector():void {
+			_view3D.camera.lens.far = 10000;
+			_gameController.remove();
+			_gameController = null;
+			_vehicleSelector = new VehicleSelector(_view3D.scene, _user.vehicleId, _user.textureId, _user.powerupSlots, _allPowerups);
+		}
 		
 		private function setNewCamera(temp_view3D:View3D):void{
 			ParticlesFactory.instance.initialize(temp_view3D.scene);
 			CameraManager.instance.initialize(temp_view3D.camera);
 		}
 		
-		private function changeCameraView(bool:Boolean):void{
-			/*trace("received msg from ui: " + bool);
-			_cameraToggleBool = bool;
-			if(bool){
-				setNewCamera(_view3D);
-			}else{
-				setNewCamera(_first_view3D);
-			}*/
-		}
-		
 		private function onUserLoaded(user:GameUserVO, powerups:Vector.<PowerupDefinition>, coins:Vector.<CoinsPackage>, slots:Vector.<PowerupSlot>):void {
-			_vehicleSelector = new VehicleSelector(_view3D.scene, user.vehicleId, user.textureId, user.powerupSlots,powerups);
+			SoundsManager.initialize(user.hasMusic, _view3D);
+			_user = user;
+			_allPowerups = powerups;
+			_vehicleSelector = new VehicleSelector(_view3D.scene, user.vehicleId, user.textureId, user.powerupSlots, powerups);
+			SoundsManager.startMenuLoop();
 		}
 		
 		private function startTheGame():void {
 			_view3D.camera.lens.far = 35000;
 			_vehicleSelector.remove();
+			_vehicleSelector = null;
 			_gameController = new GameController(_stage, _view3D);
 		}
 		
@@ -123,10 +126,11 @@ package com.mayhem.game
 			if (_vehicleSelector) {
 				_vehicleSelector.doStuff();
 			}
-			if(_gameController)_gameController.renderGame();
-			/*if(_cameraToggleBool)*/_view3D.render();
-			//if(!_cameraToggleBool)_first_view3D.render();
-			if(_gameController)_gameController.checkVehicleCollision();
+			_view3D.render();
+			if (_gameController) {
+				_gameController.renderGame();
+				_gameController.checkVehicleCollision();
+			}
 		}
 		
 		public function get renderer():View3D {

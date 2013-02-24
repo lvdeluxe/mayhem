@@ -148,10 +148,14 @@ package com.mayhem.game
 		
 		public function remove():void {
 			_scene.removeChild(_container);
+			
 			UISignals.SET_TEXTURE.remove(updateTexture);
 			UISignals.SET_VEHICLE.remove(updateVehicle);
 			UISignals.ADD_POWERUP_TO_SLOT.remove(addPowerToSlot);
 			UISignals.REMOVE_POWERUP_FROM_SLOT.remove(removePowerup);
+			MultiplayerSignals.SLOT_UNLOCKED.remove(onSlotUnlocked);
+			UISignals.ADD_POPUP.remove(disableAllClicks);
+			UISignals.REMOVE_POPUP.remove(enableAllClicks);
 		}
 		
 		private function updateVehicle(vehicleId:uint):void {

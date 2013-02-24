@@ -42,6 +42,10 @@ package com.mayhem.game
 			body.addEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
 		}
 		
+		public function cleanup():void {
+			body.removeEventListener(AWPEvent.COLLISION_ADDED,collisionDetectionHandler);
+		}
+		
 		private function collisionDetectionHandler(event:AWPEvent):void {
 			if(event.collisionObject.skin){
 				var cubeCollider:MovingCube = event.collisionObject.skin.extra as MovingCube;

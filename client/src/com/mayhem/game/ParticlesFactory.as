@@ -48,6 +48,7 @@ package com.mayhem.game
 		}
 		
 		public function initialize(pScene:Scene3D):void {
+			_runningParticles = new Dictionary();
 			_scene = pScene;
 			var parts:* = new _collisionXML();
 			var xml:XML = new XML(parts);
@@ -88,6 +89,15 @@ package com.mayhem.game
 			}
 			return _instance;
 		}
+		
+		public function cleanup():void {
+			for each(var eGroup:Object in _runningParticles) {
+				var group:EffectGroup = eGroup.particleEffect;
+				group.parent.removeChild(group);
+			}
+			_runningParticles = new Dictionary();
+		}
+		
 		
 		public function checkRemoveParticles():void {
 			for each(var eGroup:Object in _runningParticles) {

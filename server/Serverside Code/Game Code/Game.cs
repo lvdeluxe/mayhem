@@ -85,15 +85,13 @@ namespace MyGame {
                 userInfo.Set("vehicleId", player.JoinData["vehicleId"]);
                 userInfo.Set("textureId", player.JoinData["textureId"]);
                 userInfo.Save();
-
+                player.XP = userInfo.GetInt("xp");
                 
                 player.UserIndex = indexList[0];
                 Console.WriteLine("userId: " + player.ConnectUserId + " " + player.UserIndex.ToString());
                 indexList.RemoveAt(0);
                 player.TextureId = Convert.ToUInt32(player.JoinData["textureId"]);
                 player.VehicleId = Convert.ToUInt32(player.JoinData["vehicleId"]);
-                Console.WriteLine(player.TextureId);
-                Console.WriteLine(player.JoinData["textureId"]); ;
                 allUsers.Add(player.ConnectUserId, player);
                 allAICubes.Remove("ai_" + player.UserIndex.ToString());
                 player.PayVault.Refresh(delegate()
@@ -239,11 +237,14 @@ namespace MyGame {
                         player.PayVault.Credit(100, "EndSession", delegate()
                         {
                             PlayerIO.BigDB.Load("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo){
+                                Console.WriteLine("XP = " + player.XP.ToString());
+                                //Console.WriteLine("XP = " + userInfo.xp.ToString());
                                 player.XP += 5;
                                 userInfo.Set("xp", player.XP);
                                 userInfo.Save();
                                 statsInfo.Save();
                                 Broadcast("UserSessionExpired", uid, player.PayVault.Coins, player.XP);
+                                Console.WriteLine("XP = " + player.XP.ToString());
                             });                            
                         });                        
                     });                   
@@ -257,6 +258,9 @@ namespace MyGame {
                     string chaser_id = message.GetString(0);
                     string target_id = message.GetString(1);
                     Broadcast("AITargetUpdated", chaser_id, target_id);
+                    break;
+                case "RemoveUser":
+                    player.Disconnect();
                     break;
 			}
 		}

@@ -135,6 +135,18 @@ package com.mayhem.game
 			
 		}
 		
+		public function cleanup():void {
+			body.removeEventListener(AWPEvent.RAY_CAST, testRayCast);
+			if (_shieldCollisionBody && _shieldCollisionBody.hasEventListener(AWPEvent.COLLISION_ADDED)){
+				_shieldCollisionBody.removeEventListener(AWPEvent.COLLISION_ADDED, onShieldCollision);
+				mesh.removeEventListener(Object3DEvent.POSITION_CHANGED, onShieldFrame);
+			}
+			_collisionTimer.removeEventListener(TimerEvent.TIMER,onTimer);
+			_collisionTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete);
+			_invisibilityTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, onInvisibilityComplete);
+			_shieldTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, onShieldComplete);
+		}
+		
 		private function setInfoPlane(userId:String,bitmapData:BitmapData):void 
 		{
 			if(userId == user.uid){

@@ -35,6 +35,12 @@ package com.mayhem.ui
 		public static var EmptySlot:Class;
 		[Embed(source = "/assets/ui/powerup_locked_slot.png")]
 		public static var LockedSlot:Class;
+		[Embed(source = "/assets/ui/music.png")]
+		public static var Music:Class;
+		[Embed(source = "/assets/ui/no_music.png")]
+		public static var NoMusic:Class;
+		[Embed(source = "/assets/ui/logo.png")]
+		public static var Logo:Class;
 		
 		public function TexturesManager() 
 		{

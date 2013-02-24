@@ -77,6 +77,8 @@ package com.mayhem.ui
 			_sessionTextField.width = 200;
 			_sessionTextField.text = "Session Stats";
 			addChild(_sessionTextField);
+			
+			
 		}
 		
 		private function onToggleChange(event:Event):void {
@@ -146,11 +148,12 @@ package com.mayhem.ui
 		}
 		
 		private function stopPlaying(event:Event):void {
-			trace("stopPlaying")
+			_toggle.removeEventListener( Event.CHANGE, onToggleChange );
+			UISignals.BACK_TO_SELECTOR.dispatch();
 		}
 		
 		private function restart(event:Event):void {
-			UISignals.CLICK_RESTART.dispatch();
+			UISignals.RESTART_SESSION.dispatch();
 		}
 		
 	}

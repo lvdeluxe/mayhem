@@ -14,7 +14,8 @@ package com.mayhem.signals
 		public static var OWNER_RESPAWNED:Signal = new Signal();
 		public static var OWNER_POWERUP_FILL:Signal = new Signal();
 		public static var UPDATE_GAME_TIMER:Signal = new Signal();
-		public static var CLICK_RESTART:Signal = new Signal();
+		public static var RESTART_SESSION:Signal = new Signal();
+		public static var BACK_TO_SELECTOR:Signal = new Signal();
 		public static var SHOW_STATS:Signal = new Signal();
 		public static var UPDATE_USER_INFO:Signal = new Signal();
 		public static var SET_TEXTURE:Signal = new Signal();
@@ -27,6 +28,7 @@ package com.mayhem.signals
 		public static var REMOVE_POWERUP_FROM_SLOT:Signal = new Signal();
 		public static var ADD_POPUP:Signal = new Signal();
 		public static var REMOVE_POPUP:Signal = new Signal();
+		public static var SET_POWERUPS:Signal = new Signal();
 				
 		public function UISignals() 
 		{
