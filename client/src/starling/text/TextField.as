@@ -11,6 +11,7 @@
 package starling.text
 {
     import flash.display.BitmapData;
+    import flash.display.StageQuality;
     import flash.geom.Matrix;
     import flash.geom.Rectangle;
     import flash.text.AntiAliasType;
@@ -64,7 +65,7 @@ package starling.text
     public class TextField extends DisplayObjectContainer
     {
         // the name container with the registered bitmap fonts
-        private static const BITMAP_FONT_DATA_NAME:String = "starling.TextField.BitmapFonts";
+        private static const BITMAP_FONT_DATA_NAME:String = "starling.display.TextField.BitmapFonts";
         
         private var mFontSize:Number;
         private var mColor:uint;
@@ -187,9 +188,23 @@ package starling.text
             if (mVAlign == VAlign.TOP)         yOffset = 2; // flash adds a 2 pixel offset
             else if (mVAlign == VAlign.CENTER) yOffset = (height - textHeight) / 2.0;
             else if (mVAlign == VAlign.BOTTOM) yOffset =  height - textHeight - 2;
+
+            formatText(sNativeTextField, textFormat);
             
             var bitmapData:BitmapData = new BitmapData(width, height, true, 0x0);
-            bitmapData.draw(sNativeTextField, new Matrix(1, 0, 0, 1, 0, int(yOffset)-2));
+            var drawMatrix:Matrix = new Matrix(1, 0, 0, 1, 0, int(yOffset)-2); 
+            var drawWithQualityFunc:Function = 
+                "drawWithQuality" in bitmapData ? bitmapData["drawWithQuality"] : null;
+            
+            // Beginning with AIR 3.3, we can force a drawing quality. Since "LOW" produces
+            // wrong output oftentimes, we force "MEDIUM" if possible.
+            
+            if (drawWithQualityFunc is Function)
+                drawWithQualityFunc.call(bitmapData, sNativeTextField, drawMatrix, 
+                                         null, null, null, false, StageQuality.MEDIUM);
+            else
+                bitmapData.draw(sNativeTextField, drawMatrix);
+            
             sNativeTextField.text = "";
             
             // update textBounds rectangle
@@ -212,7 +227,14 @@ package starling.text
                 mImage.readjustSize(); 
             }
         }
-        
+
+        /** formatText is called immediately before the text is rendered. The intent of formatText
+         *  is to be overridden in a subclass, so that you can provide custom formatting for TextField.
+         *  <code>textField</code> is the flash.text.TextField object that you can specially format;
+         *  <code>textFormat</code> is the default TextFormat for <code>textField</code>.
+         */
+        protected function formatText(textField:flash.text.TextField, textFormat:TextFormat):void {}
+
         private function autoScaleNativeTextField(textField:flash.text.TextField):void
         {
             var size:Number   = Number(textField.defaultTextFormat.size);
@@ -476,12 +498,13 @@ package starling.text
         {
             if (!mIsRenderedText)
                 throw(new Error("The TextField.nativeFilters property cannot be used on Bitmap fonts."));
-			
+            
             mNativeFilters = value.concat();
             mRequiresRedraw = true;
         }
         
-        /** Makes a bitmap font available at any text field, identified by its <code>name</code>.
+        /** Makes a bitmap font available at any TextField in the current stage3D context.
+         *  The font is identified by its <code>name</code>.
          *  Per default, the <code>name</code> property of the bitmap font will be used, but you 
          *  can pass a custom name, as well. @returns the name of the font. */
         public static function registerBitmapFont(bitmapFont:BitmapFont, name:String=null):String
@@ -507,15 +530,15 @@ package starling.text
         }
         
         /** Stores the currently available bitmap fonts. Since a bitmap font will only work
-         *  in one Starling instance, they are saved in Starling's 'customData' property. */
+         *  in one Stage3D context, they are saved in Starling's 'contextData' property. */
         private static function get bitmapFonts():Dictionary
         {
-            var fonts:Dictionary = Starling.current.customData[BITMAP_FONT_DATA_NAME] as Dictionary;
+            var fonts:Dictionary = Starling.current.contextData[BITMAP_FONT_DATA_NAME] as Dictionary;
             
             if (fonts == null)
             {
                 fonts = new Dictionary();
-                Starling.current.customData[BITMAP_FONT_DATA_NAME] = fonts;
+                Starling.current.contextData[BITMAP_FONT_DATA_NAME] = fonts;
             }
             
             return fonts;

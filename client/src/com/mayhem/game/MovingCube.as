@@ -23,6 +23,10 @@ package com.mayhem.game
 	import awayphysics.collision.dispatch.AWPCollisionObject;
 	import awayphysics.collision.shapes.AWPBoxShape;
 	import awayphysics.collision.shapes.AWPBvhTriangleMeshShape;
+	import awayphysics.collision.shapes.AWPCapsuleShape;
+	import awayphysics.collision.shapes.AWPCollisionShape;
+	import awayphysics.collision.shapes.AWPCompoundShape;
+	import awayphysics.collision.shapes.AWPConvexHullShape;
 	import awayphysics.collision.shapes.AWPSphereShape;
 	import awayphysics.data.AWPCollisionFlags;
 	import awayphysics.dynamics.AWPDynamicsWorld;
@@ -58,7 +62,7 @@ package com.mayhem.game
 		public var hasCollided:Boolean = false;
 		public var hasFelt:Boolean = false;
 		public var linearVelocityBeforeCollision:Vector3D = new Vector3D();
-		public var totalEnergy:int = GameData.VEHICLE_MAX_ENERGY;
+		public var totalEnergy:Number = GameData.VEHICLE_MAX_ENERGY;
 		public var spawnPosition:Vector3D = new Vector3D();
 		public var powerupRefill:uint = 0;
 		public var isInvisible:Boolean = false;
@@ -69,6 +73,7 @@ package com.mayhem.game
 		
 		
 		public var isInContactWithGound:Boolean = false;
+		public var isInContactWithRamp:Boolean = false;
 		
 		public var user:GameUserVO;
 		
@@ -83,6 +88,10 @@ package com.mayhem.game
 		public var infoPlane:Sprite3D;
 		
 		public var hasShield:Boolean = false;
+		
+		public var hasEnteredRamp:Boolean = false;
+		
+		public var isInDangerZone:Boolean = false;
 		
 		
 		public function MovingCube(pUser:GameUserVO) 
@@ -106,6 +115,7 @@ package com.mayhem.game
 			_shieldTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onShieldComplete);
 
 			mesh = ModelsManager.instance.allVehicleMeshes[user.vehicleId].clone() as Mesh;
+			//mesh = ModelsManager.instance.getVehicleCollider();
 			mesh.material = getMaterial();
 			mesh.material.bothSides = true;
 			mesh.material.lightPicker = MaterialsFactory.mainLightPicker;	
@@ -114,9 +124,9 @@ package com.mayhem.game
 
 			mesh.extra = this;
 			
-			var boxShape : AWPBoxShape = new AWPBoxShape(450, 200, 600);
+			var boxShape:AWPBoxShape = new AWPBoxShape(450, 200, 600);
 			body = new AWPRigidBody(boxShape, mesh, GameData.VEHICLE_MASS);
-			body.addRay(new Vector3D(), new Vector3D(0,-150,0));
+			body.addRay(new Vector3D(0,0,0), new Vector3D(0,-150,0));
 			//var trident:Trident = new Trident(500);
 			//mesh.addChild(trident)
 			body.gravity = new Vector3D(0, GameData.VEHICLE_GRAVITY,0);
@@ -155,12 +165,34 @@ package com.mayhem.game
 				infoPlane = new Sprite3D(mat, 500, 500);
 				infoPlane.y = 200;
 				mesh.addChild(infoPlane);
+				if (!enableBehavior) {
+					infoPlane.visible = false;
+				}
 			}
 		}
 		
 		private function testRayCast(event:AWPEvent):void {
-			//event.collisionObject.
 			isInContactWithGound = true;
+			//if (body.linearVelocity.length > 50) {
+				//body.clearForces();
+			//}
+			//if(user.uid == "user_1234")trace(body.linearVelocity.length)
+			//if(event.collisionObject.skin){
+				//if (event.collisionObject.skin.name == MeshMapping.RAMP) {
+					//if (user.uid == "user_1234") {
+						//trace(body.rotationX)
+						//trace( event.manifoldPoint.normalWorldOnB)
+						//trace("///////////////////")
+						//body.linearDamping = 0;
+						//body.angularDamping = 0;
+						//body.rotationX = -25;
+						//trace(body.rotationX)
+						//body.rotationX -= 25;
+						//isInContactWithRamp = true;
+						//body.rotationX = event.manifoldPoint.normalWorldOnB.dotProduct(body.rotation);
+					//}
+				//}
+			//}
 		}
 		//
 		public function getMaterial():TextureMaterial {
@@ -264,8 +296,6 @@ package com.mayhem.game
 		public function setImpactState(position:Vector3D):void {
 			var particlesPosition:Vector3D = mesh.transform.transformVector(position);
 			ParticlesFactory.instance.getSparksParticles(particlesPosition);
-			//_collisionTimer.reset();
-			//_collisionTimer.start();
 		}
 		
 		private function enableCollision():void {

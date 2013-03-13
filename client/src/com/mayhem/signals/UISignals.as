@@ -29,6 +29,8 @@ package com.mayhem.signals
 		public static var ADD_POPUP:Signal = new Signal();
 		public static var REMOVE_POPUP:Signal = new Signal();
 		public static var SET_POWERUPS:Signal = new Signal();
+		public static var EXIT_DANGER_ZONE:Signal = new Signal();
+		public static var ENTER_DANGER_ZONE:Signal = new Signal();
 				
 		public function UISignals() 
 		{

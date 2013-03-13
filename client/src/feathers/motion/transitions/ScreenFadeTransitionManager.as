@@ -1,26 +1,9 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Feathers
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
 */
 package feathers.motion.transitions
 {
@@ -88,6 +71,12 @@ package feathers.motion.transitions
 		 * The easing function to use.
 		 */
 		public var ease:Object = Transitions.EASE_OUT;
+
+		/**
+		 * Determines if the next transition should be skipped. After the
+		 * transition, this value returns to <code>false</code>.
+		 */
+		public var skipNextTransition:Boolean = false;
 		
 		/**
 		 * The function passed to the <code>transition</code> property of the
@@ -99,12 +88,28 @@ package feathers.motion.transitions
 			{
 				throw new ArgumentError("Cannot transition if both old screen and new screen are null.");
 			}
-			
+
 			if(this._activeTransition)
 			{
 				this._savedOtherTarget = null;
 				this._activeTransition.advanceTime(this._activeTransition.totalTime);
 				this._activeTransition = null;
+			}
+
+			if(this.skipNextTransition)
+			{
+				this.skipNextTransition = false;
+				this._savedCompleteHandler = null;
+				if(newScreen)
+				{
+					newScreen.x = 0;
+					newScreen.alpha = 1;
+				}
+				if(onComplete != null)
+				{
+					onComplete();
+				}
+				return;
 			}
 			
 			this._savedCompleteHandler = onComplete;

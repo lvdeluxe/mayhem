@@ -48,6 +48,7 @@ package com.mayhem.multiplayer
 		private var _allCoinsPacks:Vector.<CoinsPackage>;
 		private var _allSlots:Vector.<PowerupSlot>;
 		private var _selectedPowerups:Array;
+		private var _leaderboardUsers:Vector.<GameUserVO> = new Vector.<GameUserVO>();
 		
 		public static const MAX_USER_PER_ROOM:uint = 12;
 		
@@ -82,9 +83,10 @@ package com.mayhem.multiplayer
 			_client = client;
 			setSignals();
 			//uncomment this line for local server 
-			_client.multiplayer.developmentServer = "localhost:8184";
+			//_client.multiplayer.developmentServer = "localhost:8184";
 			_client.bigDB.load("PlayerObjects", client.connectUserId, onUserDataLoaded, handleError);
 		}
+		
 		
 		private function onGameStart(vId:uint, tId:uint, selectedPowerups:Array):void {
 			trace("Game starts", vId, tId);
@@ -155,6 +157,7 @@ package com.mayhem.multiplayer
 				}				
 			}
 			MultiplayerSignals.USER_LOADED.dispatch(_allUsers[_client.connectUserId],_allPowerups,_allCoinsPacks,_allSlots);
+			
 		}
 		
 		
@@ -201,9 +204,38 @@ package com.mayhem.multiplayer
 			UISignals.BACK_TO_SELECTOR.add(removeUserFormServer);
 			MultiplayerSignals.CHANGE_MUSIC_SETTINGS.add(onChangeMusicSettings);
 			MultiplayerSignals.LEVEL_UP.add(onLevelUp)
+			MultiplayerSignals.GET_LEADERBOARD.add(getLeaderboard);
+			MultiplayerSignals.GET_LEADERBOARD_DATA.add(getLeaderboardData);
 		}
 		
+		private function getLeaderboardData(uid:String, callback:Function):void {
+			_client.bigDB.load("UserStats", uid, function(dbObject:DatabaseObject):void {
+				var stats:GameStats = new GameStats(uid);
+				if(dbObject!=null){
+					stats.alltime_max_speed = dbObject.AllTimeMaxSpeed;
+					stats.alltime_num_hits_inflicted = dbObject.AllTimeHitsInflicted;
+					stats.alltime_num_hits_received = dbObject.AllTimeHitsReceived;
+					stats.alltime_num_kills_inflicted = dbObject.AllTimeKillsInflicted;
+					stats.alltime_num_kills_received = dbObject.AllTimeKillsReceived;
+					stats.alltime_sessions_played = dbObject.AllTimeSessionsPlayed;
+				}
+				callback(stats);
+			}, handleError);
+		}
 		
+		private function getLeaderboard(callback:Function):void {
+			_client.bigDB.loadRange("PlayerObjects", "LeaderboardUser", null, null, null, 1000, function(allUsers:Array):void {
+				for (var i:uint = 0 ; i < allUsers.length ; i++ ) {
+					var dbObject:DatabaseObject = allUsers[i];
+					var user:GameUserVO = new GameUserVO(dbObject.key);
+					user.name = dbObject.username;
+					user.xp = dbObject.xp;
+					_leaderboardUsers.push(user);
+				}
+				callback(_leaderboardUsers);
+			}, handleError);
+			
+		}
 		
 		private function onChangeMusicSettings(hasMusic:Boolean):void {
 			_client.bigDB.loadMyPlayerObject(function(dbObject:DatabaseObject):void {
@@ -541,15 +573,14 @@ package com.mayhem.multiplayer
 		
 		private function userSessionExpired(m:Message, uid:String, coins:int, xp:uint):void {
 			var user:GameUserVO = _allUsers[uid];
-			user.igc = coins;
-			user.xp = xp;
-			trace("userSessionExpired",user.powerupSlots)
-			_client.bigDB.load("UserStats", uid, onStatsComplete);
-			UISignals.UPDATE_USER_INFO.dispatch(user);
-		}
-		
-		private function onStatsComplete(dbObject:DatabaseObject):void {
-			MultiplayerSignals.SESSION_PAUSED.dispatch(dbObject);
+			if(user.isMainUser){
+				user.igc = coins;
+				user.xp = xp;
+				_client.bigDB.load("UserStats", uid, function(dbObject:DatabaseObject):void {
+					MultiplayerSignals.SESSION_PAUSED.dispatch(dbObject);
+					UISignals.UPDATE_USER_INFO.dispatch(user);
+				}, handleError);
+			}
 		}
 		
 		private function userSessionRestarted(m:Message, uid:String):void {

@@ -1,6 +1,11 @@
 package com.mayhem.ui 
 {
+	import com.hibernum.social.controller.SocialImageLoader;
+	import com.hibernum.social.model.SocialRequest;
+	import com.hibernum.social.model.SocialUser;
+	import com.hibernum.social.service.FacebookService;
 	import com.mayhem.game.GameData;
+	import com.mayhem.game.GameStats;
 	import com.mayhem.game.ModelsManager;
 	import com.mayhem.game.powerups.PowerupDefinition;
 	import com.mayhem.game.powerups.PowerupSlot;
@@ -14,12 +19,19 @@ package com.mayhem.ui
 	import feathers.controls.ButtonGroup;
 	import feathers.controls.Callout;
 	import feathers.controls.Label;
+	import feathers.controls.List;
+	import feathers.controls.Radio;
 	import feathers.controls.Screen;
+	import feathers.controls.ToggleSwitch;
 	import feathers.core.PopUpManager;
+	import feathers.core.ToggleGroup;
 	import feathers.data.ListCollection;
 	import feathers.text.BitmapFontTextFormat;
 	import feathers.themes.AzureMobileTheme;
+	import flash.display.Bitmap;
+	import flash.display.Loader;
 	import flash.geom.Point;
+	import flash.net.URLRequest;
 	import flash.text.TextFormatAlign;
 	import flash.utils.setTimeout;
 	import playerio.VaultItem;
@@ -34,6 +46,7 @@ package com.mayhem.ui
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.textures.Texture;
+	//import flash.events.Event;
 	/**
 	 * ...
 	 * @author availlant
@@ -58,19 +71,37 @@ package com.mayhem.ui
 		private var _closeBtn:Button;
 		private var _howToPlay:Label
 		private var _credits:Label
+		private var _leaderboardDataContainer:Sprite = new Sprite();
+		private var _leaderboardContainer:Sprite = new Sprite();
 		private var _unlockSlotContainer:Sprite = new Sprite();
 		private var _purchasePowerupContainer:Sprite = new Sprite();
 		private var _purchaseMoreCoinsContainer:Sprite = new Sprite();
+		private var _inviteFriendsBtn:Button;
+		private var _closeLeaderboardDataBtn:Button;
+		private var _closeLeaderboardBtn:Button;
 		private var _closeUnlockSlotBtn:Button;
 		private var _closePurchaseCoinsBtn:Button;
 		private var _closePurchaseBtn:Button;
 		private var _purchaseCreditsBtn:Button;
 		private var _unlockSlotBtn:Button;
+		private var _leaderboardBtn:Button;
 		private var _btnContainer:Sprite;
 		private var _theme:AzureMobileTheme;
 		private var _numFreeSlots:uint;
 		
+		private var _leaderboardGroup:ToggleGroup;
+		
+		private var _maxLeaderboardPics:uint = 0;
+		private var _incLeaderboardPics:uint = 0;
+		private var _leaderboardList:List;
+		
 		private var _selectedPowerups:Array = [];
+		
+		private var _currentLeaderboardSelected:uint = 0;
+		
+		private var _leaderboardUsers:Vector.<Object> = new Vector.<Object>();
+		private var _leaderboardFriends:Vector.<Object> = new Vector.<Object>();
+		private var _currentleaderboardUsers:Vector.<Object> = new Vector.<Object>();
 		
 		private static const CUSTOM_BUTTON_NAME:String = "customName";
 		
@@ -99,12 +130,128 @@ package com.mayhem.ui
 			setVehicleButtons();	
 			setInfoPopupContent();
 			setInfosButton();
+			
 			UISignals.POWERUP_SLOT_CLICKED.add(onSlotSelected);
 			MultiplayerSignals.POWERUP_UNLOCKED.add(onPowerupUnlocked);
 			MultiplayerSignals.SLOT_UNLOCKED.add(onSlotUnlocked);
+			MultiplayerSignals.GET_LEADERBOARD.dispatch(onGetLeaderboard);
+			
 			for (var i:uint = 0 ; i < _user.powerupSlots ; i++ ) {
 				_selectedPowerups.push("");
 			}
+			
+			var logo:Image = new Image(Texture.fromBitmap(new TexturesManager.Logo()));
+			logo.x = (Starling.current.nativeStage.stageWidth - logo.width) / 2;
+			addChild(logo);
+		}
+		
+		private function onClickItemLeaderboard(event:Event):void {
+			var list:List = List( event.currentTarget );
+			_currentLeaderboardSelected = list.selectedIndex;
+			MultiplayerSignals.GET_LEADERBOARD_DATA.dispatch(_currentleaderboardUsers[_currentLeaderboardSelected].user_id, showLeaderboardDataPopup);
+		}
+		
+		private function showLeaderboardDataPopup(stats:GameStats):void {
+			var user:Object;
+			for (var i:uint = 0 ; i < _currentleaderboardUsers.length ; i++ ) {
+				if (_currentleaderboardUsers[i].user_id == stats.uid) {
+					user = _currentleaderboardUsers[i];
+				}
+			}
+			
+			_leaderboardDataContainer = new Sprite();
+			var btn:Button = new Button();
+			btn.width = 500;
+			btn.height = 300;
+			btn.touchable = false;			
+			
+			var leaderboardDataTitle:Label = new Label();
+			leaderboardDataTitle.width = 500;
+			leaderboardDataTitle.height = 24;
+			leaderboardDataTitle.y = 20
+			leaderboardDataTitle.text = user.name;
+			
+			var img:Image = new Image(user.pic);
+			img.x = 10;
+			img.y = 10;
+			
+			_closeLeaderboardDataBtn = new Button();
+			_closeLeaderboardDataBtn.defaultIcon = new Image(Texture.fromBitmap(new TexturesManager.CloseButton()));
+			_closeLeaderboardDataBtn.width = 30;
+			_closeLeaderboardDataBtn.height = 30;
+			_closeLeaderboardDataBtn.x = 465;
+			_closeLeaderboardDataBtn.y = 5;
+			_closeLeaderboardDataBtn.addEventListener(Event.TRIGGERED, onCloseLeaderboardData);
+			
+			var dataLabel:Label  = new Label();
+			dataLabel.textRendererProperties.wordWrap = true;
+			dataLabel.width = 400;
+			dataLabel.height = 200;
+			dataLabel.x = 50;
+			dataLabel.y = 75;
+			dataLabel.text =  "has played " +stats.alltime_sessions_played.toString() + " sessions.\n"+
+			"has hit " + stats.alltime_num_hits_inflicted.toString() + " enemies.\n" +
+			"has been hit " + stats.alltime_num_hits_received.toString() + " times.\n"+			
+			"has destroyed " + stats.alltime_num_kills_inflicted.toString() + " enemies.\n" +
+			"has been destroyed " + stats.alltime_num_kills_received.toString() + " times.\n" +
+			"Max speed at impact was " + uint(stats.alltime_max_speed ).toString() + " km/h."
+			
+			
+			_leaderboardDataContainer.addChild(btn);
+			_leaderboardDataContainer.addChild(leaderboardDataTitle);
+			_leaderboardDataContainer.addChild(dataLabel);			
+			_leaderboardDataContainer.addChild(img);		
+			_leaderboardDataContainer.addChild(_closeLeaderboardDataBtn);
+			
+			PopUpManager.addPopUp(_leaderboardDataContainer);
+		}
+		
+		private function onCloseLeaderboardData(event:Event):void {
+			PopUpManager.removePopUp(_leaderboardDataContainer);
+			_leaderboardList.selectedItem.isSelected = false;
+		}
+		
+		private function onGetLeaderboard(leaderboardUsers:Vector.<GameUserVO>):void {
+			var pic:Texture = Texture.fromBitmap(new ModelsManager.instance.leaderboardDummy());
+			for (var i:uint = 0 ; i < leaderboardUsers.length ; i++ ) {
+				var user:Object = { };
+				user.user_id = leaderboardUsers[i].uid;
+				user.name = leaderboardUsers[i].name;
+				user.label = leaderboardUsers[i].name + " / Level "+(GameData.getLevelForXP(leaderboardUsers[i].xp) + 1).toString();
+				
+				if (leaderboardUsers[i].name.split("_")[0] != "dummy") {
+					_maxLeaderboardPics ++;
+					var imgLoader:SocialImageLoader = new SocialImageLoader(leaderboardUsers[i].uid, setLeaderboardUserPicture);
+				}else {
+					user.pic = pic;
+				}
+				_leaderboardUsers.push(user);
+			}
+			
+		}
+		
+		private function setLeaderboardUserPicture(userId:String, img:Bitmap):void
+		{
+			for (var i:uint = 0 ; i < _leaderboardUsers.length; i++ ) {
+				if (_leaderboardUsers[i].user_id == userId) {
+					_leaderboardUsers[i].pic = Texture.fromBitmap(img);
+				}
+			}
+			_incLeaderboardPics++;
+			if (_incLeaderboardPics == _maxLeaderboardPics)
+				SocialSignals.GET_LEADERBOARD_FRIENDS.dispatch(onGetLeaderboardFriends);
+		}
+		
+		private function onGetLeaderboardFriends(leaderboardFriends:Array):void {
+			for (var i:uint = 0 ; i < leaderboardFriends.length ; i++ ) {
+				var sUser:SocialUser = leaderboardFriends[i];
+				for (var j:uint = 0 ; j < _leaderboardUsers.length; j++ ) {
+					if (sUser.social_id == _leaderboardUsers[j].user_id.split("_")[1]) {
+						_leaderboardFriends.push(_leaderboardUsers[j]);
+					}
+				}				
+			}
+			setLeaderboardButton();
 		}
 		
 		private function onSlotUnlocked(mainUser:GameUserVO, slot_id:String):void 
@@ -282,6 +429,149 @@ package com.mayhem.ui
 			_infoContainer.addChild(_closeBtn);
 		}
 		
+		private function showLeaderboardPopup():void {
+			_leaderboardContainer = new Sprite();
+			var btn:Button = new Button();
+			btn.width = 800;
+			btn.height = 600;
+			btn.touchable = false;			
+			
+			var leaderboardTitle:Label = new Label();
+			leaderboardTitle.width = 800;
+			leaderboardTitle.height = 24;
+			leaderboardTitle.y = 20
+			leaderboardTitle.text = "LEADERBOARD";
+			
+			_closeLeaderboardBtn = new Button();
+			_closeLeaderboardBtn.defaultIcon = new Image(Texture.fromBitmap(new TexturesManager.CloseButton()));
+			_closeLeaderboardBtn.width = 30;
+			_closeLeaderboardBtn.height = 30;
+			_closeLeaderboardBtn.x = 765;
+			_closeLeaderboardBtn.y = 5;
+			_closeLeaderboardBtn.addEventListener(Event.TRIGGERED, onCloseLeaderboard);
+			
+			if(_leaderboardFriends.length > 0){
+				_leaderboardGroup = new ToggleGroup();
+	 
+				var radio1:Radio = new Radio();
+				radio1.label = "All Users";
+				radio1.toggleGroup = _leaderboardGroup;
+				radio1.isSelected = true;
+				radio1.x = 230;
+				radio1.y = 75;
+				radio1.labelOffsetX = 10;
+				 
+				var radio2:Radio = new Radio();
+				radio2.label = "Friends";
+				radio2.toggleGroup = _leaderboardGroup;
+				radio2.x = 450;
+				radio2.y = 75;
+				radio2.labelOffsetX = 10;
+				
+				_leaderboardGroup.addEventListener( Event.CHANGE, onChangeLeaderboard );
+			}
+			
+			_leaderboardList = new List();
+			_leaderboardList.width = 700;
+			_leaderboardList.height = 350;
+			_leaderboardList.x = 50;
+			if(_leaderboardFriends.length > 0){
+				_leaderboardList.y = 150;
+				_leaderboardList.height = 350;
+			}else {
+				_leaderboardList.y = 75;
+				_leaderboardList.height = 438;
+			}
+			_leaderboardList.addEventListener( Event.CHANGE, onClickItemLeaderboard );
+			_currentleaderboardUsers = _leaderboardUsers;
+			var leaderboardCollection:ListCollection = new ListCollection( _leaderboardUsers);
+			
+			_leaderboardList.dataProvider = leaderboardCollection;
+			_leaderboardList.itemRendererProperties.labelField = "label";
+			_leaderboardList.itemRendererProperties.iconSourceField = "pic";
+			
+			_inviteFriendsBtn = new Button();
+			_inviteFriendsBtn.label = "Invite Friends";
+			_inviteFriendsBtn.width = 250;
+			_inviteFriendsBtn.height = 44;
+			_inviteFriendsBtn.x = 275;
+			_inviteFriendsBtn.y = 540;
+			_inviteFriendsBtn.addEventListener(Event.TRIGGERED, onClickInvite);
+			
+			_leaderboardContainer.addChild(btn);
+			_leaderboardContainer.addChild(leaderboardTitle);
+			if(_leaderboardFriends.length > 0)_leaderboardContainer.addChild(radio1);			
+			if(_leaderboardFriends.length > 0)_leaderboardContainer.addChild(radio2);			
+			_leaderboardContainer.addChild(_leaderboardList);
+			_leaderboardContainer.addChild(_inviteFriendsBtn);			
+			_leaderboardContainer.addChild(_closeLeaderboardBtn);
+			
+			PopUpManager.addPopUp(_leaderboardContainer);
+		}
+		
+		
+		private function onChangeLeaderboard(event:Event):void {
+			var group:ToggleGroup = ToggleGroup( event.currentTarget );
+			switch(group.selectedIndex) {
+				default:
+				case 0:
+					showLeaderboardAllUser();
+					break;
+				case 1:
+					showLeaderboardFriends();
+					break;
+			}
+		}
+		
+		private function showLeaderboardFriends():void {
+			_currentleaderboardUsers = _leaderboardFriends;
+			var leaderboardCollection:ListCollection = new ListCollection( _leaderboardFriends);
+			_leaderboardList.dataProvider = leaderboardCollection;	
+		}
+		
+		private function showLeaderboardAllUser():void {
+			_currentleaderboardUsers = _leaderboardUsers;
+			var leaderboardCollection:ListCollection = new ListCollection( _leaderboardUsers);
+			_leaderboardList.dataProvider = leaderboardCollection;			
+		}
+		
+		
+		private function onClickInvite(event:Event):void {
+			var req:SocialRequest = new SocialRequest();
+			req.title = "Come and Play Bumper Mayhem";
+			req.message = "You will have some fun!!!";
+			req.filters = ['app_non_users'];
+			FacebookService.request(req, onInviteSuccess, onInviteFailure);
+		}
+		
+		private function onInviteSuccess(success:Object):void {
+			trace(success);
+		}		
+		
+		private function onInviteFailure(error:Object):void {
+			trace(error);
+		}
+		
+		private function onCloseLeaderboard(event:Event):void {
+			PopUpManager.removePopUp(_leaderboardContainer);
+			_leaderboardList.removeEventListener( Event.CHANGE, onClickItemLeaderboard );
+			_inviteFriendsBtn.removeEventListener(Event.TRIGGERED, onClickInvite);
+			if(_leaderboardGroup)_leaderboardGroup.removeEventListener( Event.CHANGE, onChangeLeaderboard );
+		}
+		private function onClickLeaderboard(event:Event):void {
+			showLeaderboardPopup();
+		}
+		
+		private function setLeaderboardButton():void {
+			_leaderboardBtn = new Button();
+			_leaderboardBtn.defaultIcon = new Image(Texture.fromBitmap(new ModelsManager.instance.leaderboardIcon()));
+			_leaderboardBtn.width = 50;
+			_leaderboardBtn.height = 50;
+			_leaderboardBtn.x = 10;
+			_leaderboardBtn.y = 10;
+			addChild(_leaderboardBtn);
+			_leaderboardBtn.addEventListener(Event.TRIGGERED, onClickLeaderboard);
+		}
 		private function setInfosButton():void 
 		{
 			_infoBtn = new Button();
@@ -296,16 +586,15 @@ package com.mayhem.ui
 		
 		private function onClickInfo(e:Event):void 
 		{
-			
 			PopUpManager.addPopUp(_infoContainer);
 			UISignals.ADD_POPUP.dispatch();
 			_closeBtn.addEventListener(Event.TRIGGERED, removePopup);
 			
-			_howToPlay.validate();
 			var tf:BitmapFontTextFormat = _howToPlay.textRendererProperties.textFormat;
-			
 			_howToPlay.textRendererProperties.textFormat = null;
 			tf.size = 14;
+			
+			_howToPlay.validate();
 			_howToPlay.textRendererProperties.textFormat = tf;
 			_credits.validate();
 			_credits.textRendererProperties.textFormat = tf;
@@ -330,7 +619,7 @@ package com.mayhem.ui
 			label.text = "Select your Power-Ups";
 			label.width = 600;
 			label.x = (Starling.current.nativeStage.stageWidth - 600 )  / 2;
-			label.y = 100;
+			label.y = 135;
 			addChild(label);
 			
 			_btnContainer = new Sprite();			
@@ -394,7 +683,7 @@ package com.mayhem.ui
 			btn5.addEventListener(Event.TRIGGERED, onClickPowerup);
 			
 			addChild(_btnContainer);
-			_btnContainer.y = 150;
+			_btnContainer.y = 180;
 			_btnContainer.x = (Starling.current.nativeStage.stageWidth / 2) - 210;
 		}
 		
@@ -738,6 +1027,13 @@ package com.mayhem.ui
 			_startButton.removeEventListener(Event.TRIGGERED, startGame);
 			_prevButton.removeEventListener( Event.TRIGGERED, prevVehicle);
 			_nextButton.removeEventListener( Event.TRIGGERED, nextVehicle);
+			if(_leaderboardBtn){
+				_leaderboardBtn.removeEventListener(Event.TRIGGERED, onClickLeaderboard);
+				removeChild(_leaderboardBtn);
+			}
+			if (_leaderboardList) {
+				_leaderboardList.removeEventListener( Event.CHANGE, onClickItemLeaderboard );
+			}
 			removeChild(_startButton);
 			removeChild(_btnContainer);
 			removeChild(_prevButton);
@@ -750,11 +1046,13 @@ package com.mayhem.ui
 		
 		private function setVehicleButtons():void {
 			_prevButton = new Button();
+			_prevButton.height = 50;
 			_prevButton.label = "<<";
 			addChild(_prevButton);
 			_prevButton.addEventListener( Event.TRIGGERED, prevVehicle );
 			
 			_nextButton = new Button();
+			_nextButton.height = 50;
 			_nextButton.label = ">>";
 			addChild(_nextButton);
 			_nextButton.addEventListener( Event.TRIGGERED, nextVehicle );
@@ -825,12 +1123,12 @@ package com.mayhem.ui
 			_colorSelector.y = _startButton.y - 65; 
 			
 			_prevButton.validate();
-			_prevButton.x = ((Starling.current.nativeStage.stageWidth - _prevButton.width) / 2) - 350;
-			_prevButton.y = (Starling.current.nativeStage.stageHeight - _prevButton.height) / 2;
+			_prevButton.x = ((Starling.current.nativeStage.stageWidth - _prevButton.width) / 2) - 300;
+			_prevButton.y = ((Starling.current.nativeStage.stageHeight - _prevButton.height) / 2) + 75;
 			
 			_nextButton.validate();
-			_nextButton.x = ((Starling.current.nativeStage.stageWidth - _nextButton.width) / 2) + 350;
-			_nextButton.y = (Starling.current.nativeStage.stageHeight - _nextButton.height) / 2;
+			_nextButton.x = ((Starling.current.nativeStage.stageWidth - _nextButton.width) / 2) + 300;
+			_nextButton.y = ((Starling.current.nativeStage.stageHeight - _nextButton.height) / 2) + 75;
 		}
 		
 	}

@@ -10,6 +10,7 @@ package com.mayhem.game
 	import away3d.materials.TextureMaterial;
 	import away3d.primitives.CylinderGeometry;
 	import away3d.primitives.PlaneGeometry;
+	import away3d.textures.BitmapTexture;
 	import away3d.tools.utils.Bounds;
 	import awayphysics.collision.dispatch.AWPCollisionObject;
 	import awayphysics.collision.dispatch.AWPCollisionWorld;
@@ -30,6 +31,8 @@ package com.mayhem.game
 	import com.mayhem.signals.MultiplayerSignals;
 	import com.mayhem.signals.UISignals;
 	import com.mayhem.signals.UserInputSignals;
+	import flash.display.Bitmap;
+	import flash.display.BlendMode;
 	import flash.geom.Vector3D;
 	import away3d.library.AssetLibrary;
 	import away3d.events.AssetEvent;
@@ -54,7 +57,7 @@ package com.mayhem.game
 		public var allSpawnPoints:Vector.<Mesh> = new Vector.<Mesh>(Connector.MAX_USER_PER_ROOM);
 		private var _allDoors:Dictionary = new Dictionary();
 		public var mainBody:AWPRigidBody;
-		private var _rampRigidBody:AWPRigidBody;
+		//private var _rampRigidBody:AWPRigidBody;
 		private var _rampRotation:Number = 0;
 		
 		private var _fallingRigidbody : AWPGhostObject;
@@ -98,6 +101,9 @@ package com.mayhem.game
 		}
 		
 		public function getSpawnPoint(index:int):Vector3D {
+			//trace(index)
+			//trace(allSpawnPoints[index])
+			//trace(allSpawnPoints[index].position)
 			var pos:Vector3D = allSpawnPoints[index].position.clone();
 			allSpawnPoints[index].extra.occupied = true;
 			pos.y += 100;
@@ -123,12 +129,12 @@ package com.mayhem.game
 			return -1;
 		}
 		
-		public function rotateRamp():void {
-			if (_rampRigidBody) {
-				_rampRotation+=0.2;
+		//public function rotateRamp():void {
+			//if (_rampRigidBody) {
+				//_rampRotation+=0.2;
 				//_rampRigidBody.rotation = new Vector3D(0,_rampRotation,0);
-			}
-		}
+			//}
+		//}
 		
 		
 		private function meshIsBumper(meshName:String):Boolean {
@@ -213,9 +219,19 @@ package com.mayhem.game
 							}
 						}
 					}
-					if (mesh!=null && mesh.name == MeshMapping.RAMP) {
-						_rampRigidBody = body;		
-						//var rBody:AWPCollisionObject = new AWPCollisionObject();
+					if (mesh != null && mesh.name == MeshMapping.RAMP) {
+						//var rampCollisionMesh1:Mesh = new Mesh(new CubeGeometry(1700, 1000,50,1,1,1), new ColorMaterial(0xcc0000,0.5));
+						//rampCollisionMesh1.rotationX = 90;
+						//rampCollisionMesh1.position = new Vector3D(-75, 500, -5300);
+						//_mainContainer.addChild(rampCollisionMesh1);
+						//var rampCollisionBody1:AWPRigidBody = new AWPRigidBody(new AWPBoxShape(1700, 1000, 50), rampCollisionMesh1);
+						//rampCollisionBody1.collisionFlags = AWPCollisionFlags.CF_NO_CONTACT_RESPONSE;
+						body.addEventListener(AWPEvent.COLLISION_ADDED, onRampCollision);
+						//rampCollisionBody1.position = new Vector3D(-75, 500, -5600);
+						//_physicsWorld.addRigidBody(rampCollisionBody1);
+						//_rampRigidBody = body;	
+						
+						body.friction = 0.1; 
 					}
 					if(body != null)_physicsWorld.addRigidBody(body);
 					if(mesh!=null)_mainContainer.addChild(mesh);
@@ -223,7 +239,9 @@ package com.mayhem.game
 			}
 			
 			var dangerShape:AWPCylinderShape = new AWPCylinderShape(3000, 500);
-			var mat:ColorMaterial = new ColorMaterial(0xcc0000, 0.1);
+			var mat:TextureMaterial = new TextureMaterial(new BitmapTexture(Bitmap(new ModelsManager.instance.DangerZoneTexture()).bitmapData));
+			mat.blendMode = BlendMode.ADD;
+			mat.repeat = true
 			mat.bothSides = true;
 			var dangerMesh:Mesh = new Mesh(new CylinderGeometry(3000, 3000, 500, 16, 1, false, false), mat);
 			dangerMesh.castsShadows = false;
@@ -243,6 +261,31 @@ package com.mayhem.game
 			_physicsWorld.addCollisionObject(_fallingRigidbody);
 			
 			return _mainContainer;
+		}
+		
+		private function onRampCollision(event:AWPEvent):void {
+			if (event.collisionObject.skin) {
+				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
+				if (vehicle) {
+					GameSignals.REFILL_ENERGY.dispatch(vehicle.user.uid);
+					//if(vehicle.user.uid == "user_1234" && !vehicle.hasEnteredRamp && event.manifoldPoint.normalWorldOnB.equals(Vector3D.Z_AXIS)) {
+						//
+						//trace(event.manifoldPoint.normalWorldOnB)
+						//vehicle.body.gravity = new Vector3D();
+						//vehicle.body.rotationX = -10;
+						//trace(event.collisionObject.position)
+						//trace(event.collisionObject.rotation)
+						//vehicle.body.
+						//vehicle.body.gravity = new Vector3D(0, -10, 0);
+						//vehicle.body.position = event.collisionObject.position.clone();
+						//vehicle.body.rotation = event.collisionObject.rotation.clone();
+						//trace(event.collisionObject.po)
+						//vehicle.body.applyTorqueImpulse(new Vector3D(-45, 0, 0));
+						//vehicle.body.applyImpulse(new Vector3D(0,100,0),new Vector3D(0,0,0));
+					//}
+					//vehicle.hasEnteredRamp = true;
+				}
+			}
 		}
 		
 		public function cleanup():void {
@@ -266,6 +309,9 @@ package com.mayhem.game
 				if (vehicle && event.currentTarget.skin.extra.index == vehicle.user.spawnIndex && !vehicle.enableBehavior) {
 					var doorBody:AWPRigidBody = event.currentTarget.skin.extra.door;
 					vehicle.enableBehavior = true;
+					if (vehicle.infoPlane) {
+						vehicle.infoPlane.visible = true;
+					}
 					setTimeout(function():void {
 						doorBody.y = 193.81425380706787;
 						if (vehicle is MovingAICube) {
@@ -286,7 +332,8 @@ package com.mayhem.game
 			if(event.collisionObject.skin){
 				var vehicle:MovingCube = event.collisionObject.skin.extra as MovingCube;
 				if (vehicle) {
-					if(!vehicle.hasShield)
+					if (!vehicle.hasShield)
+						vehicle.isInDangerZone = true;
 						GameSignals.DANGER_ZONE_COLLISION.dispatch(vehicle);					
 				}
 			}

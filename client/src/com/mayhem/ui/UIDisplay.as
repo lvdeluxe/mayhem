@@ -2,6 +2,7 @@ package com.mayhem.ui
 {
 	
 	import com.mayhem.game.GameData;
+	import com.mayhem.game.GameStats;
 	import com.mayhem.game.powerups.PowerupDefinition;
 	import com.mayhem.game.powerups.PowerupSlot;
 	import com.mayhem.game.powerups.PowerupsModel;
@@ -37,10 +38,15 @@ package com.mayhem.ui
 		private var _igcTextField:Label;
 		private var _levelTextField:Label;
 		
+		private var _endSessionScreen:EndSessionScreen;		
+		
 		private var _user:GameUserVO;
 		private var _powerups:Vector.<PowerupDefinition>;
 		private var _coinPacks:Vector.<CoinsPackage>;
 		private var _slots:Vector.<PowerupSlot>;
+		
+		private var _previousCoins:uint;
+		private var _previousXP:uint;
 		
 		private var _musicBtn:Button;
 		
@@ -56,13 +62,35 @@ package com.mayhem.ui
 			MultiplayerSignals.SLOT_UNLOCKED.add(onSlotPurchased);
 			UISignals.BACK_TO_SELECTOR.add(backToSelector);
 			UISignals.UPDATE_USER_INFO.add(updateUserInfo);	
+			UISignals.REMOVE_STATS.add(removeEndSession);
+			UISignals.SHOW_STATS.add(showGameSessionStats);	
 			setView();			
 		}	
 		
+		private function showGameSessionStats(gameStats:GameStats):void
+		{
+			_endSessionScreen = new EndSessionScreen();
+			_endSessionScreen.displayStats(gameStats);
+			addChild(_endSessionScreen);
+			_gameHUD.resetTimer();
+		}
+		
 		private function updateUserInfo(user:GameUserVO):void {
-			_levelTextField.text = "Level " + (GameData.getLevelForXP(user.xp) + 1).toString() + " (" + user.xp + "/" + GameData.getNextLevelXP(user.xp) + ")";
+			if (_endSessionScreen) {
+				_endSessionScreen.displayRewardCoins((user.igc - _previousCoins).toString() , (user.xp - _previousXP).toString());
+			}
+			var currentLevel:uint = (GameData.getLevelForXP(user.xp) + 1);
+			_levelTextField.text = "Level " + currentLevel.toString() + " (" + user.xp + "/" + GameData.getNextLevelXP(user.xp) + ")";
 			_igcTextField.text = "Coins:" + user.igc.toString();
+			_previousCoins = user.igc;
+			_previousXP = user.xp;
 			checkNewUnlockedItems(user);
+		}
+		
+		private function removeEndSession():void {
+			_endSessionScreen.cleanup();
+			removeChild(_endSessionScreen);
+			_endSessionScreen = null;
 		}
 		
 		
@@ -103,6 +131,7 @@ package com.mayhem.ui
 	
 		
 		private function backToSelector():void {
+			removeEndSession();
 			_gameHUD.cleanup();
 			removeChild(_gameHUD);
 			_selectMenu = new SelectMenu(_user,_powerups, _coinPacks, _slots, _theme);
@@ -137,6 +166,8 @@ package com.mayhem.ui
 			_currentLevel = GameData.getLevelForXP(user.xp) + 1;
 			_levelTextField.text = "Level " + _currentLevel.toString() + " (" + user.xp + "/" + GameData.getNextLevelXP(user.xp)+")";
 			_selectMenu = new SelectMenu(user, powerups, coinPacks, slots, _theme);
+			_previousCoins = user.igc;
+			_previousXP = user.xp;
 			addChild(_selectMenu);		
 		}
 
@@ -170,10 +201,6 @@ package com.mayhem.ui
 		}
 		
 		private function setView():void {
-			var logo:Image = new Image(Texture.fromBitmap(new TexturesManager.Logo()));
-			logo.x = (Starling.current.nativeStage.stageWidth - logo.width) / 2;
-			addChild(logo);
-			
 			_igcTextField = new Label();
 			_igcTextField.text = 'Coins';
 			addChild(_igcTextField);

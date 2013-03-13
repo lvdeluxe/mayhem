@@ -285,8 +285,7 @@ package starling.display
                 mTexture = texture;
                 mTinted = tinted;
                 mSmoothing = smoothing;
-                mVertexData.setPremultipliedAlpha(
-                    texture ? texture.premultipliedAlpha : true, false); 
+                mVertexData.setPremultipliedAlpha(quad.premultipliedAlpha);
             }
             
             quad.copyVertexDataTo(mVertexData, vertexID);
@@ -299,6 +298,8 @@ package starling.display
             mNumQuads++;
         }
         
+        /** Adds another QuadBatch to this batch. Just like the 'addQuad' method, you have to
+         *  make sure that you only add batches with an equal state. */
         public function addQuadBatch(quadBatch:QuadBatch, parentAlpha:Number=1.0, 
                                      modelViewMatrix:Matrix=null, blendMode:String=null):void
         {
@@ -511,6 +512,7 @@ package starling.display
         public function get tinted():Boolean { return mTinted; }
         public function get texture():Texture { return mTexture; }
         public function get smoothing():String { return mSmoothing; }
+        public function get premultipliedAlpha():Boolean { return mVertexData.premultipliedAlpha; }
         
         private function get capacity():int { return mVertexData.numVertices / 4; }
         
@@ -521,10 +523,7 @@ package starling.display
             var target:Starling = Starling.current;
             if (target.hasProgram(QUAD_PROGRAM_NAME)) return; // already registered
             
-            // create vertex and fragment programs from assembly
-            var vertexProgramAssembler:AGALMiniAssembler = new AGALMiniAssembler();
-            var fragmentProgramAssembler:AGALMiniAssembler = new AGALMiniAssembler();
-            
+            var assembler:AGALMiniAssembler = new AGALMiniAssembler();
             var vertexProgramCode:String;
             var fragmentProgramCode:String;
             
@@ -546,11 +545,9 @@ package starling.display
             fragmentProgramCode =
                 "mov oc, v0       \n";  // output color
             
-            vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode);
-            fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentProgramCode);
-            
             target.registerProgram(QUAD_PROGRAM_NAME,
-                vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
+                assembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode),
+                assembler.assemble(Context3DProgramType.FRAGMENT, fragmentProgramCode));
             
             // Image:
             // Each combination of tinted/repeat/mipmap/smoothing has its own fragment shader.
@@ -565,8 +562,6 @@ package starling.display
                     "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
                     "mov v1, va2      \n";  // pass texture coordinates to fragment program
                     
-                vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode);
-                
                 fragmentProgramCode = tinted ?
                     "tex ft1,  v1, fs0 <???> \n" + // sample texture 0
                     "mul  oc, ft1,  v0       \n"   // multiply color with texel color
@@ -607,12 +602,12 @@ package starling.display
                                 else
                                     options.push("linear", mipmap ? "miplinear" : "mipnone");
                                 
-                                fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT,
-                                    fragmentProgramCode.replace("???", options.join()));
-                                
                                 target.registerProgram(
                                     getImageProgramName(tinted, mipmap, repeat, format, smoothing),
-                                    vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
+                                    assembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode),
+                                    assembler.assemble(Context3DProgramType.FRAGMENT,
+                                        fragmentProgramCode.replace("???", options.join()))
+                                );
                             }
                         }
                     }

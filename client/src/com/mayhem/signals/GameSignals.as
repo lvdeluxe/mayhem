@@ -18,6 +18,7 @@ package com.mayhem.signals
 		public static var DANGER_ZONE_COLLISION:Signal = new Signal();
 		public static var GET_USER_INFO_PLANE:Signal = new Signal();
 		public static var SET_USER_INFO_PLANE:Signal = new Signal();
+		public static var REFILL_ENERGY:Signal = new Signal();
 		
 		public function GameSignals() 
 		{

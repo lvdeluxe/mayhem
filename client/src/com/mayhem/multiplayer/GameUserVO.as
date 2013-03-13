@@ -1,5 +1,6 @@
 package com.mayhem.multiplayer 
 {
+	import com.mayhem.game.GameStats;
 	/**
 	 * ...
 	 * @author availlant
@@ -19,6 +20,7 @@ package com.mayhem.multiplayer
 		public var powerups:Vector.<String> = new Vector.<String>();
 		public var selectedPowerups:Array;
 		public var hasMusic:Boolean;
+		public var stats:GameStats;
 		
 		public function GameUserVO(pId:String) 
 		{

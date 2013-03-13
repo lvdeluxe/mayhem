@@ -66,7 +66,7 @@ package starling.textures
         private var mSupport:RenderSupport;
         
         /** helper object */
-        private static var sScissorRect:Rectangle = new Rectangle();
+        private static var sClipRect:Rectangle = new Rectangle();
         
         /** Creates a new RenderTexture with a certain size. If the texture is persistent, the
          *  contents of the texture remains intact after each draw call, allowing you to use the
@@ -98,6 +98,7 @@ package starling.textures
         public override function dispose():void
         {
             mSupport.dispose();
+            mActiveTexture.dispose();
             
             if (isPersistent) 
             {
@@ -108,7 +109,8 @@ package starling.textures
             super.dispose();
         }
         
-        /** Draws an object into the texture.
+        /** Draws an object into the texture. Note that any filters on the object will currently
+         *  be ignored.
          * 
          *  @param object       The object to draw.
          *  @param matrix       If 'matrix' is null, the object will be drawn adhering its 
@@ -159,9 +161,9 @@ package starling.textures
             }
             
             // limit drawing to relevant area
-            sScissorRect.setTo(0, 0, mActiveTexture.nativeWidth, mActiveTexture.nativeHeight);
+            sClipRect.setTo(0, 0, mActiveTexture.width, mActiveTexture.height);
 
-            mSupport.scissorRectangle = sScissorRect;
+            mSupport.pushClipRect(sClipRect);
             mSupport.renderTarget = mActiveTexture;
             mSupport.clear();
             
@@ -185,7 +187,7 @@ package starling.textures
                 mSupport.finishQuadBatch();
                 mSupport.nextFrame();
                 mSupport.renderTarget = null;
-                mSupport.scissorRectangle = null;
+                mSupport.popClipRect();
             }
         }
         

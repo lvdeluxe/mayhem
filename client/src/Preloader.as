@@ -1,5 +1,7 @@
 package  
 {
+	import com.mayhem.ui.TexturesManager;
+	import flash.display.Bitmap;
 	import flash.display.Loader;
 	import flash.display.LoaderInfo;
 	import flash.display.Sprite;
@@ -21,6 +23,7 @@ package
 		
 		private var _loadingBar:Sprite;
 		private var tf:TextField
+		private var logo:Bitmap;
 		
 		public function Preloader() 
 		{
@@ -31,6 +34,11 @@ package
 		private function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+			logo = new TexturesManager.Logo();
+			logo.smoothing = true;
+			logo.x = (stage.stageWidth - logo.width) / 2;
+			logo.y = ((stage.stageHeight / 2) - logo.height) - 20  ;
+			addChild(logo);
 			setLoadingBar();
 			var context:LoaderContext = new LoaderContext(true, ApplicationDomain.currentDomain, SecurityDomain.currentDomain);
 			context.securityDomain = SecurityDomain.currentDomain;
@@ -70,6 +78,7 @@ package
 			event.currentTarget.removeEventListener(Event.COMPLETE, onCompleteHandler);
 			event.currentTarget.removeEventListener(ProgressEvent.PROGRESS, onProgressHandler);
 			removeChild(_loadingBar);
+			removeChild(logo);
 			addChild(event.currentTarget.content);
 		}
 	}

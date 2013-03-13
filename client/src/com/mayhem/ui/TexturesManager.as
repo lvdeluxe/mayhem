@@ -39,7 +39,7 @@ package com.mayhem.ui
 		public static var Music:Class;
 		[Embed(source = "/assets/ui/no_music.png")]
 		public static var NoMusic:Class;
-		[Embed(source = "/assets/ui/logo.png")]
+		[Embed(source = "/assets/ui/logo1.png")]
 		public static var Logo:Class;
 		
 		public function TexturesManager() 

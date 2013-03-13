@@ -90,9 +90,9 @@ var FBBridge = {
 			FBBridge.gameElement.onJavaScriptError(error);
 		}
 	},
-	getOwnerFriends:function(params, limit) {
+	getOwnerFriends:function(params) {
 		try {
-			FB.api('me/friends&limit=' + limit, params, function(response) {
+			FB.api('me/friends', params, function(response) {
 				if(!response || response.error) {
 					FBBridge.gameElement.onFailure('onGetOwnerFriends', response.error);
 				}

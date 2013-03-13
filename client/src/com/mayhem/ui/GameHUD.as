@@ -15,6 +15,8 @@ package com.mayhem.ui
 	import feathers.controls.Screen;
 	import feathers.core.PopUpManager;
 	import feathers.text.BitmapFontTextFormat;
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
 	import starling.core.Starling;	
 	import flash.utils.setTimeout;
 	import starling.display.Image;
@@ -34,10 +36,12 @@ package com.mayhem.ui
 		private var _statusTextField:Label;
 		private var _timerTextField:Label;		
 		private  var _totalTimeString:String;
-		private var _endSessionScreen:EndSessionScreen;		
+		//private var _endSessionScreen:EndSessionScreen;		
 		private var _allPowerups:Vector.<Sprite> = new Vector.<Sprite>();
 		private var _levelupContainer:Sprite;
 		private var _closeBtn:Button;
+		private var _alertLabel:Label;
+		private var _intervalIndex:uint;
 		
 		public function GameHUD() 
 		{
@@ -51,11 +55,11 @@ package com.mayhem.ui
 			UISignals.OWNER_FELT.add(onOwnerFelt);
 			UISignals.OWNER_RESPAWNED.add(clearTextFields);
 			UISignals.OWNER_POWERUP_FILL.add(updatePowerMeter);
-			UISignals.UPDATE_GAME_TIMER.add(updateGameTimer);
-			UISignals.SHOW_STATS.add(showGameSessionStats);		
-			UISignals.SHOW_COUNTDOWN.add(showCountDown);			
-			UISignals.REMOVE_STATS.add(removeEndSession);
-			UISignals.SET_POWERUPS.add(setPowerups)
+			UISignals.UPDATE_GAME_TIMER.add(updateGameTimer);	
+			UISignals.SHOW_COUNTDOWN.add(showCountDown);	
+			UISignals.SET_POWERUPS.add(setPowerups);
+			UISignals.ENTER_DANGER_ZONE.add(setDangerZoneAlert);
+			UISignals.EXIT_DANGER_ZONE.add(removeDangerZoneAlert);
 		}
 		
 		public function cleanup():void {
@@ -65,11 +69,37 @@ package com.mayhem.ui
 			UISignals.OWNER_RESPAWNED.remove(clearTextFields);
 			UISignals.OWNER_POWERUP_FILL.remove(updatePowerMeter);
 			UISignals.UPDATE_GAME_TIMER.remove(updateGameTimer);
-			UISignals.SHOW_STATS.remove(showGameSessionStats);
-					
-			UISignals.SHOW_COUNTDOWN.remove(showCountDown);			
-			UISignals.REMOVE_STATS.remove(removeEndSession);
+			UISignals.SHOW_COUNTDOWN.remove(showCountDown);	
 			UISignals.SET_POWERUPS.remove(setPowerups);
+			UISignals.ENTER_DANGER_ZONE.remove(setDangerZoneAlert);
+			UISignals.EXIT_DANGER_ZONE.remove(removeDangerZoneAlert);
+		}
+		
+		private function setDangerZoneAlert():void {
+			_alertLabel = new Label();
+			_alertLabel.text = "DANGER!!!";
+			_alertLabel.width = 400;
+			_alertLabel.height = 60;
+			_alertLabel.x = (Starling.current.nativeStage.width - 400) / 2;
+			_alertLabel.y = 100;
+			addChild(_alertLabel);
+			
+			var tfAlert:BitmapFontTextFormat = _alertLabel.textRendererProperties.textFormat;
+			_alertLabel.textRendererProperties.textFormat = null;
+			tfAlert.color = 0xcc0000;
+			tfAlert.size = 48;
+			_alertLabel.textRendererProperties.textFormat = tfAlert;
+			_alertLabel.validate();
+			
+			_intervalIndex = setInterval(function():void {
+				_alertLabel.visible = !_alertLabel.visible;
+			},100);
+		}
+		
+		private function removeDangerZoneAlert():void {
+			removeChild(_alertLabel);
+			clearInterval(_intervalIndex);
+			_alertLabel = null;
 		}
 		
 		private function setPowerups(selectedPowerups:Array):void {
@@ -141,7 +171,7 @@ package com.mayhem.ui
 		}
 		
 		override protected function draw():void
-		{
+		{			
 			var tf:BitmapFontTextFormat = _statusTextField.textRendererProperties.textFormat;
 			_statusTextField.textRendererProperties.textFormat = null;
 			tf.size = 48;
@@ -168,14 +198,15 @@ package com.mayhem.ui
 			_timerTextField.textRendererProperties.textFormat = null;
 			tf.align = 'left';
 			tf.size = 24;
-			//_timerTextField.height = _healthBar.height;
-			//_timerTextField.width = _healthBar.width - 20;
-			_timerTextField.x = 10//_healthBar.x + 10;
-			_timerTextField.y = 5//_healthBar.y// + _healthBar.height + 5;
+			_timerTextField.x = 10;
+			_timerTextField.y = 5;
 			_timerTextField.textRendererProperties.textFormat = tf;		
 		}
 		
 		private function createUI():void {
+			
+			
+			
 			_totalTimeString = UIDisplay.formatTime(GameData.GAME_SESSION_DURATION);			
 			_statusTextField = new Label();
 			_statusTextField.text = "STATUS";
@@ -199,19 +230,9 @@ package com.mayhem.ui
 			_timerTextField = new Label();
 			_timerTextField.text = 'Time';
 			addChild(_timerTextField);
-			
-			_endSessionScreen = new EndSessionScreen();
-			addChild(_endSessionScreen);
-			_endSessionScreen.visible = false;
 		}
 		
-		private function removeEndSession():void {
-			_endSessionScreen.visible = false;
-		}
-		
-		private function showGameSessionStats(gameStats:GameStats):void {
-			_endSessionScreen.displayStats(gameStats);
-			_endSessionScreen.visible = true;			
+		public function resetTimer():void {		
 			_timerTextField.text = _totalTimeString + "/" + _totalTimeString;
 		}
 		
@@ -238,7 +259,7 @@ package com.mayhem.ui
 			_statusTextField.visible = true;
 		}
 		private function onEnergyOut():void {
-			_statusTextField.text = "YOU DIED, YOU MORON!!!";
+			_statusTextField.text = "YOU DIED!!!";
 			_statusTextField.visible = true;
 		}
 		private function onEnergyUpdate(prct:Number):void {

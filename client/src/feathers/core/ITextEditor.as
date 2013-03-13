@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -60,9 +60,20 @@ package feathers.core
 		function setFocus(position:Point = null):void;
 
 		/**
+		 * Removes focus from the text editor.
+		 */
+		function clearFocus():void;
+
+		/**
 		 * Sets the range of selected characters. If both values are the same,
 		 * the text insertion position is changed and nothing is selected.
 		 */
 		function selectRange(startIndex:int, endIndex:int):void;
+
+		/**
+		 * Measures the text's bounds (without a full validation, if
+		 * possible).
+		 */
+		function measureText(result:Point = null):Point;
 	}
 }

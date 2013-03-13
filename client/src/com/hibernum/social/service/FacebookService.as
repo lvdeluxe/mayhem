@@ -70,9 +70,9 @@ public class FacebookService {
 		unregisterCallback('onGetOwnerInfos', SUCCESS)(user);
 	}
 
-	public static function getOwnerFriends(fieldsObject:Object, limit:Number, success:Function, failure:Function = null):void {
+	public static function getOwnerFriends(fieldsObject:Object, success:Function, failure:Function = null):void {
 		registerCallback('onGetOwnerFriends', success, failure);
-		ExternalInterface.call('FBBridge.getOwnerFriends', fieldsObject, limit.toString());
+		ExternalInterface.call('FBBridge.getOwnerFriends', fieldsObject);
 	}
 
 	private static function onGetOwnerFriends(result:Object):void {

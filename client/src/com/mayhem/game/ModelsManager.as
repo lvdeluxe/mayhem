@@ -30,7 +30,7 @@ package com.mayhem.game
 		public var allArenaMeshes:Vector.<Mesh> = new Vector.<Mesh>();
 		public var allVehicleMeshes:Vector.<Mesh> = new Vector.<Mesh>();
 		
-		[Embed(source = "/assets/Arena5.awd", mimeType = "application/octet-stream")]
+		[Embed(source = "/assets/Arena5_2.awd", mimeType = "application/octet-stream")]
 		private var ArenaClass:Class;
 		[Embed(source = "/assets/vehicles/vehicle_0/Vehicle.awd", mimeType = "application/octet-stream")]
 		private var VehicleClass_0:Class;
@@ -38,7 +38,10 @@ package com.mayhem.game
 		private var VehicleClass_1:Class;
 		[Embed(source = "/assets/vehicles/vehicle_2/Vehicle.awd", mimeType = "application/octet-stream")]
 		private var VehicleClass_2:Class;
-		
+		//
+		//[Embed(source = "/assets/VehicleCollider.awd", mimeType = "application/octet-stream")]
+		//private var VehicleCollider:Class;
+		//
 		[Embed(source = "/assets/vehicles/AIVehicleTexture.jpg")]
 		private var Vehicle_AI_Texture:Class;
 		
@@ -92,8 +95,18 @@ package com.mayhem.game
 		[Embed(source = "/assets/skullface.jpg")]
 		public var skullFace:Class;
 		
+		[Embed(source = "/assets/ui/leaderboard_icon.png")]
+		public var leaderboardIcon:Class;
+		[Embed(source = "/assets/ui/dummy.jpg")]
+		public var leaderboardDummy:Class;		
+		
+		[Embed(source = "/assets/danger_zone_texture.png")]
+		public var DangerZoneTexture:Class;
+		
 		private var numVehicles:uint = 0;
 		public var maxVehicles:uint = 3;
+		
+		private var _vehicleColliderMesh:Mesh;
 		
 		
 		public function ModelsManager() 
@@ -162,7 +175,6 @@ package com.mayhem.game
 			_allVehicleBitmaps[2].push(new Vehicle_2_Texture_4() as Bitmap);
 			
 			_aiVehicleTexture = new Vehicle_AI_Texture() as Bitmap;
-			//loadTextures();
 			loadArena();
 		}
 		
@@ -173,6 +185,7 @@ package com.mayhem.game
 		public function getVehicleTextureByIds(vId:uint, tId:uint):BitmapData {
 			return _allVehicleBitmaps[vId][tId].bitmapData;
 		}
+	
 		
 		private function onVehicleComplete(event:AssetEvent):void {
 			if (event.asset.assetType == AssetType.MESH) {
@@ -203,12 +216,6 @@ package com.mayhem.game
 		}
 		private function onArenaFullyLoaded(event:LoaderEvent):void {
 			loadVehicle_0();
-		}
-		
-		public function getRandomVehicleTexture():BitmapData {
-			var rnd:uint = Math.floor(Math.random() * _allVehicleBitmaps.length)
-			trace(rnd);
-			return _allVehicleBitmaps[0][rnd].bitmapData;
 		}
 		
 		private function loadVehicle_0():void {

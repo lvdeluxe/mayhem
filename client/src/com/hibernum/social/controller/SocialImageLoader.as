@@ -14,12 +14,14 @@ package com.hibernum.social.controller
 	{
 		
 		private var _userId:String;
+		private var _callback:Function;
 		
-		public function SocialImageLoader(uid:String) 
+		public function SocialImageLoader(uid:String, cb:Function) 
 		{
 			_userId = uid;
+			_callback = cb;
 			var imagePath:String = FacebookService.getImageUrl(_userId.split("_")[1]);
-			var loader:Loader = new Loader()
+			var loader:Loader = new Loader();
 			var req:URLRequest = new URLRequest(imagePath);
 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onImageComplete);
 			loader.load(req);
@@ -27,7 +29,7 @@ package com.hibernum.social.controller
 		
 		private function onImageComplete(event:Event):void {
 			var img:Bitmap = event.target.loader.content;
-			SocialSignals.IMAGE_LOADED.dispatch(_userId,img);
+			_callback(_userId, img);
 		}
 		
 	}

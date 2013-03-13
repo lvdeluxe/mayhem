@@ -1,30 +1,14 @@
 /*
-Copyright (c) 2012 Josh Tynjala
+Feathers
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+This program is free software. You can redistribute and/or modify it in
+accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
+	import feathers.core.IFeathersControl;
 	import feathers.events.FeathersEventType;
 	import feathers.system.DeviceCapabilities;
 	import feathers.utils.display.calculateScaleRatioToFit;
@@ -35,8 +19,8 @@ package feathers.controls
 	import flash.ui.Keyboard;
 
 	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 
 	/**
 	 * Provides useful capabilities for a menu screen displayed by
@@ -55,7 +39,7 @@ package feathers.controls
 			this.addEventListener(Event.ADDED_TO_STAGE, screen_addedToStageHandler);
 			this.addEventListener(FeathersEventType.RESIZE, screen_resizeHandler);
 			super();
-			this.originalDPI = 168;
+			this.originalDPI = DeviceCapabilities.dpi;
 		}
 		
 		/**
@@ -245,6 +229,47 @@ package feathers.controls
 		 * keyboard events to cancel the default behavior.
 		 */
 		protected var searchButtonHandler:Function;
+
+		/**
+		 * @private
+		 */
+		override protected function draw():void
+		{
+			const needsWidth:Boolean = isNaN(this.explicitWidth);
+			const needsHeight:Boolean = isNaN(this.explicitHeight);
+			if(!needsWidth && !needsHeight)
+			{
+				return;
+			}
+
+			var newWidth:Number = this.explicitWidth;
+			var newHeight:Number = this.explicitHeight;
+			if(needsWidth || needsHeight)
+			{
+				var maxX:Number = isNaN(newWidth) ? 0 : newWidth;
+				var maxY:Number = isNaN(newHeight) ? 0 : newHeight;
+				const childCount:int = this.numChildren;
+				for(var i:int = 0; i < childCount; i++)
+				{
+					var child:DisplayObject = this.getChildAt(i);
+					if(child is IFeathersControl)
+					{
+						IFeathersControl(child).validate();
+					}
+					maxX = Math.max(maxX, child.x + child.width);
+					maxY = Math.max(maxY, child.y + child.height);
+				}
+				if(needsWidth)
+				{
+					newWidth = maxX;
+				}
+				if(needsHeight)
+				{
+					newHeight = maxY;
+				}
+			}
+			this.setSizeInternal(newWidth, newHeight, false);
+		}
 		
 		/**
 		 * @private

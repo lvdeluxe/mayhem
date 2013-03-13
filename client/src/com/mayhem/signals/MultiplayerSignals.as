@@ -32,6 +32,8 @@ package com.mayhem.signals
 		static public const SLOT_CREDITS_UNLOCKED:Signal = new Signal();
 		static public const CHANGE_MUSIC_SETTINGS:Signal = new Signal();
 		static public const LEVEL_UP:Signal = new Signal();
+		static public const GET_LEADERBOARD:Signal = new Signal();
+		static public const GET_LEADERBOARD_DATA:Signal = new Signal();
 		
 		public function MultiplayerSignals() 
 		{

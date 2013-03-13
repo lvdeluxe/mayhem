@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -8,6 +8,7 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls
 {
 	import feathers.core.FeathersControl;
+	import feathers.core.IFeathersControl;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.ILayout;
 	import feathers.layout.IVirtualLayout;
@@ -318,6 +319,28 @@ package feathers.controls
 		}
 
 		/**
+		 * Quickly sets all padding properties to the same value. The
+		 * <code>padding</code> getter always returns the value of
+		 * <code>paddingTop</code>, but the other padding values may be
+		 * different.
+		 */
+		public function get padding():Number
+		{
+			return this._paddingTop;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set padding(value:Number):void
+		{
+			this.paddingTop = value;
+			this.paddingRight = value;
+			this.paddingBottom = value;
+			this.paddingLeft = value;
+		}
+
+		/**
 		 * @private
 		 */
 		protected var _paddingTop:Number = 0;
@@ -538,6 +561,10 @@ package feathers.controls
 						this.addChild(this.selectedSymbol);
 					}
 					this.symbols.push(this.selectedSymbol);
+					if(this.selectedSymbol is IFeathersControl)
+					{
+						IFeathersControl(this.selectedSymbol).validate();
+					}
 				}
 				else
 				{
@@ -552,6 +579,10 @@ package feathers.controls
 					}
 					this.unselectedSymbols.push(symbol);
 					this.symbols.push(symbol);
+					if(symbol is IFeathersControl)
+					{
+						IFeathersControl(symbol).validate();
+					}
 				}
 			}
 
@@ -604,6 +635,8 @@ package feathers.controls
 					horizontalLayout.verticalAlign = this._verticalAlign;
 				}
 			}
+			SUGGESTED_BOUNDS.x = SUGGESTED_BOUNDS.y = 0;
+			SUGGESTED_BOUNDS.scrollX = SUGGESTED_BOUNDS.scrollY = 0;
 			SUGGESTED_BOUNDS.explicitWidth = this.explicitWidth;
 			SUGGESTED_BOUNDS.explicitHeight = this.explicitHeight;
 			SUGGESTED_BOUNDS.maxWidth = this._maxWidth;

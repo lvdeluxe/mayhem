@@ -36,17 +36,19 @@ package com.hibernum.social.model
 		
 		private var _isSocial:Boolean = true;
 		private var _allUsers:Dictionary = new Dictionary();
+		private var _allFriends:Array;
 		
 		
 		public function SocialModel(onUserLogged:Function, standalone:Boolean) 
 		{
 			GameSignals.GET_USER_INFO_PLANE.add(getUserImage);
 			SocialSignals.IMAGE_LOADED.add(createUserInfoBitmapData);
+			SocialSignals.GET_LEADERBOARD_FRIENDS.add(getLeaderboardFriends);
 			_isSocial = !standalone;
 			if (standalone) {
 				var socialUser:SocialUser = new SocialUser();
-				socialUser.social_id = "1234";
-				//socialUser.social_id = Math.round(Math.random() * 10000).toString();
+				//socialUser.social_id = "1234";
+				socialUser.social_id = Math.round(Math.random() * 10000).toString();
 				socialUser.name = getRandomName();
 				onUserLogged(socialUser);
 				_allUsers[socialUser.social_id] = socialUser;
@@ -55,6 +57,19 @@ package com.hibernum.social.model
 				FacebookService.initialize();
 				FacebookService.init("483222041718845", "cmayhem", onSuccess, onFailure);
 			}
+		}
+		
+		private function getLeaderboardFriends(cb:Function):void {
+			var friendUsers:Array = [];
+			if(_isSocial){
+				for (var i:uint = 0 ; i < _allFriends.length ; i++ ) {
+					var sUser:SocialUser = _allFriends[i];
+					if (sUser.isAppUser) {
+						friendUsers.push(sUser);
+					}
+				}
+			}
+			cb(friendUsers);
 		}
 		
 		private function getUserImage(userId:String):void 
@@ -88,7 +103,9 @@ package com.hibernum.social.model
 		private function getImageAfterUserLoaded(user:SocialUser):void {
 			_allUsers[user.social_id] = user;
 			if (_isSocial) {
-				var imgLoader:SocialImageLoader = new SocialImageLoader("user_"+user.social_id);
+				var imgLoader:SocialImageLoader = new SocialImageLoader("user_" + user.social_id, function(userId:String,img:Bitmap):void {
+					SocialSignals.IMAGE_LOADED.dispatch(userId,img);
+				});
 				
 			}else {
 				createUserInfoBitmapData("user_"+user.social_id,new Bitmap(new BitmapData(50, 50, false, 0xcc0000)));
@@ -121,43 +138,12 @@ package com.hibernum.social.model
 		}
 		
 		
-		
-		//private function addUserFromJoin(userObject:GameUserVO):void {
-			//if(_isSocial){
-				//var userId:String = userObject.uid;
-				//var socialId:String = userId.split("_")[1];
-				//FacebookService.getOwnerInfo( { id:socialId }, onUserAdded, onFailure);				
-			//}else {
-				//var userVo:SocialUser = new SocialUser();
-				//userVo.social_id = userId.split("_")[1];
-				//onUserAdded(userVo);
-			//}
-		//}
-		//
-		//private function addUser(userObject:Object):void {
-			//if(_isSocial){
-				//var userId:String = userObject.user.uid;
-				//var socialId:String = userId.split("_")[1];
-				//FacebookService.getOwnerInfo( { id:socialId }, onUserAdded, onFailure);
-			//}else {
-				//var userVo:SocialUser = new SocialUser();
-				//userVo.social_id = userId.split("_")[1];
-				//onUserAdded(userVo);
-			//}
-		//}
-		//
-		//
-		//private function onUserAdded(user:SocialUser):void {
-			//trace(user.name);
-			//_allUsers[user.social_id] = user;
-		//}
-		
 		private function getRandomName():String {
 			var str:String = "";
 			var split:Array = letters.split("");
-			for (var i:uint = 0 ; i < 10 ; i++ )
+			for (var i:uint = 0 ; i < 4 ; i++ )
 				str += split[Math.floor(Math.random() * split.length)];
-			return str;
+			return "dummy_"+str;
 		}
 		
 		private function onFailure(o:Object):void {
@@ -175,6 +161,12 @@ package com.hibernum.social.model
 			userVo.token = _token;
 			mainUser = userVo;
 			_allUsers[userVo.social_id] = userVo;
+			FacebookService.getOwnerFriends({fields:"first_name,last_name,name,installed", limit:1000},onFriendsSuccess, onFailure);
+			
+		}
+		
+		private function onFriendsSuccess(response:Object):void {
+			_allFriends = response as Array;
 			_callbackUserLoggedIn(mainUser);	
 		}
 		

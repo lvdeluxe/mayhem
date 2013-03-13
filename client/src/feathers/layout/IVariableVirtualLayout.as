@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -36,5 +36,18 @@ package feathers.layout
 		 * Clears the cached dimensions for one specific virtualized index.
 		 */
 		function resetVariableVirtualCacheAtIndex(index:int, item:DisplayObject = null):void;
+
+		/**
+		 * Inserts an item in to the cache at the specified index, pushing the
+		 * old cached value at that index, and all following values, up one
+		 * index.
+		 */
+		function addToVariableVirtualCacheAtIndex(index:int, item:DisplayObject = null):void;
+
+		/**
+		 * Removes an item in to the cache at the specified index, moving the
+		 * values at following indexes down by one.
+		 */
+		function removeFromVariableVirtualCacheAtIndex(index:int):void;
 	}
 }

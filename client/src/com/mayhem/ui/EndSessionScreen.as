@@ -36,6 +36,7 @@ package com.mayhem.ui
 		private var _sessionTextField:Label;
 		private var _toggle:ToggleSwitch;
 		private var _stats:GameStats;
+		private var _rewardLabel:Label;
 		
 		public function EndSessionScreen() 
 		{
@@ -76,9 +77,25 @@ package com.mayhem.ui
 			_sessionTextField = new Label();
 			_sessionTextField.width = 200;
 			_sessionTextField.text = "Session Stats";
-			addChild(_sessionTextField);
+			addChild(_sessionTextField);			
+		}
+		
+		public function cleanup():void {
+			_toggle.removeEventListener( Event.CHANGE, onToggleChange );
+			_buttonGroup.removeEventListeners();
+		}
+		
+		public function displayRewardCoins(rewardCoins:String, rewardXP:String):void {
+			if (_rewardLabel != null)
+				return;
+			_rewardLabel = new Label();
+			_rewardLabel.width = 600;
+			_rewardLabel.height = 48;
 			
-			
+			_rewardLabel.x = (Starling.current.nativeStage.width - _statsTextField.width) / 2;
+			_rewardLabel.y = 100;
+			_rewardLabel.text = "You earned " + rewardCoins + " Coins and " + rewardXP + " XP!";
+			addChild(_rewardLabel);	
 		}
 		
 		private function onToggleChange(event:Event):void {
@@ -132,7 +149,6 @@ package com.mayhem.ui
 			"You've been hit " + _stats.current_num_hits_received.toString() + " times.\n"+			
 			"You destroyed " + _stats.current_num_kills_inflicted.toString() + " enemies.\n" +
 			"You've been destroyed " + _stats.current_num_kills_received.toString() + " times.\n" +
-			"You felt " + _stats.current_num_felt.toString() + " times.\n" +
 			"Max speed at impact was "+uint(_stats.current_max_speed ).toString() + " km/h."
 			_statsTextField.text = str;
 		}
@@ -142,7 +158,6 @@ package com.mayhem.ui
 			"You've been hit " + _stats.alltime_num_hits_received.toString() + " times.\n"+			
 			"You destroyed " + _stats.alltime_num_kills_inflicted.toString() + " enemies.\n" +
 			"You've been destroyed " + _stats.alltime_num_kills_received.toString() + " times.\n" +
-			"You felt " + _stats.alltime_num_felt.toString() + " times.\n" +
 			"Max speed at impact was "+uint(_stats.alltime_max_speed ).toString() + " km/h."
 			_statsTextField.text = str;
 		}

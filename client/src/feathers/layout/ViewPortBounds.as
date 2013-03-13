@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -22,6 +22,16 @@ package feathers.layout
 		 * The y position of the view port, in pixels.
 		 */
 		public var y:Number = 0;
+
+		/**
+		 * The horizontal scroll position of the view port, in pixels.
+		 */
+		public var scrollX:Number = 0;
+
+		/**
+		 * The vertical scroll position of the view port, in pixels.
+		 */
+		public var scrollY:Number = 0;
 
 		/**
 		 * The explicit width of the view port, in pixels. If <code>NaN</code>,

@@ -1,6 +1,6 @@
 /*
 Feathers
-Copyright (c) 2012 Josh Tynjala. All Rights Reserved.
+Copyright 2012-2013 Joshua Tynjala. All Rights Reserved.
 
 This program is free software. You can redistribute and/or modify it in
 accordance with the terms of the accompanying license agreement.
@@ -8,6 +8,8 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls.supportClasses
 {
 	import feathers.core.IFeathersControl;
+
+	import flash.geom.Rectangle;
 
 	[ExcludeClass]
 	public interface IViewPort extends IFeathersControl
@@ -31,5 +33,8 @@ package feathers.controls.supportClasses
 		function set verticalScrollPosition(value:Number):void;
 		function get horizontalScrollStep():Number;
 		function get verticalScrollStep():Number;
+
+		function get clipRect():Rectangle;
+		function set clipRect(value:Rectangle):void;
 	}
 }

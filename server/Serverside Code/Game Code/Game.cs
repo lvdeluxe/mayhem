@@ -234,12 +234,13 @@ namespace MyGame {
                             statsInfo.Set("AllTimeMaxSpeed", CurrentMaxSpeed);
                             statsInfo.Set("AllTimeSessionsPlayed", 1);
                         }
+                        int RewardCoins = GetRewardCoins(player, CurrentKillsReceived, CurrentKillsInflicted, CurrentHitsReceived, CurrentHitsInflicted, CurrentMaxSpeed);
                         player.PayVault.Credit(100, "EndSession", delegate()
                         {
                             PlayerIO.BigDB.Load("PlayerObjects", player.ConnectUserId, delegate(DatabaseObject userInfo){
                                 Console.WriteLine("XP = " + player.XP.ToString());
                                 //Console.WriteLine("XP = " + userInfo.xp.ToString());
-                                player.XP += 5;
+                                player.XP += GetRewardXP(player, CurrentKillsReceived, CurrentKillsInflicted, CurrentHitsReceived, CurrentHitsInflicted, CurrentMaxSpeed); ;
                                 userInfo.Set("xp", player.XP);
                                 userInfo.Save();
                                 statsInfo.Save();
@@ -264,6 +265,50 @@ namespace MyGame {
                     break;
 			}
 		}
+
+        private uint[] XP_FOR_LEVELS = {0, 10, 50, 200, 500, 900, 1500, 2800, 4000, 8000, 15000, 40000, 100000,200000,500000,1000000};
+        const uint BASE_REWARD_XP = 5;
+        const uint BASE_REWARD_COINS = 100;
+        const float XP_FACTOR = 0.01f;
+        const float COINS_FACTOR = 0.1f;
+
+        uint getLevelForXP(int xp) {
+			uint level = 0;
+			for (uint i = 0 ; i < XP_FOR_LEVELS.Length - 1; i++ ) {
+				uint before = XP_FOR_LEVELS[i];
+				uint after = XP_FOR_LEVELS[i + 1];
+				if (xp >= before && xp < after)
+					return i;
+			}
+			return level;
+		}
+
+        int GetRewardCoins(Player player, int CurrentKillsReceived, int CurrentKillsInflicted, int CurrentHitsReceived, int CurrentHitsInflicted, int CurrentMaxSpeed)
+        {
+            uint level = getLevelForXP(player.XP) + 1;
+            int diffKills = CurrentKillsInflicted - CurrentKillsReceived;
+            int diffHits = CurrentHitsInflicted - CurrentHitsReceived;
+
+            float bonusKillsCoins = diffKills > 0 ? (diffKills * level * COINS_FACTOR) : 0;
+			float bonusHitsCoins = diffHits > 0 ? diffHits * level * COINS_FACTOR : 0;
+			float bonusSpeedCoins = (CurrentMaxSpeed > 150) ? (CurrentMaxSpeed - 150) * level * COINS_FACTOR : 0;
+
+            return (int)(BASE_REWARD_COINS + bonusKillsCoins + bonusHitsCoins + bonusSpeedCoins);
+        }
+
+
+        int GetRewardXP(Player player, int CurrentKillsReceived, int CurrentKillsInflicted, int CurrentHitsReceived, int CurrentHitsInflicted, int CurrentMaxSpeed)
+        {
+            uint level = getLevelForXP(player.XP) + 1;
+            int diffKills = CurrentKillsInflicted - CurrentKillsReceived;
+            int diffHits = CurrentHitsInflicted - CurrentHitsReceived;
+
+            float bonusKillsXP = diffKills > 0 ? (diffKills * level * XP_FACTOR) : 0;
+			float bonusHitsXP = diffHits > 0 ? diffHits * level * XP_FACTOR : 0;
+			float bonusSpeedXP = (CurrentMaxSpeed > 150) ? (CurrentMaxSpeed - 150) * level * XP_FACTOR : 0;
+
+            return (int)(BASE_REWARD_XP + bonusKillsXP + bonusHitsXP + bonusSpeedXP);
+        }
 
         int byteArrayToInt(byte[] b, int index) {
             return (b[index] << 24) + ((b[index + 1] & 0xFF) << 16) + ((b[index + 2] & 0xFF) << 8) + (b[index + 3] & 0xFF); 

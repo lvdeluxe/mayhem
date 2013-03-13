@@ -20,6 +20,7 @@ package com.mayhem.game
 		public static const LIN_DAMPING:Number = 0.99;
 		
 		public static const GAME_SESSION_DURATION:Number = 180000;
+		//public static const GAME_SESSION_DURATION:Number = 30000;
 		
 		public static var VEHICLE_LIN_VELOCITY:Number = 15000;
 		public static var VEHICLE_ANG_VELOCITY:Number = 80;
@@ -37,8 +38,8 @@ package com.mayhem.game
 		public static var ARENA_FRICTION:Number = 0.5;
 		public static var ARENA_RESTITUTION:Number = 0;
 		
-		public static const XP_FOR_LEVELS:Array = 	[0, 10, 50, 200, 500, 900, 1500, 2800, 4000, 8000, 15000, 40000, 100000];
-		//public static const LEVES:Array = 			[1,  2,  3,   4,   5,   6,    7,    8,    9,   10,    11,    12,     13];
+		public static const XP_FOR_LEVELS:Array = 	[0, 10, 50, 200, 500, 900, 1500, 2800, 4000, 8000, 15000, 40000, 100000,200000,500000,1000000];
+		//public static const LEVES:Array = 			[1,  2,  3,   4,   5,   6,    7,    8,    9,   10,    11,    12,     13 , 14 , 15];
 		
 		
 		public function GameData() 
